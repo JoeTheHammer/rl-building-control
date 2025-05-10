@@ -21,7 +21,7 @@ class EnvironmentProvider(ABC):
         self._config = config
 
     @abstractmethod
-    def create(self) -> IEnvironment:
+    def create_environment(self) -> IEnvironment:
         """
         Create and return an environment instance using the configuration.
 
