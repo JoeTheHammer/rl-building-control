@@ -1,2 +1,4 @@
-# rl-building-control
-Code of my master thesis that explores Reinforcement Learning for Building Control
+# RL Building Control
+Code of my master to explores Reinforcement Learning for Building Control
+
+To be done ...
