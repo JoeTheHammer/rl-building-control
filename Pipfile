@@ -5,8 +5,11 @@ name = "pypi"
 
 [packages]
 numpy = "*"
+flake8 = "*"
 
 [dev-packages]
+black = "*"
+isort = "*"
 
 [requires]
 python_version = "3.12"

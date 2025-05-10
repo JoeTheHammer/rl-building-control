@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-
 # TODO: Add more methods, all that are needed in simulation
+
 
 class IEnvironment(ABC):
     """
