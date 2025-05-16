@@ -1,0 +1,2 @@
+engine: "sinergym"
+environment_config: "environment1.yaml"

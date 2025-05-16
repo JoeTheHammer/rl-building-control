@@ -1,40 +1,27 @@
 from abc import ABC, abstractmethod
 
-from config.base_config import IEnvironmentConfig
 from environments.base_env import IEnvironment
 
 
 class EnvironmentProvider(ABC):
     """
-    Abstract factory for creating simulation environments.
-    Concrete providers must define how to construct an environment
-    based on a given configuration.
+    Abstract factory interface for creating simulation environments.
+
+    Concrete providers are responsible for interpreting the given configuration
+    file (typically a YAML path) and returning a fully constructed environment
+    instance ready for use.
     """
 
-    def __init__(self, config: IEnvironmentConfig):
+    @abstractmethod
+    def create_environment(self, config_path: str) -> IEnvironment:
         """
-        Initialize the provider with a given environment config.
+        Create and return an environment instance based on the provided configuration file.
 
         Args:
-            config (IEnvironmentConfig): The environment configuration.
-        """
-        self._config = config
-
-    @abstractmethod
-    def create_environment(self) -> IEnvironment:
-        """
-        Create and return an environment instance using the configuration.
+            config_path (str): Path to the environment configuration file. The format
+                               and structure of this file are specific to the provider.
 
         Returns:
-            IEnvironment: A concrete environment instance.
+            IEnvironment: A fully constructed simulation environment instance.
         """
         pass
-
-    def get_config(self) -> IEnvironmentConfig:
-        """
-        Return the configuration associated with this provider.
-
-        Returns:
-            IEnvironmentConfig: The configuration instance.
-        """
-        return self._config
