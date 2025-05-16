@@ -1,5 +1,3 @@
-# custom_loggers/logger_factory.py
-
 import logging
 
 
