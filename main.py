@@ -1,5 +1,3 @@
-from parser.config_parser import parse_experiment_configs
-
 import typer
 
 from bootstrap.sinergym_loader import create_sinergym_provider
@@ -15,10 +13,9 @@ def run(config: str = typer.Argument(..., help="Path to the YAML config file")):
 
     experiment_manager = ExperimentManager()
     experiment_manager.register_environment_provider("sinergym", sinergym_provider)
+    experiment_manager.setup_experiments(config)
 
-    experiment_configs = parse_experiment_configs(config)
-
-    logger.info("Ready to go!")
+    logger.info("All experiments finished.")
 
 
 if __name__ == "__main__":
