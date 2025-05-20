@@ -8,6 +8,22 @@ ENERGY_PLUS_PATH_FILENAME = "energyplus_path.pth"
 
 
 def check_energyplus_path() -> bool:
+    """
+    Check if the EnergyPlus path is correctly configured in the Python environment.
+
+    This function searches the system's `site-packages` directories for a `.pth` file
+    (specified by the `ENERGY_PLUS_PATH_FILENAME` constant) that should contain the path
+    to the EnergyPlus installation. It logs appropriate messages based on whether the file
+    exists or not.
+
+    Returns:
+        bool: True if the EnergyPlus path file exists, False otherwise.
+
+    Logs:
+        - Error if `site-packages` cannot be found.
+        - Warning and instructions if the path file is missing.
+        - Info if the path is correctly found.
+    """
     try:
         site_packages_dir = next(Path(p) for p in site.getsitepackages() if "site-packages" in p)
     except StopIteration:
@@ -29,6 +45,23 @@ def check_energyplus_path() -> bool:
 
 
 def create_sinergym_provider():
+    """
+    Create and return a `SinergymProvider` instance, ensuring the EnergyPlus environment is correctly configured.
+
+    This function checks for the presence of the EnergyPlus path before attempting to import and
+    instantiate the `SinergymProvider`. If the path is not configured or the import fails,
+    the program will terminate with an error message.
+
+    Returns:
+        SinergymProvider: An instance of the `SinergymProvider` class.
+
+    Raises:
+        SystemExit: If the EnergyPlus path is not configured or the `SinergymProvider` cannot be imported.
+
+    Logs:
+        - Error if the EnergyPlus path is invalid or missing.
+        - Error if the import fails, including a debug message with the original exception.
+    """
     if not check_energyplus_path():
         sys.exit(1)
 

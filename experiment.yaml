@@ -1,2 +1,4 @@
-engine: "sinergym"
-environment_config: "environment1.yaml"
+experiments:
+  - name: "experiment 1"
+    engine: "sinergym"
+    environment_config: "environment1.yaml"
