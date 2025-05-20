@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="838px" preserveAspectRatio="none" style="width:1973px;height:838px;background:#FFFFFF;" version="1.1" viewBox="0 0 1973 838" width="1973px" zoomAndPan="magnify"><defs/><g><!--MD5=[e3c565211456ad2dabb0f70601bb8c20]
+class IEnvironment--><g id="elem_IEnvironment"><rect codeLine="2" fill="#F1F1F1" height="80.5938" id="IEnvironment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="347" x="844.5" y="751"/><ellipse cx="968.75" cy="767" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M964.6719,762.7656 L964.6719,760.6094 L972.0625,760.6094 L972.0625,762.7656 L969.5938,762.7656 L969.5938,770.8438 L972.0625,770.8438 L972.0625,773 L964.6719,773 L964.6719,770.8438 L967.1406,770.8438 L967.1406,762.7656 L964.6719,762.7656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="90" x="989.25" y="771.8467">IEnvironment</text><line style="stroke:#181818;stroke-width:0.5;" x1="845.5" x2="1190.5" y1="783" y2="783"/><line style="stroke:#181818;stroke-width:0.5;" x1="845.5" x2="1190.5" y1="791" y2="791"/><ellipse cx="855.5" cy="804.6484" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="91" x="864.5" y="807.9951">reset(): State</text><ellipse cx="855.5" cy="820.9453" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="321" x="864.5" y="824.292">step(action: Action): (State, Reward, bool, dict)</text></g><!--MD5=[1d7ba1c7002d54515419844fbd155368]
+class Controller--><g id="elem_Controller"><rect codeLine="7" fill="#F1F1F1" height="64.2969" id="Controller" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="189" x="1113.5" y="411.5"/><ellipse cx="1170.25" cy="427.5" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1166.1719,423.2656 L1166.1719,421.1094 L1173.5625,421.1094 L1173.5625,423.2656 L1171.0938,423.2656 L1171.0938,431.3438 L1173.5625,431.3438 L1173.5625,433.5 L1166.1719,433.5 L1166.1719,431.3438 L1168.6406,431.3438 L1168.6406,423.2656 L1166.1719,423.2656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="67" x="1190.75" y="432.3467">Controller</text><line style="stroke:#181818;stroke-width:0.5;" x1="1114.5" x2="1301.5" y1="443.5" y2="443.5"/><line style="stroke:#181818;stroke-width:0.5;" x1="1114.5" x2="1301.5" y1="451.5" y2="451.5"/><ellipse cx="1124.5" cy="465.1484" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="163" x="1133.5" y="468.4951">getAction(state): Action</text></g><!--MD5=[a7d4a2182202304e5f98f7b78458dfe9]
+class EnvironmentProvider--><g id="elem_EnvironmentProvider"><rect codeLine="12" fill="#F1F1F1" height="64.2969" id="EnvironmentProvider" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="402" x="672" y="213.5"/><ellipse cx="797.25" cy="229.5" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M793.1719,225.2656 L793.1719,223.1094 L800.5625,223.1094 L800.5625,225.2656 L798.0938,225.2656 L798.0938,233.3438 L800.5625,233.3438 L800.5625,235.5 L793.1719,235.5 L793.1719,233.3438 L795.6406,233.3438 L795.6406,225.2656 L793.1719,225.2656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="143" x="817.75" y="234.3467">EnvironmentProvider</text><line style="stroke:#181818;stroke-width:0.5;" x1="673" x2="1073" y1="245.5" y2="245.5"/><line style="stroke:#181818;stroke-width:0.5;" x1="673" x2="1073" y1="253.5" y2="253.5"/><ellipse cx="683" cy="267.1484" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="376" x="692" y="270.4951">create_environment(config_path: String): IEnvironment</text></g><!--MD5=[e29f668360d013b759c007157b858626]
+class SinergymProvider--><g id="elem_SinergymProvider"><rect codeLine="17" fill="#F1F1F1" height="48" id="SinergymProvider" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="152" x="725" y="419.5"/><ellipse cx="740" cy="435.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M742.9688,441.1406 Q742.3906,441.4375 741.75,441.5781 Q741.1094,441.7344 740.4063,441.7344 Q737.9063,441.7344 736.5781,440.0938 Q735.2656,438.4375 735.2656,435.3125 Q735.2656,432.1875 736.5781,430.5313 Q737.9063,428.875 740.4063,428.875 Q741.1094,428.875 741.75,429.0313 Q742.4063,429.1875 742.9688,429.4844 L742.9688,432.2031 Q742.3438,431.625 741.75,431.3594 Q741.1563,431.0781 740.5313,431.0781 Q739.1875,431.0781 738.5,432.1563 Q737.8125,433.2188 737.8125,435.3125 Q737.8125,437.4063 738.5,438.4844 Q739.1875,439.5469 740.5313,439.5469 Q741.1563,439.5469 741.75,439.2813 Q742.3438,439 742.9688,438.4219 L742.9688,441.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="120" x="754" y="440.3467">SinergymProvider</text><line style="stroke:#181818;stroke-width:0.5;" x1="726" x2="876" y1="451.5" y2="451.5"/><line style="stroke:#181818;stroke-width:0.5;" x1="726" x2="876" y1="459.5" y2="459.5"/></g><!--MD5=[30d24cbeb4efcde6f77e634e6bd714f2]
+class SinergymEnvironment--><g id="elem_SinergymEnvironment"><rect codeLine="18" fill="#F1F1F1" height="48" id="SinergymEnvironment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="183" x="709.5" y="609.5"/><ellipse cx="724.5" cy="625.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M727.4688,631.1406 Q726.8906,631.4375 726.25,631.5781 Q725.6094,631.7344 724.9063,631.7344 Q722.4063,631.7344 721.0781,630.0938 Q719.7656,628.4375 719.7656,625.3125 Q719.7656,622.1875 721.0781,620.5313 Q722.4063,618.875 724.9063,618.875 Q725.6094,618.875 726.25,619.0313 Q726.9063,619.1875 727.4688,619.4844 L727.4688,622.2031 Q726.8438,621.625 726.25,621.3594 Q725.6563,621.0781 725.0313,621.0781 Q723.6875,621.0781 723,622.1563 Q722.3125,623.2188 722.3125,625.3125 Q722.3125,627.4063 723,628.4844 Q723.6875,629.5469 725.0313,629.5469 Q725.6563,629.5469 726.25,629.2813 Q726.8438,629 727.4688,628.4219 L727.4688,631.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="151" x="738.5" y="630.3467">SinergymEnvironment</text><line style="stroke:#181818;stroke-width:0.5;" x1="710.5" x2="891.5" y1="641.5" y2="641.5"/><line style="stroke:#181818;stroke-width:0.5;" x1="710.5" x2="891.5" y1="649.5" y2="649.5"/></g><!--MD5=[a0968064e02f2f0717a86289d1e4dbc1]
+class ModelicaProvider--><g id="elem_ModelicaProvider"><rect codeLine="22" fill="#F1F1F1" height="48" id="ModelicaProvider" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="149" x="921.5" y="419.5"/><ellipse cx="936.5" cy="435.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M939.4688,441.1406 Q938.8906,441.4375 938.25,441.5781 Q937.6094,441.7344 936.9063,441.7344 Q934.4063,441.7344 933.0781,440.0938 Q931.7656,438.4375 931.7656,435.3125 Q931.7656,432.1875 933.0781,430.5313 Q934.4063,428.875 936.9063,428.875 Q937.6094,428.875 938.25,429.0313 Q938.9063,429.1875 939.4688,429.4844 L939.4688,432.2031 Q938.8438,431.625 938.25,431.3594 Q937.6563,431.0781 937.0313,431.0781 Q935.6875,431.0781 935,432.1563 Q934.3125,433.2188 934.3125,435.3125 Q934.3125,437.4063 935,438.4844 Q935.6875,439.5469 937.0313,439.5469 Q937.6563,439.5469 938.25,439.2813 Q938.8438,439 939.4688,438.4219 L939.4688,441.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="117" x="950.5" y="440.3467">ModelicaProvider</text><line style="stroke:#181818;stroke-width:0.5;" x1="922.5" x2="1069.5" y1="451.5" y2="451.5"/><line style="stroke:#181818;stroke-width:0.5;" x1="922.5" x2="1069.5" y1="459.5" y2="459.5"/></g><!--MD5=[01f38dfdf06f31bc6656e5e90b65bb18]
+class ModelicaEnvironment--><g id="elem_ModelicaEnvironment"><rect codeLine="23" fill="#F1F1F1" height="48" id="ModelicaEnvironment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="180" x="928" y="609.5"/><ellipse cx="943" cy="625.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M945.9688,631.1406 Q945.3906,631.4375 944.75,631.5781 Q944.1094,631.7344 943.4063,631.7344 Q940.9063,631.7344 939.5781,630.0938 Q938.2656,628.4375 938.2656,625.3125 Q938.2656,622.1875 939.5781,620.5313 Q940.9063,618.875 943.4063,618.875 Q944.1094,618.875 944.75,619.0313 Q945.4063,619.1875 945.9688,619.4844 L945.9688,622.2031 Q945.3438,621.625 944.75,621.3594 Q944.1563,621.0781 943.5313,621.0781 Q942.1875,621.0781 941.5,622.1563 Q940.8125,623.2188 940.8125,625.3125 Q940.8125,627.4063 941.5,628.4844 Q942.1875,629.5469 943.5313,629.5469 Q944.1563,629.5469 944.75,629.2813 Q945.3438,629 945.9688,628.4219 L945.9688,631.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="148" x="957" y="630.3467">ModelicaEnvironment</text><line style="stroke:#181818;stroke-width:0.5;" x1="929" x2="1107" y1="641.5" y2="641.5"/><line style="stroke:#181818;stroke-width:0.5;" x1="929" x2="1107" y1="649.5" y2="649.5"/></g><!--MD5=[3e96dd66dd64ae2e61f50c8668a6b0a4]
+class ExperimentManager--><g id="elem_ExperimentManager"><rect codeLine="30" fill="#F1F1F1" height="96.8906" id="ExperimentManager" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="559" x="593.5" y="7"/><ellipse cx="799.75" cy="23" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M802.7188,28.6406 Q802.1406,28.9375 801.5,29.0781 Q800.8594,29.2344 800.1563,29.2344 Q797.6563,29.2344 796.3281,27.5938 Q795.0156,25.9375 795.0156,22.8125 Q795.0156,19.6875 796.3281,18.0313 Q797.6563,16.375 800.1563,16.375 Q800.8594,16.375 801.5,16.5313 Q802.1563,16.6875 802.7188,16.9844 L802.7188,19.7031 Q802.0938,19.125 801.5,18.8594 Q800.9063,18.5781 800.2813,18.5781 Q798.9375,18.5781 798.25,19.6563 Q797.5625,20.7188 797.5625,22.8125 Q797.5625,24.9063 798.25,25.9844 Q798.9375,27.0469 800.2813,27.0469 Q800.9063,27.0469 801.5,26.7813 Q802.0938,26.5 802.7188,25.9219 L802.7188,28.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="138" x="820.25" y="27.8467">ExperimentManager</text><line style="stroke:#181818;stroke-width:0.5;" x1="594.5" x2="1151.5" y1="39" y2="39"/><line style="stroke:#181818;stroke-width:0.5;" x1="594.5" x2="1151.5" y1="47" y2="47"/><ellipse cx="604.5" cy="60.6484" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="533" x="613.5" y="63.9951">register_environment_provider(engine: String, provider: EnvironmentProvider)</text><ellipse cx="604.5" cy="76.9453" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="272" x="613.5" y="80.292">setup_experiments(config_path: String)</text><ellipse cx="604.5" cy="93.2422" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="54" x="613.5" y="96.5889">run_all()</text></g><!--MD5=[ce8cbc728fc55536171de6bd6a781236]
+class ConfigParser--><g id="elem_ConfigParser"><rect codeLine="36" fill="#F1F1F1" height="80.5938" id="ConfigParser" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="668" x="7" y="593"/><ellipse cx="292.75" cy="609" fill="#ADD8E6" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M288.4688,602.6094 L291.3906,602.6094 L292.8594,608.0469 L294.3281,602.6094 L297.2656,602.6094 L297.2656,615 L295.1563,615 L295.1563,605.0781 L293.8438,610.5 L291.9063,610.5 L290.5781,605.0781 L290.5781,615 L288.4688,615 L288.4688,602.6094 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88" x="313.25" y="613.8467">ConfigParser</text><line style="stroke:#181818;stroke-width:0.5;" x1="8" x2="674" y1="625" y2="625"/><line style="stroke:#181818;stroke-width:0.5;" x1="8" x2="674" y1="633" y2="633"/><ellipse cx="18" cy="646.6484" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="498" x="27" y="649.9951">parse_experiment_configs(config_path: String): List&lt;ExperimentConfig&gt;</text><ellipse cx="18" cy="662.9453" fill="#84BE84" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="642" x="27" y="666.292">parse_sinergym_environment_config(config_path: String): List&lt;SinergymEnvironmentConfig&gt;</text></g><!--MD5=[2a9217e8f2d7f96589335d2c6f09894a]
+class Experiment--><g id="elem_Experiment"><rect codeLine="41" fill="#F1F1F1" height="129.4844" id="Experiment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="175" x="1397.5" y="181"/><ellipse cx="1441.75" cy="197" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1444.7188,202.6406 Q1444.1406,202.9375 1443.5,203.0781 Q1442.8594,203.2344 1442.1563,203.2344 Q1439.6563,203.2344 1438.3281,201.5938 Q1437.0156,199.9375 1437.0156,196.8125 Q1437.0156,193.6875 1438.3281,192.0313 Q1439.6563,190.375 1442.1563,190.375 Q1442.8594,190.375 1443.5,190.5313 Q1444.1563,190.6875 1444.7188,190.9844 L1444.7188,193.7031 Q1444.0938,193.125 1443.5,192.8594 Q1442.9063,192.5781 1442.2813,192.5781 Q1440.9375,192.5781 1440.25,193.6563 Q1439.5625,194.7188 1439.5625,196.8125 Q1439.5625,198.9063 1440.25,199.9844 Q1440.9375,201.0469 1442.2813,201.0469 Q1442.9063,201.0469 1443.5,200.7813 Q1444.0938,200.5 1444.7188,199.9219 L1444.7188,202.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="78" x="1462.25" y="201.8467">Experiment</text><line style="stroke:#181818;stroke-width:0.5;" x1="1398.5" x2="1571.5" y1="213" y2="213"/><ellipse cx="1408.5" cy="226.6484" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="96" x="1417.5" y="229.9951">engine: string</text><ellipse cx="1408.5" cy="242.9453" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="90" x="1417.5" y="246.292">episodes: int</text><ellipse cx="1408.5" cy="259.2422" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="61" x="1417.5" y="262.5889">seed: int</text><ellipse cx="1408.5" cy="275.5391" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="144" x="1417.5" y="278.8857">start_time: DateTime</text><ellipse cx="1408.5" cy="291.8359" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="149" x="1417.5" y="295.1826">finish_time: DateTime</text><line style="stroke:#181818;stroke-width:0.5;" x1="1398.5" x2="1571.5" y1="302.4844" y2="302.4844"/></g><!--MD5=[e91c523f8d7dd94a4e9260e7eb441913]
+class ExperimentStatus--><g id="elem_ExperimentStatus"><rect codeLine="49" fill="#F1F1F1" height="113.1875" id="ExperimentStatus" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="154" x="1338" y="387"/><ellipse cx="1353" cy="403" fill="#EB937F" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1357.1094,409 L1349.3906,409 L1349.3906,396.6094 L1357.1094,396.6094 L1357.1094,398.7656 L1351.8438,398.7656 L1351.8438,401.4375 L1356.6094,401.4375 L1356.6094,403.5938 L1351.8438,403.5938 L1351.8438,406.8438 L1357.1094,406.8438 L1357.1094,409 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="122" x="1367" y="407.8467">ExperimentStatus</text><line style="stroke:#181818;stroke-width:0.5;" x1="1339" x2="1491" y1="419" y2="419"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="64" x="1344" y="435.9951">RUNNING</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63" x="1344" y="452.292">PENDING</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63" x="1344" y="468.5889">FINISHED</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="53" x="1344" y="484.8857">TUNING</text><line style="stroke:#181818;stroke-width:0.5;" x1="1339" x2="1491" y1="492.1875" y2="492.1875"/></g><!--MD5=[248f897e4bb16c2722904b15df30346f]
+class Logger--><g id="elem_Logger"><rect codeLine="82" fill="#F1F1F1" height="64.2969" id="Logger" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="114" x="1527" y="411.5"/><ellipse cx="1557.3" cy="427.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1560.2688,433.1406 Q1559.6906,433.4375 1559.05,433.5781 Q1558.4094,433.7344 1557.7063,433.7344 Q1555.2063,433.7344 1553.8781,432.0938 Q1552.5656,430.4375 1552.5656,427.3125 Q1552.5656,424.1875 1553.8781,422.5313 Q1555.2063,420.875 1557.7063,420.875 Q1558.4094,420.875 1559.05,421.0313 Q1559.7063,421.1875 1560.2688,421.4844 L1560.2688,424.2031 Q1559.6438,423.625 1559.05,423.3594 Q1558.4563,423.0781 1557.8313,423.0781 Q1556.4875,423.0781 1555.8,424.1563 Q1555.1125,425.2188 1555.1125,427.3125 Q1555.1125,429.4063 1555.8,430.4844 Q1556.4875,431.5469 1557.8313,431.5469 Q1558.4563,431.5469 1559.05,431.2813 Q1559.6438,431 1560.2688,430.4219 L1560.2688,433.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="48" x="1574.7" y="432.3467">Logger</text><line style="stroke:#181818;stroke-width:0.5;" x1="1528" x2="1640" y1="443.5" y2="443.5"/><ellipse cx="1538" cy="457.1484" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88" x="1547" y="460.4951">name: String</text><line style="stroke:#181818;stroke-width:0.5;" x1="1528" x2="1640" y1="467.7969" y2="467.7969"/></g><!--MD5=[281bb5dd1d30cabf93bd4ed98cd3f817]
+class ReportGenerator--><g id="elem_ReportGenerator"><rect codeLine="95" fill="#F1F1F1" height="80.5938" id="ReportGenerator" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="238" x="1676" y="403"/><ellipse cx="1732.25" cy="419" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1735.2188,424.6406 Q1734.6406,424.9375 1734,425.0781 Q1733.3594,425.2344 1732.6563,425.2344 Q1730.1563,425.2344 1728.8281,423.5938 Q1727.5156,421.9375 1727.5156,418.8125 Q1727.5156,415.6875 1728.8281,414.0313 Q1730.1563,412.375 1732.6563,412.375 Q1733.3594,412.375 1734,412.5313 Q1734.6563,412.6875 1735.2188,412.9844 L1735.2188,415.7031 Q1734.5938,415.125 1734,414.8594 Q1733.4063,414.5781 1732.7813,414.5781 Q1731.4375,414.5781 1730.75,415.6563 Q1730.0625,416.7188 1730.0625,418.8125 Q1730.0625,420.9063 1730.75,421.9844 Q1731.4375,423.0469 1732.7813,423.0469 Q1733.4063,423.0469 1734,422.7813 Q1734.5938,422.5 1735.2188,421.9219 L1735.2188,424.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="117" x="1752.75" y="423.8467">ReportGenerator</text><line style="stroke:#181818;stroke-width:0.5;" x1="1677" x2="1913" y1="435" y2="435"/><ellipse cx="1687" cy="448.6484" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="148" x="1696" y="451.9951">formats: Set&lt;String&gt;</text><ellipse cx="1687" cy="464.9453" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="212" x="1696" y="468.292">metrics_to_show: List&lt;String&gt;</text><line style="stroke:#181818;stroke-width:0.5;" x1="1677" x2="1913" y1="475.5938" y2="475.5938"/></g><!--MD5=[310c03e1fef7fa88f24398ca912a8790]
+class RLController--><g id="elem_RLController"><rect codeLine="73" fill="#F1F1F1" height="64.2969" id="RLController" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="137" x="1352.5" y="601.5"/><ellipse cx="1376.95" cy="617.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1379.9188,623.1406 Q1379.3406,623.4375 1378.7,623.5781 Q1378.0594,623.7344 1377.3563,623.7344 Q1374.8563,623.7344 1373.5281,622.0938 Q1372.2156,620.4375 1372.2156,617.3125 Q1372.2156,614.1875 1373.5281,612.5313 Q1374.8563,610.875 1377.3563,610.875 Q1378.0594,610.875 1378.7,611.0313 Q1379.3563,611.1875 1379.9188,611.4844 L1379.9188,614.2031 Q1379.2938,613.625 1378.7,613.3594 Q1378.1063,613.0781 1377.4813,613.0781 Q1376.1375,613.0781 1375.45,614.1563 Q1374.7625,615.2188 1374.7625,617.3125 Q1374.7625,619.4063 1375.45,620.4844 Q1376.1375,621.5469 1377.4813,621.5469 Q1378.1063,621.5469 1378.7,621.2813 Q1379.2938,621 1379.9188,620.4219 L1379.9188,623.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="84" x="1393.05" y="622.3467">RLController</text><line style="stroke:#181818;stroke-width:0.5;" x1="1353.5" x2="1488.5" y1="633.5" y2="633.5"/><ellipse cx="1363.5" cy="647.1484" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="111" x="1372.5" y="650.4951">model: RLModel</text><line style="stroke:#181818;stroke-width:0.5;" x1="1353.5" x2="1488.5" y1="657.7969" y2="657.7969"/></g><!--MD5=[ab4844d6a963a76d6711976405d51c6a]
+class RuleBasedController--><g id="elem_RuleBasedController"><rect codeLine="77" fill="#F1F1F1" height="64.2969" id="RuleBasedController" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="174" x="1143" y="601.5"/><ellipse cx="1158" cy="617.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1160.9688,623.1406 Q1160.3906,623.4375 1159.75,623.5781 Q1159.1094,623.7344 1158.4063,623.7344 Q1155.9063,623.7344 1154.5781,622.0938 Q1153.2656,620.4375 1153.2656,617.3125 Q1153.2656,614.1875 1154.5781,612.5313 Q1155.9063,610.875 1158.4063,610.875 Q1159.1094,610.875 1159.75,611.0313 Q1160.4063,611.1875 1160.9688,611.4844 L1160.9688,614.2031 Q1160.3438,613.625 1159.75,613.3594 Q1159.1563,613.0781 1158.5313,613.0781 Q1157.1875,613.0781 1156.5,614.1563 Q1155.8125,615.2188 1155.8125,617.3125 Q1155.8125,619.4063 1156.5,620.4844 Q1157.1875,621.5469 1158.5313,621.5469 Q1159.1563,621.5469 1159.75,621.2813 Q1160.3438,621 1160.9688,620.4219 L1160.9688,623.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="142" x="1172" y="622.3467">RuleBasedController</text><line style="stroke:#181818;stroke-width:0.5;" x1="1144" x2="1316" y1="633.5" y2="633.5"/><ellipse cx="1154" cy="647.1484" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="73" x="1163" y="650.4951">rules: TBD</text><line style="stroke:#181818;stroke-width:0.5;" x1="1144" x2="1316" y1="657.7969" y2="657.7969"/></g><!--MD5=[fde78261c83df273810042a88c770c4d]
+class LogLevel--><g id="elem_LogLevel"><rect codeLine="86" fill="#F1F1F1" height="96.8906" id="LogLevel" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="92" x="1538" y="585"/><ellipse cx="1553" cy="601" fill="#EB937F" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1557.1094,607 L1549.3906,607 L1549.3906,594.6094 L1557.1094,594.6094 L1557.1094,596.7656 L1551.8438,596.7656 L1551.8438,599.4375 L1556.6094,599.4375 L1556.6094,601.5938 L1551.8438,601.5938 L1551.8438,604.8438 L1557.1094,604.8438 L1557.1094,607 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="60" x="1567" y="605.8467">LogLevel</text><line style="stroke:#181818;stroke-width:0.5;" x1="1539" x2="1629" y1="617" y2="617"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="51" x="1544" y="633.9951">DEBUG</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="32" x="1544" y="650.292">INFO</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="50" x="1544" y="666.5889">ERROR</text><line style="stroke:#181818;stroke-width:0.5;" x1="1539" x2="1629" y1="673.8906" y2="673.8906"/></g><!--MD5=[f00dbe8c0302c6aec2cb26b3c659c8fc]
+class Report--><g id="elem_Report"><rect codeLine="100" fill="#F1F1F1" height="113.1875" id="Report" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="194" x="1698" y="577"/><ellipse cx="1767.25" cy="593" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1770.2188,598.6406 Q1769.6406,598.9375 1769,599.0781 Q1768.3594,599.2344 1767.6563,599.2344 Q1765.1563,599.2344 1763.8281,597.5938 Q1762.5156,595.9375 1762.5156,592.8125 Q1762.5156,589.6875 1763.8281,588.0313 Q1765.1563,586.375 1767.6563,586.375 Q1768.3594,586.375 1769,586.5313 Q1769.6563,586.6875 1770.2188,586.9844 L1770.2188,589.7031 Q1769.5938,589.125 1769,588.8594 Q1768.4063,588.5781 1767.7813,588.5781 Q1766.4375,588.5781 1765.75,589.6563 Q1765.0625,590.7188 1765.0625,592.8125 Q1765.0625,594.9063 1765.75,595.9844 Q1766.4375,597.0469 1767.7813,597.0469 Q1768.4063,597.0469 1769,596.7813 Q1769.5938,596.5 1770.2188,595.9219 L1770.2188,598.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="47" x="1787.75" y="597.8467">Report</text><line style="stroke:#181818;stroke-width:0.5;" x1="1699" x2="1891" y1="609" y2="609"/><ellipse cx="1709" cy="622.6484" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="138" x="1718" y="625.9951">summary_stats: dict</text><ellipse cx="1709" cy="638.9453" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="131" x="1718" y="642.292">controller_info: dict</text><ellipse cx="1709" cy="655.2422" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="153" x="1718" y="658.5889">environment_info: dict</text><ellipse cx="1709" cy="671.5391" fill="none" rx="3" ry="3" style="stroke:#038048;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="168" x="1718" y="674.8857">generated_at: DateTime</text><line style="stroke:#181818;stroke-width:0.5;" x1="1699" x2="1891" y1="682.1875" y2="682.1875"/></g><!--MD5=[a2dcada079002ac9df36d65e23afa48a]
+link SinergymProvider to SinergymEnvironment--><g id="link_SinergymProvider_SinergymEnvironment"><path codeLine="25" d="M801,467.55 C801,501.94 801,566.63 801,603.96 " fill="none" id="SinergymProvider-to-SinergymEnvironment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="801,609.26,805,600.26,801,604.26,797,600.26,801,609.26" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="126" x="802" y="543.0669">creates and returns</text></g><!--MD5=[427581b306c1752b663033e5541eca56]
+link SinergymEnvironment to IEnvironment--><g id="link_SinergymEnvironment_IEnvironment"><path codeLine="26" d="M833.02,657.52 C862.7,678.85 907.91,711.36 946.21,738.89 " fill="none" id="SinergymEnvironment-to-IEnvironment" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="950.53,733.38,962.68,750.73,942.36,744.74,950.53,733.38" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[beeb61bfada330b04f48bbbcb1543309]
+reverse link EnvironmentProvider to SinergymProvider--><g id="link_EnvironmentProvider_SinergymProvider"><path codeLine="27" d="M854.65,296.46 C840.15,335.92 820.59,389.17 809.54,419.26 " fill="none" id="EnvironmentProvider-backto-SinergymProvider" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="848.12,293.92,861.59,277.56,861.27,298.74,848.12,293.92" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[4f183a8eada57b06675350b00402f2dc]
+link SinergymProvider to ConfigParser--><g id="link_SinergymProvider_ConfigParser"><path codeLine="56" d="M761.19,467.71 C722.05,489.92 660.18,523.44 604,547 C565.18,563.28 522.09,578.44 482.22,591.33 " fill="none" id="SinergymProvider-to-ConfigParser" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="477.38,592.89,487.1722,593.945,482.1403,591.3604,484.7249,586.3285,477.38,592.89" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="30" x="639" y="543.0669">uses</text></g><!--MD5=[7cf80b62dfb2fff3477e4ad7ba3f063a]
+link ExperimentManager to ConfigParser--><g id="link_ExperimentManager_ConfigParser"><path codeLine="57" d="M767.73,104.03 C729.39,124.38 687.32,150.53 654,181 C517.26,306.05 407.8,501.32 362.97,588.22 " fill="none" id="ExperimentManager-to-ConfigParser" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="360.62,592.78,368.2861,586.5969,362.9016,588.3309,361.1676,582.9464,360.62,592.78" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="30" x="515" y="353.0669">uses</text></g><!--MD5=[f89f56c3f58488c464c31da1d9197c47]
+link ExperimentManager to Experiment--><g id="link_ExperimentManager_Experiment"><path codeLine="58" d="M1027.83,104.06 C1142.75,139.36 1295.65,186.33 1392.22,216 " fill="none" id="ExperimentManager-to-Experiment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1397.06,217.49,1389.6384,211.0154,1392.282,216.0166,1387.2809,218.6602,1397.06,217.49" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="108" x="1180" y="147.0669">creates and runs</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1041.0405" y="124.0274">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1382.4876" y="211.6017">*</text></g><!--MD5=[d6fd716591f8730834a59ce0902db083]
+link ExperimentManager to EnvironmentProvider--><g id="link_ExperimentManager_EnvironmentProvider"><path codeLine="59" d="M873,104.43 C873,136.69 873,178.57 873,208.1 " fill="none" id="ExperimentManager-to-EnvironmentProvider" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="873,213.47,877,204.47,873,208.47,869,204.47,873,213.47" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="56" x="874" y="147.0669">registers</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="864.4625" y="124.0959">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="865.2781" y="202.3669">*</text></g><!--MD5=[15d7e4be280620cadd89e755b7ef981a]
+link Experiment to IEnvironment--><g id="link_Experiment_IEnvironment"><path codeLine="60" d="M1572.79,261.5 C1690.4,283.59 1889.31,328.65 1932,387 C1965.16,432.32 1928.46,670.7 1909,690 C1859.45,739.15 1442.11,768.75 1196.56,782.08 " fill="none" id="Experiment-to-IEnvironment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1191.51,782.35,1200.7141,785.8548,1196.5026,782.0782,1200.2792,777.8667,1191.51,782.35" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="1942" y="543.0669">has</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1580.6352" y="259.2823">*</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1199.5534" y="778.6747">1</text></g><!--MD5=[260609423ace49fa2552dc7cd20adac5]
+link Experiment to Controller--><g id="link_Experiment_Controller"><path codeLine="61" d="M1397.36,308.52 C1350.71,341.52 1295.13,380.85 1256.3,408.33 " fill="none" id="Experiment-to-Controller" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1252.12,411.28,1261.7789,409.3551,1256.204,408.3955,1257.1637,402.8206,1252.12,411.28" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="1348" y="353.0669">has</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1382.5277" y="310.343">*</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1252.0186" y="400.5109">1</text></g><!--MD5=[a35bbebc8dc0557ecd3f3dcb70c696f7]
+link Experiment to Logger--><g id="link_Experiment_Logger"><path codeLine="62" d="M1517.14,310.14 C1533.31,342.15 1552.32,379.77 1565.92,406.71 " fill="none" id="Experiment-to-Logger" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1568.23,411.27,1567.7325,401.4337,1565.9711,406.8094,1560.5954,405.048,1568.23,411.27" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="43" x="1542" y="353.0669">logs to</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1513.4515" y="330.5278">*</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1556.3378" y="400.4989">1</text></g><!--MD5=[f8212b782ca955b7bfd71cf52e00eccd]
+link Experiment to ExperimentStatus--><g id="link_Experiment_ExperimentStatus"><path codeLine="63" d="M1454.01,310.02 C1449.69,319.94 1445.53,330.16 1442,340 C1437.21,353.34 1432.86,367.94 1429.12,381.83 " fill="none" id="Experiment-to-ExperimentStatus" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1427.77,386.91,1433.9455,379.2377,1429.053,382.0774,1426.2133,377.1849,1427.77,386.91" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="67" x="1443" y="353.0669">has status</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1443.0221" y="330.3939">*</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1420.8937" y="375.7619">1</text></g><!--MD5=[08c170ba83c76afb66df21f5152b0ed9]
+link Experiment to ReportGenerator--><g id="link_Experiment_ReportGenerator"><path codeLine="64" d="M1572.59,301.88 C1621.85,333.02 1682.39,371.3 1727.86,400.05 " fill="none" id="Experiment-to-ReportGenerator" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1732.22,402.81,1726.7476,394.6214,1727.9929,400.1395,1722.4748,401.3848,1732.22,402.81" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="115" x="1660" y="353.0669">generates reports</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1580.418" y="303.1324">*</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1713.1596" y="391.9401">1</text></g><!--MD5=[f7ddc21ae6906ace6935927122186f32]
+link ModelicaProvider to ModelicaEnvironment--><g id="link_ModelicaProvider_ModelicaEnvironment"><path codeLine="65" d="M998.7,467.55 C1002.72,501.94 1010.29,566.63 1014.66,603.96 " fill="none" id="ModelicaProvider-to-ModelicaEnvironment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1015.28,609.26,1018.1995,599.8538,1014.695,604.2943,1010.2544,600.7898,1015.28,609.26" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="126" x="1009" y="543.0669">creates and returns</text></g><!--MD5=[b588e3acea36d629e8f81757ba296e5e]
+link ModelicaEnvironment to IEnvironment--><g id="link_ModelicaEnvironment_IEnvironment"><path codeLine="66" d="M1018,657.52 C1018,676.75 1018,705.05 1018,730.61 " fill="none" id="ModelicaEnvironment-to-IEnvironment" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="1025,730.73,1018,750.73,1011,730.73,1025,730.73" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[e9923145dee7ea4c721caa324647c982]
+reverse link EnvironmentProvider to ModelicaProvider--><g id="link_EnvironmentProvider_ModelicaProvider"><path codeLine="67" d="M903.17,294.58 C928.04,334.21 962.23,388.69 981.42,419.26 " fill="none" id="EnvironmentProvider-backto-ModelicaProvider" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="897.19,298.22,892.49,277.56,909.05,290.78,897.19,298.22" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[0517d85793559f306b0467141ce27d52]
+reverse link Controller to RLController--><g id="link_Controller_RLController"><path codeLine="70" d="M1258.23,488.83 C1297.46,523.46 1350.99,570.71 1385.78,601.41 " fill="none" id="Controller-backto-RLController" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="1253.54,494.03,1243.17,475.54,1262.8,483.53,1253.54,494.03" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[99b10bb40453c6016a9212ef8bf9c8ff]
+reverse link Controller to RuleBasedController--><g id="link_Controller_RuleBasedController"><path codeLine="71" d="M1213.99,495.66 C1217.94,529.47 1223,572.68 1226.36,601.41 " fill="none" id="Controller-backto-RuleBasedController" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="1207,496.22,1211.63,475.54,1220.91,494.6,1207,496.22" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[febcdca18e2735de6962fc81ac92c999]
+link Logger to LogLevel--><g id="link_Logger_LogLevel"><path codeLine="92" d="M1584,475.54 C1584,503.76 1584,545.98 1584,579.52 " fill="none" id="Logger-to-LogLevel" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1584,584.83,1588,575.83,1584,579.83,1580,575.83,1584,584.83" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="1585" y="543.0669">has</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1576.2781" y="495.7451">*</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1575.4375" y="574.015">1</text></g><!--MD5=[3bc8afd3ea5550df26ae57e4087ab58b]
+link ReportGenerator to Report--><g id="link_ReportGenerator_Report"><path codeLine="107" d="M1795,484.37 C1795,509.74 1795,543.08 1795,571.71 " fill="none" id="ReportGenerator-to-Report" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1795,577,1799,568,1795,572,1791,568,1795,577" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="48" x="1796" y="543.0669">creates</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1786.4125" y="503.5808">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="7" x="1787.5516" y="565.8634">*</text></g><!--MD5=[e0dd5eff068eb0dcc09826ecd91f64ef]
+@startuml
+' Interfaces
+interface IEnvironment {
+  + reset(): State
+  + step(action: Action): (State, Reward, bool, dict)
+}
+
+interface Controller {
+  + getAction(state): Action
+}
+
+' Abstract factory for environments
+interface EnvironmentProvider {
+  + create_environment(config_path: String): IEnvironment
+}
+
+' ───── Sinergym Concrete provider and environment ─────
+class SinergymProvider
+class SinergymEnvironment
+
+
+' ───── Modelica Concrete provider and environment ─────
+class ModelicaProvider
+class ModelicaEnvironment
+
+SinergymProvider - -> SinergymEnvironment : creates and returns
+SinergymEnvironment ..|> IEnvironment
+EnvironmentProvider <|.. SinergymProvider
+
+' ───── Orchestration ─────
+class ExperimentManager {
+  + register_environment_provider(engine: String, provider: EnvironmentProvider)
+  + setup_experiments(config_path: String)
+  + run_all()
+}
+
+class ConfigParser <<(M,#ADD8E6)>> {
+  + parse_experiment_configs(config_path: String): List<ExperimentConfig> 
+  + parse_sinergym_environment_config(config_path: String): List<SinergymEnvironmentConfig>
+}
+
+class Experiment {
+  + engine: string
+  + episodes: int
+  + seed: int
+  + start_time: DateTime
+  + finish_time: DateTime
+}
+
+enum ExperimentStatus {
+  RUNNING
+  PENDING
+  FINISHED
+  TUNING
+}
+
+SinergymProvider - -> ConfigParser : uses
+ExperimentManager - -> ConfigParser : uses
+ExperimentManager "1" - -> "*" Experiment : creates and runs
+ExperimentManager "1" - -> "*" EnvironmentProvider : registers
+Experiment "*" - -> "1" IEnvironment      : has
+Experiment "*" - -> "1" Controller        : has
+Experiment "*" - -> "1" Logger            : logs to
+Experiment "*" - -> "1" ExperimentStatus  : has status
+Experiment "*" - -> "1" ReportGenerator   : generates reports
+ModelicaProvider - -> ModelicaEnvironment : creates and returns
+ModelicaEnvironment ..|> IEnvironment
+EnvironmentProvider <|.. ModelicaProvider
+
+' ───── Controllers ─────
+Controller <|.. RLController
+Controller <|.. RuleBasedController
+
+class RLController {
+  + model: RLModel
+}
+
+class RuleBasedController {
+  + rules: TBD
+}
+
+' ───── Logging ─────
+class Logger {
+  + name: String
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  ERROR
+}
+
+Logger "*" - -> "1" LogLevel : has
+
+' ───── Reporting ─────
+class ReportGenerator {
+  + formats: Set<String>
+  + metrics_to_show: List<String>
+}
+
+class Report {
+  + summary_stats: dict
+  + controller_info: dict
+  + environment_info: dict
+  + generated_at: DateTime
+}
+
+ReportGenerator "1" - -> "*" Report : creates
+@enduml
+
+@startuml
+interface IEnvironment {
+  + reset(): State
+  + step(action: Action): (State, Reward, bool, dict)
+}
+
+interface Controller {
+  + getAction(state): Action
+}
+
+interface EnvironmentProvider {
+  + create_environment(config_path: String): IEnvironment
+}
+
+class SinergymProvider
+class SinergymEnvironment
+
+
+class ModelicaProvider
+class ModelicaEnvironment
+
+SinergymProvider - -> SinergymEnvironment : creates and returns
+SinergymEnvironment ..|> IEnvironment
+EnvironmentProvider <|.. SinergymProvider
+
+class ExperimentManager {
+  + register_environment_provider(engine: String, provider: EnvironmentProvider)
+  + setup_experiments(config_path: String)
+  + run_all()
+}
+
+class ConfigParser <<(M,#ADD8E6)>> {
+  + parse_experiment_configs(config_path: String): List<ExperimentConfig> 
+  + parse_sinergym_environment_config(config_path: String): List<SinergymEnvironmentConfig>
+}
+
+class Experiment {
+  + engine: string
+  + episodes: int
+  + seed: int
+  + start_time: DateTime
+  + finish_time: DateTime
+}
+
+enum ExperimentStatus {
+  RUNNING
+  PENDING
+  FINISHED
+  TUNING
+}
+
+SinergymProvider - -> ConfigParser : uses
+ExperimentManager - -> ConfigParser : uses
+ExperimentManager "1" - -> "*" Experiment : creates and runs
+ExperimentManager "1" - -> "*" EnvironmentProvider : registers
+Experiment "*" - -> "1" IEnvironment      : has
+Experiment "*" - -> "1" Controller        : has
+Experiment "*" - -> "1" Logger            : logs to
+Experiment "*" - -> "1" ExperimentStatus  : has status
+Experiment "*" - -> "1" ReportGenerator   : generates reports
+ModelicaProvider - -> ModelicaEnvironment : creates and returns
+ModelicaEnvironment ..|> IEnvironment
+EnvironmentProvider <|.. ModelicaProvider
+
+Controller <|.. RLController
+Controller <|.. RuleBasedController
+
+class RLController {
+  + model: RLModel
+}
+
+class RuleBasedController {
+  + rules: TBD
+}
+
+class Logger {
+  + name: String
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  ERROR
+}
+
+Logger "*" - -> "1" LogLevel : has
+
+class ReportGenerator {
+  + formats: Set<String>
+  + metrics_to_show: List<String>
+}
+
+class Report {
+  + summary_stats: dict
+  + controller_info: dict
+  + environment_info: dict
+  + generated_at: DateTime
+}
+
+ReportGenerator "1" - -> "*" Report : creates
+@enduml
+
+PlantUML version 1.2022.7(Mon Aug 22 17:01:30 UTC 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>
