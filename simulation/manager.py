@@ -11,24 +11,24 @@ class ExperimentManager:
         self._providers: Dict[str, EnvironmentProvider] = {}
         self._experiments: List[Experiment] = []
 
-    def setup_experiments(self, config: str):
+    def setup_experiments(self, config_path: str):
         """
         Parses and initializes all experiments defined in the config file.
 
         Args:
-            config (str): Path to the YAML config file containing experiment definitions.
+            config_path (str): Path to the YAML config file containing experiment definitions.
         """
-        experiment_configs = parse_experiment_configs(config)
-        for config in experiment_configs:
-            setup_logger.info(f"Setting up experiment {config.name}")
+        experiment_configs = parse_experiment_configs(config_path)
+        for config_path in experiment_configs:
+            setup_logger.info(f"Setting up experiment {config_path.name}")
             try:
-                experiment = self._create_experiment(config)
+                experiment = self._create_experiment(config_path)
                 if experiment is None:
-                    setup_logger.warning(f"Experiment {config.name} could not be created.")
+                    setup_logger.warning(f"Experiment {config_path.name} could not be created.")
                     continue
                 self._register_experiment(experiment)
             except Exception as e:
-                setup_logger.error(f"Failed to create experiment {config.name}: {e}")
+                setup_logger.error(f"Failed to create experiment {config_path.name}: {e}")
 
     def _create_experiment(self, experiment_config: ExperimentConfig) -> Experiment | None:
         # TODO: Think about which attributes experiment needs, one is environment that must be provided by provider
