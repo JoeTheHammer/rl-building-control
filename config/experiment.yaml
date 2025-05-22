@@ -1,4 +1,4 @@
 experiments:
   - name: "experiment 1"
     engine: "sinergym"
-    environment_config: "environment1.yaml"
+    environment_config: "config/environment1.yaml"

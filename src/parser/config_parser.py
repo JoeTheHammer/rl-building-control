@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import yaml
-from environments.sinergym_config import SinergymEnvironmentConfig
 
+from environments.sinergym_config import SinergymEnvironmentConfig
 from experiment.experiment_config import ExperimentList
 
 
