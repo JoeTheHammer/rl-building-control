@@ -5,7 +5,7 @@ from environments.base_env import IEnvironment
 
 class EnvironmentProvider(ABC):
     """
-    Abstract factory interface for creating simulation environments.
+    Abstract factory interface for creating experiment environments.
 
     Concrete providers are responsible for interpreting the given configuration
     file (typically a YAML path) and returning a fully constructed environment
@@ -22,6 +22,6 @@ class EnvironmentProvider(ABC):
                                and structure of this file are specific to the provider.
 
         Returns:
-            IEnvironment: A fully constructed simulation environment instance.
+            IEnvironment: A fully constructed experiment environment instance.
         """
         pass

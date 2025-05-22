@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 numpy = "*"
 flake8 = "*"
+pydantic = "*"
 
 [dev-packages]
 black = "*"

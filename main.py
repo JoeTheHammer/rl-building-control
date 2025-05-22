@@ -2,13 +2,13 @@ import typer
 
 from bootstrap.sinergym_loader import create_sinergym_provider
 from custom_loggers.setup_logger import logger
-from simulation.manager import ExperimentManager
+from experiment.manager import ExperimentManager
 
 app = typer.Typer()
 
 
 @app.command()
-def run(config: str = typer.Argument(..., help="Path to the YAML config file")):
+def run(config: str = typer.Argument(..., help="Path to the YAML environment_config file")):
     sinergym_provider = create_sinergym_provider()
 
     experiment_manager = ExperimentManager()

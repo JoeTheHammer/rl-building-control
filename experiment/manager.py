@@ -1,9 +1,11 @@
-from parser.config_parser import parse_experiment_configs
+from parser.config_parser import parse_experiment_list
 from typing import Dict, List
 
 from custom_loggers.setup_logger import logger as setup_logger
 from environments.base_provider import EnvironmentProvider
-from simulation.experiment import Experiment, ExperimentConfig
+
+from experiment.experiment import Experiment
+from experiment.experiment_config import ExperimentConfig
 
 
 class ExperimentManager:
@@ -13,13 +15,13 @@ class ExperimentManager:
 
     def setup_experiments(self, config_path: str):
         """
-        Parses and initializes all experiments defined in the config file.
+        Parses and initializes all experiments defined in the environment_config file.
 
         Args:
-            config_path (str): Path to the YAML config file containing experiment definitions.
+            config_path (str): Path to the YAML environment_config file containing experiment definitions.
         """
-        experiment_configs = parse_experiment_configs(config_path)
-        for config_path in experiment_configs:
+        experiment_configs = parse_experiment_list(config_path)
+        for config_path in experiment_configs.experiments:
             setup_logger.info(f"Setting up experiment {config_path.name}")
             try:
                 experiment = self._create_experiment(config_path)

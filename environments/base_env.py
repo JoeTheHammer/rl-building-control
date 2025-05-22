@@ -4,7 +4,7 @@ from typing import Any
 
 class IEnvironment(ABC):
     """
-    Interface for a simulation environment that can be interacted with by a controller or agent.
+    Interface for an experiment environment that can be interacted with by a controller or agent.
     Implementations must support environment reset and interaction through actions.
     """
 

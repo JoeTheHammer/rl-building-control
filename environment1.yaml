@@ -1,2 +1,25 @@
 building_model: "path/to/building/model"
 weather_data: "path/to/weather/data"
+
+state_space:
+  variables:
+    air_temp_101:
+      type: "Zone Mean Air Temperature"
+      zone: "GUESTROOM101"
+    humidity_101:
+      type: "Zone Mean Air Humidity Ratio"
+      zone: "GUESTROOM101"
+  meters:
+    electricity: "Electricity:Facility"
+    gas: "NaturalGas:Facility"
+
+action_space:
+  actuators:
+    setpoint_temp:
+      type: "continuous"
+      range: [18.0, 28.0]
+      component: "Schedule:Constant"
+      control_type: "Schedule Value"
+      actuator_key: "PythonControlledSetpoint"
+
+reward_function: "add reward function"
