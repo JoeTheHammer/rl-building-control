@@ -70,6 +70,23 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Tuple:
 class SinergymProvider(EnvironmentProvider):
 
     def create_environment(self, config_path: str) -> SinergymEnvironment:
+        """
+        Create and return a configured SinergymEnvironment instance from a YAML configuration file.
+
+        This method reads the provided YAML config, parses it into a SinergymEnvironmentConfig object,
+        and constructs the necessary components to instantiate a SinergymEnvironment, including paths,
+        observation variables, meters, actuators, and the Gym-compatible action space.
+
+        Args:
+            config_path (str): Path to the YAML configuration file describing the environment setup.
+
+        Returns:
+            SinergymEnvironment: A fully initialized Sinergym environment ready for interaction.
+
+        Raises:
+            ValueError: If actuator definitions are invalid or unsupported.
+            FileNotFoundError: If the building model or weather file paths are incorrect.
+        """
         config = parse_sinergym_environment_config(config_path)
         building_model_path, weather_data_path, variables, meters, actuators, action_space = (
             _build_environment_elements(config)
