@@ -40,7 +40,7 @@ class ExperimentManager:
             )
             return None
         env = env_provider.create_environment(experiment_config.environment_config)
-        pass
+        return Experiment(experiment_config.name, env)
 
     def _register_experiment(self, experiment: Experiment) -> None:
         """Registers an experiment by adding it to the experiments list."""
@@ -52,4 +52,6 @@ class ExperimentManager:
 
     def run_all(self):
         """Run all experiments that are registered."""
-        pass
+        for experiment in self._experiments:
+            # TODO: Add exception handling later
+            experiment.run()

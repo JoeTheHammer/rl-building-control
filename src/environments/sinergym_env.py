@@ -25,3 +25,21 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             action_space=action_space,
             reward=MyReward,
         )
+
+    def step(self, action):
+        # STEP FUNCTION TO TEST SETUP
+
+        # Correct shape of action
+        if isinstance(action, (list, np.ndarray)):
+            action = np.array(action, dtype=np.float32)
+        else:
+            action = np.array([action], dtype=np.float32)
+
+        obs, reward, terminated, truncated, info = super().step(action)
+
+        obs_dict = info.copy()
+        # TODO: Extract information for reward based on reward config TBD ...
+        obs_dict["air_temp_101"] = obs[0]
+        obs_dict["action"] = action
+        reward, reward_info = self.reward_fn(obs_dict)
+        return obs, reward, terminated, truncated, {**info, **reward_info}

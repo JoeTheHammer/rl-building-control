@@ -34,3 +34,13 @@ class IEnvironment(ABC):
                 - info: Additional diagnostic information.
         """
         pass
+
+    @abstractmethod
+    def close(self):
+        """
+        Perform any necessary cleanup and release environment resources.
+
+        This method should be called when the environment is no longer needed,
+        to free up any system resources (e.g., processes, file handles, simulation engines).
+        """
+        pass
