@@ -25,12 +25,6 @@ class Experiment:
             random_action = np.array([action_value], dtype=np.float32)
 
             obs, reward, terminated, truncated, info = self.env.step(random_action)
-            print(
-                f"\rStep: {info['timestep']:5}, Temp: {info['temp']:.2f}°C, "
-                f"Reward: {reward}, Action: {random_action[0]}",
-                end="",
-                flush=True,
-            )
 
             actions.append(random_action)
             done = terminated or truncated

@@ -59,6 +59,5 @@ class ExpressionReward(BaseReward):
                 logger.error(f"[ExpressionReward] Evaluation error {e}")
 
         reward = float(result)
-        print(reward)
 
         return reward, {"reward": reward}
