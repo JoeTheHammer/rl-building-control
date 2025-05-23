@@ -1,9 +1,11 @@
+from typing import Any, Dict, Optional, Type
+
 import numpy as np
 from gymnasium.spaces import Box
+from sinergym import BaseReward
 from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
-from reward.reward import MyReward
 
 
 class SinergymEnvironment(EplusEnv, IEnvironment):
@@ -14,6 +16,8 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         variables: dict[str, tuple[str, str]],
         meters: dict[str, str],
         actuators: dict[str, tuple[str, str, str]],
+        reward_function_cls: Type[BaseReward],
+        reward_kwargs: Optional[Dict[str, Any]] = None,
         action_space: Box = Box(low=0, high=0, shape=(0,), dtype=np.float32),
     ):
         super().__init__(
@@ -23,7 +27,8 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             meters=meters,
             actuators=actuators,
             action_space=action_space,
-            reward=MyReward,
+            reward=reward_function_cls,
+            reward_kwargs=reward_kwargs,
         )
 
     def step(self, action):

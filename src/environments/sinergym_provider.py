@@ -1,47 +1,62 @@
+import importlib
 import os
+from dataclasses import dataclass
 from parser.config_parser import parse_sinergym_environment_config
-from typing import Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import gymnasium as gym
 import numpy as np
+from gymnasium.spaces import Box
+from sinergym import BaseReward
 
 from custom_loggers.setup_logger import logger
 from environments.base_provider import EnvironmentProvider
 from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
+from reward.custom_reward import MyReward
+from reward.expression import ExpressionReward
 
 
-def _build_environment_elements(config: SinergymEnvironmentConfig) -> Tuple:
-    """
-    Converts a SinergymEnvironmentConfig object into the concrete elements needed
-    to initialize a Sinergym environment.
+@dataclass
+class EnvironmentElements:
+    building_model_path: str
+    weather_data_path: str
+    variables: Dict[str, Tuple[str, str]]
+    meters: Dict[str, str]
+    actuators: Dict[str, Tuple[str, str, str]]
+    reward_function_cls: type[BaseReward]
+    reward_kwargs: Optional[Dict[str, Any]]
+    action_space: Box
 
-    Returns:
-        Tuple containing:
-            - idf_path (str): Absolute path to the building model file
-            - epw_path (str): Absolute path to the weather data file
-            - variables (dict): Observation variables as (type, zone) tuples
-            - meters (dict): Dictionary of meter names
-            - actuators (dict): Actuator definitions as (component, control_type, actuator_key) tuples
-            - action_space (gym.Space): Combined Gym action space for all actuators
-    """
+
+EXPRESSION_REWARD_TYPE = "expression"
+PYTHON_REWARD_TYPE = "python"
+
+
+def _resolve_paths(config: SinergymEnvironmentConfig) -> Tuple[str, str]:
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-
     building_model_path = os.path.join(project_root, config.building_model)
     weather_data_path = os.path.join(project_root, config.weather_data)
+    return building_model_path, weather_data_path
 
-    variables = {key: (v.type, v.zone) for key, v in config.state_space.variables.items()}
 
-    meters = config.state_space.meters
+def _parse_variables(config: SinergymEnvironmentConfig) -> dict:
+    return {key: (v.type, v.zone) for key, v in config.state_space.variables.items()}
 
-    actuators = {
+
+def _parse_meters(config: SinergymEnvironmentConfig) -> dict:
+    return config.state_space.meters
+
+
+def _parse_actuators(config: SinergymEnvironmentConfig) -> dict:
+    return {
         name: (a.component, a.control_type, a.actuator_key)
         for name, a in config.action_space.actuators.items()
     }
 
-    # Build flat action space from all continuous actuators
-    low = []
-    high = []
+
+def _build_action_space(config: SinergymEnvironmentConfig) -> Box:
+    low, high = [], []
 
     for name, a in config.action_space.actuators.items():
         if a.type == "continuous":
@@ -54,43 +69,73 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Tuple:
         else:
             raise ValueError(f"Unsupported actuator type: {a.type}")
 
-    # Create flat Box action space
     if not low:
-        action_space = gym.spaces.Box(low=0, high=0, shape=(0,), dtype=np.float32)
-    else:
-        action_space = gym.spaces.Box(
-            low=np.array(low, dtype=np.float32),
-            high=np.array(high, dtype=np.float32),
-            dtype=np.float32,
+        return gym.spaces.Box(low=0, high=0, shape=(0,), dtype=np.float32)
+
+    return gym.spaces.Box(
+        low=np.array(low, dtype=np.float32),
+        high=np.array(high, dtype=np.float32),
+        dtype=np.float32,
+    )
+
+
+def _build_reward_function(config: SinergymEnvironmentConfig) -> Tuple[Any, Dict[str, Any]]:
+    reward_cfg = config.reward_function
+
+    if reward_cfg.type == EXPRESSION_REWARD_TYPE:
+        return (
+            ExpressionReward,
+            {
+                "expression": reward_cfg.expression,
+                "params": reward_cfg.params or {},
+            },
         )
 
-    return building_model_path, weather_data_path, variables, meters, actuators, action_space
+    elif reward_cfg.type == PYTHON_REWARD_TYPE:
+        try:
+            module = importlib.import_module(reward_cfg.module)
+            cls = getattr(module, reward_cfg.class_name)
+            return cls, reward_cfg.init_args or {}
+        except (ImportError, AttributeError) as e:
+            raise ImportError(f"Could not import custom reward class '{reward_cfg.class_name}' "
+                              f"from module '{reward_cfg.module}': {e}")
+
+    return MyReward, {}  # fallback
+
+
+def _build_environment_elements(config: SinergymEnvironmentConfig) -> EnvironmentElements:
+    building_model_path, weather_data_path = _resolve_paths(config)
+    variables = _parse_variables(config)
+    meters = _parse_meters(config)
+    actuators = _parse_actuators(config)
+    action_space = _build_action_space(config)
+    reward_function_cls, reward_kwargs = _build_reward_function(config)
+
+    return EnvironmentElements(
+        building_model_path=building_model_path,
+        weather_data_path=weather_data_path,
+        variables=variables,
+        meters=meters,
+        actuators=actuators,
+        reward_function_cls=reward_function_cls,
+        reward_kwargs=reward_kwargs,
+        action_space=action_space,
+    )
 
 
 class SinergymProvider(EnvironmentProvider):
 
     def create_environment(self, config_path: str) -> SinergymEnvironment:
-        """
-        Create and return a configured SinergymEnvironment instance from a YAML configuration file.
-
-        This method reads the provided YAML config, parses it into a SinergymEnvironmentConfig object,
-        and constructs the necessary components to instantiate a SinergymEnvironment, including paths,
-        observation variables, meters, actuators, and the Gym-compatible action space.
-
-        Args:
-            config_path (str): Path to the YAML configuration file describing the environment setup.
-
-        Returns:
-            SinergymEnvironment: A fully initialized Sinergym environment ready for interaction.
-
-        Raises:
-            ValueError: If actuator definitions are invalid or unsupported.
-            FileNotFoundError: If the building model or weather file paths are incorrect.
-        """
         config = parse_sinergym_environment_config(config_path)
-        building_model_path, weather_data_path, variables, meters, actuators, action_space = (
-            _build_environment_elements(config)
-        )
+        env_elements = _build_environment_elements(config)
+
         return SinergymEnvironment(
-            building_model_path, weather_data_path, variables, meters, actuators, action_space
+            env_elements.building_model_path,
+            env_elements.weather_data_path,
+            env_elements.variables,
+            env_elements.meters,
+            env_elements.actuators,
+            env_elements.reward_function_cls,
+            env_elements.reward_kwargs,
+            env_elements.action_space,
         )

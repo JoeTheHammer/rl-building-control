@@ -22,4 +22,12 @@ action_space:
       control_type: "Schedule Value"
       actuator_key: "PythonControlledSetpoint"
 
-reward_function: "add reward function"
+reward_function:
+  type: "python"
+  module: "reward.custom_reward"
+  class_name: "MyReward"
+  init_args:
+    target_temp: 28.0
+    sigma: 1.8
+    smooth_action_penalty: 0.08
+

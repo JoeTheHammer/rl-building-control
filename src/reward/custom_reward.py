@@ -16,7 +16,7 @@ class MyReward(BaseReward):
         deviation = abs(temp - self.target_temp)
 
         # Gaussian reward centered at 23°C
-        comfort_score = np.exp(-((temp - self.target_temp) ** 2) / (2 * (self.sigma ** 2)))
+        comfort_score = np.exp(-((temp - self.target_temp) ** 2) / (2 * (self.sigma**2)))
         reward = 2.0 * comfort_score - 1.0  # Range: [-1, +1]
 
         # Add action penalty to push away from 18
@@ -29,5 +29,9 @@ class MyReward(BaseReward):
 
         self.prev_action = action
 
-        return reward, {'temp': temp, 'reward': reward, 'deviation': deviation,
-                        'comfort_score': comfort_score}
+        return reward, {
+            "temp": temp,
+            "reward": reward,
+            "deviation": deviation,
+            "comfort_score": comfort_score,
+        }
