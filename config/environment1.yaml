@@ -23,11 +23,10 @@ action_space:
       actuator_key: "PythonControlledSetpoint"
 
 reward_function:
-  type: "python"
-  module: "reward.custom_reward"
-  class_name: "MyReward"
-  init_args:
-    target_temp: 28.0
-    sigma: 1.8
-    smooth_action_penalty: 0.08
+  type: "expression"
+  expression: >  
+    2 * exp(-((air_temp_101 - target_temp) ** 2) / (2 * sigma ** 2)) - 1
+  params:
+    target_temp: 23.0
+    sigma: 1.0
 
