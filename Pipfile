@@ -8,6 +8,7 @@ numpy = "*"
 flake8 = "*"
 pydantic = "*"
 typer = "*"
+pyyaml = "*"
 
 [dev-packages]
 black = "*"
