@@ -14,7 +14,7 @@ from environments.base_provider import EnvironmentProvider
 from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.custom_reward import MyReward
-from reward.expression import ExpressionReward
+from reward.expression_reward import ExpressionReward
 
 
 @dataclass
@@ -97,8 +97,10 @@ def _build_reward_function(config: SinergymEnvironmentConfig) -> Tuple[Any, Dict
             cls = getattr(module, reward_cfg.class_name)
             return cls, reward_cfg.init_args or {}
         except (ImportError, AttributeError) as e:
-            raise ImportError(f"Could not import custom reward class '{reward_cfg.class_name}' "
-                              f"from module '{reward_cfg.module}': {e}")
+            raise ImportError(
+                f"Could not import custom reward class '{reward_cfg.class_name}' "
+                f"from module '{reward_cfg.module}': {e}"
+            )
 
     return MyReward, {}  # fallback
 
