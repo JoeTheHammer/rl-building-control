@@ -1,5 +1,5 @@
 import numpy as np
-from gym.spaces import Box
+from gymnasium.spaces import Box
 from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
