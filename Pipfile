@@ -9,6 +9,8 @@ flake8 = "*"
 pydantic = "*"
 typer = "*"
 pyyaml = "*"
+gymnasium = "*"
+sinergym = "*"
 
 [dev-packages]
 black = "*"
