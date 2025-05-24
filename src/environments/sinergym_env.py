@@ -52,4 +52,4 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         )
 
         reward, reward_info = self.reward_fn(obs_dict)
-        return obs, reward, terminated, truncated, {**info, **reward_info}
+        return obs, reward, terminated, truncated, {**obs_dict, **reward_info}
