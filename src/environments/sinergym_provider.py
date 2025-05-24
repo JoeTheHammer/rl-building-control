@@ -2,7 +2,7 @@ import importlib
 import os
 from dataclasses import dataclass
 from parser.config_parser import parse_sinergym_environment_config
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import gymnasium as gym
 import numpy as np
@@ -25,6 +25,7 @@ class EnvironmentElements:
     meters: Dict[str, str]
     actuators: Dict[str, Tuple[str, str, str]]
     reward_function_cls: type[BaseReward]
+    reward_variables: List[str]
     reward_kwargs: Optional[Dict[str, Any]]
     action_space: Box
 
@@ -79,8 +80,13 @@ def _build_action_space(config: SinergymEnvironmentConfig) -> Box:
     )
 
 
-def _build_reward_function(config: SinergymEnvironmentConfig) -> Tuple[Any, Dict[str, Any]]:
+def _build_reward_function(
+    config: SinergymEnvironmentConfig,
+) -> Tuple[Any, Dict[str, Any], List[str]]:
     reward_cfg = config.reward_function
+    reward_variables = (
+        reward_cfg.variables if hasattr(reward_cfg, "variables") and reward_cfg.variables else []
+    )
 
     if reward_cfg.type == EXPRESSION_REWARD_TYPE:
         return (
@@ -89,20 +95,21 @@ def _build_reward_function(config: SinergymEnvironmentConfig) -> Tuple[Any, Dict
                 "expression": reward_cfg.expression,
                 "params": reward_cfg.params or {},
             },
+            reward_variables,
         )
 
     elif reward_cfg.type == PYTHON_REWARD_TYPE:
         try:
             module = importlib.import_module(reward_cfg.module)
             cls = getattr(module, reward_cfg.class_name)
-            return cls, reward_cfg.init_args or {}
+            return cls, reward_cfg.init_args or {}, reward_variables
         except (ImportError, AttributeError) as e:
             raise ImportError(
                 f"Could not import custom reward class '{reward_cfg.class_name}' "
                 f"from module '{reward_cfg.module}': {e}"
             )
 
-    return MyReward, {}  # fallback
+    return MyReward, {}, reward_variables  # fallback
 
 
 def _build_environment_elements(config: SinergymEnvironmentConfig) -> EnvironmentElements:
@@ -111,7 +118,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
     meters = _parse_meters(config)
     actuators = _parse_actuators(config)
     action_space = _build_action_space(config)
-    reward_function_cls, reward_kwargs = _build_reward_function(config)
+    reward_function_cls, reward_kwargs, reward_variables = _build_reward_function(config)
 
     return EnvironmentElements(
         building_model_path=building_model_path,
@@ -120,6 +127,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
         meters=meters,
         actuators=actuators,
         reward_function_cls=reward_function_cls,
+        reward_variables=reward_variables,
         reward_kwargs=reward_kwargs,
         action_space=action_space,
     )
@@ -137,6 +145,7 @@ class SinergymProvider(EnvironmentProvider):
             env_elements.variables,
             env_elements.meters,
             env_elements.actuators,
+            env_elements.reward_variables,
             env_elements.reward_function_cls,
             env_elements.reward_kwargs,
             env_elements.action_space,

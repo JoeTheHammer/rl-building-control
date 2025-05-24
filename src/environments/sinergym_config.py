@@ -25,16 +25,20 @@ class Actuator(BaseModel):
 class ActionSpace(BaseModel):
     actuators: Dict[str, Actuator]
 
-class ExpressionRewardConfig(BaseModel):
+class BaseRewardConfig(BaseModel):
+    variables: Optional[List[str]] = None  # ← shared field
+
+
+class ExpressionRewardConfig(BaseRewardConfig):
     type: Literal["expression"]
     expression: str
     params: Optional[Dict[str, Union[float, int, str]]] = None
 
 
-class PythonRewardConfig(BaseModel):
+class PythonRewardConfig(BaseRewardConfig):
     type: Literal["python"]
-    module: str  # e.g., "my_rewards.custom"
-    class_name: str  # e.g., "MyCustomReward"
+    module: str
+    class_name: str
     init_args: Optional[Dict[str, Union[float, int, str]]] = None
 
 

@@ -15,7 +15,6 @@ class Experiment:
         # Random control to test setup
         obs, _ = self.env.reset()
 
-        print(f"Observation: {obs}")
         done = False
         total_reward = 0
         actions = []

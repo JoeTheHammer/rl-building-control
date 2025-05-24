@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 import numpy as np
 from gymnasium.spaces import Box
@@ -16,10 +16,16 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         variables: dict[str, tuple[str, str]],
         meters: dict[str, str],
         actuators: dict[str, tuple[str, str, str]],
+        reward_variables: List[str],
         reward_function_cls: Type[BaseReward],
         reward_kwargs: Optional[Dict[str, Any]] = None,
         action_space: Box = Box(low=0, high=0, shape=(0,), dtype=np.float32),
     ):
+
+        self.variables = variables
+        self.meters = meters
+        self.reward_variables = reward_variables
+
         super().__init__(
             building_file=building_model_path,
             weather_files=weather_data_path,
@@ -34,17 +40,27 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
     def step(self, action):
         # STEP FUNCTION TO TEST SETUP
 
-        # Correct shape of action
-        if isinstance(action, (list, np.ndarray)):
-            action = np.array(action, dtype=np.float32)
-        else:
-            action = np.array([action], dtype=np.float32)
-
         obs, reward, terminated, truncated, info = super().step(action)
 
-        obs_dict = info.copy()
-        # TODO: Extract information for reward based on reward config TBD ...
-        obs_dict["air_temp_101"] = obs[0]
-        obs_dict["action"] = action
+        obs_dict = self.build_observation_dict(obs, action, info)
+
         reward, reward_info = self.reward_fn(obs_dict)
         return obs, reward, terminated, truncated, {**info, **reward_info}
+
+    def build_observation_dict(
+        self, obs: np.ndarray, action: np.ndarray, info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Constructs a comprehensive observation dictionary containing:
+        - Named state variables (from self.variables)
+        - Meter readings (from self.meters)
+        - Applied actuator values (from self.actuators and `action`)
+        - Episode metadata (from `info`)
+
+        The order of `obs` must match the order of keys in variables + meters.
+        The order of `action` must match the order of keys in actuators.
+        """
+        ordered_state_keys = list(self.variables.keys()) + list(self.meters.keys())
+        state_values = dict(zip(ordered_state_keys, obs))
+        action_values = dict(zip(self.actuators.keys(), action))
+        return {**state_values, **action_values, **info}

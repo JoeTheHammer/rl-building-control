@@ -45,8 +45,8 @@ class ExpressionReward(BaseReward):
     def __call__(self, obs_dict) -> (float, Dict[str, Any]):
         # Merge and convert all values to native types
         combined = {**obs_dict, **self.params}
-        local_dict = {k: _to_scalar(v) for k, v in combined.items()}
 
+        local_dict = {k: _to_scalar(v) for k, v in combined.items()}
         self.aeval.symtable.update(local_dict)
 
         try:

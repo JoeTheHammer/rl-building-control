@@ -24,6 +24,7 @@ action_space:
 
 reward_function:
   type: "expression"
+  variables: ["air_temp_101", "target_temp"]
   expression: >  
     2 * exp(-((air_temp_101 - target_temp) ** 2) / (2 * sigma ** 2)) - 1
   params:
