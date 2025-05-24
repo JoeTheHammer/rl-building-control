@@ -6,6 +6,7 @@ from sinergym import BaseReward
 from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
+from utils.observation import build_observation_dict
 
 
 class SinergymEnvironment(EplusEnv, IEnvironment):
@@ -38,29 +39,17 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         )
 
     def step(self, action):
-        # STEP FUNCTION TO TEST SETUP
 
         obs, reward, terminated, truncated, info = super().step(action)
 
-        obs_dict = self.build_observation_dict(obs, action, info)
+        obs_dict = build_observation_dict(
+            obs=obs,
+            action=action,
+            info=info,
+            variables=self.variables,
+            meters=self.meters,
+            actuators=self.actuators,
+        )
 
         reward, reward_info = self.reward_fn(obs_dict)
         return obs, reward, terminated, truncated, {**info, **reward_info}
-
-    def build_observation_dict(
-        self, obs: np.ndarray, action: np.ndarray, info: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Constructs a comprehensive observation dictionary containing:
-        - Named state variables (from self.variables)
-        - Meter readings (from self.meters)
-        - Applied actuator values (from self.actuators and `action`)
-        - Episode metadata (from `info`)
-
-        The order of `obs` must match the order of keys in variables + meters.
-        The order of `action` must match the order of keys in actuators.
-        """
-        ordered_state_keys = list(self.variables.keys()) + list(self.meters.keys())
-        state_values = dict(zip(ordered_state_keys, obs))
-        action_values = dict(zip(self.actuators.keys(), action))
-        return {**state_values, **action_values, **info}
