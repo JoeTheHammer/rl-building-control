@@ -36,8 +36,5 @@ class RandomControllerProvider(IControllerProvider):
     specifies a rule-based controller with logic type 'random'.
     """
 
-    def create_controller(self, env: gym.Env, config_path: str) -> RandomController:
-        # For random controller, we can ignore config path.
-        print("HALLO")
-        print(config_path)
+    def create_controller(self, env: gym.Env, config_path: str | None = None) -> RandomController:
         return RandomController(env)
