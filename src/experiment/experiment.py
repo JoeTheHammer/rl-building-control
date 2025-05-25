@@ -1,14 +1,13 @@
-import random
-
-import numpy as np
-
+from controllers.base_controller import IController
+from custom_loggers.experiment_logger import logger
 from environments.base_env import IEnvironment
 
 
 class Experiment:
-    def __init__(self, name: str, env: IEnvironment):
+    def __init__(self, name: str, env: IEnvironment, controller: IController):
         self.name = name
         self.env = env
+        self.controller = controller
 
     def run(self):
 
@@ -20,14 +19,13 @@ class Experiment:
         actions = []
 
         while not done:
-            action_value = random.uniform(18, 28)
-            random_action = np.array([action_value], dtype=np.float32)
-
-            obs, reward, terminated, truncated, info = self.env.step(random_action)
-
-            actions.append(random_action)
+            action = self.controller.get_action(obs)
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            actions.append(action)
             done = terminated or truncated
             total_reward += reward
+
+        logger.info(f"Total reward: {total_reward}")
 
         self.env.close()
         print("Experiment Finished!")

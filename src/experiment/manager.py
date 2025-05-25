@@ -45,7 +45,7 @@ class ExperimentManager:
         env = env_provider.create_environment(experiment_config.environment_config)
         # TODO: Add selection of controller same as for environments based on config and remove test implementation
         controller = RandomController(env)
-        return Experiment(experiment_config.name, env)
+        return Experiment(experiment_config.name, env, controller)
 
     def _register_experiment(self, experiment: Experiment) -> None:
         """Registers an experiment by adding it to the experiments list."""

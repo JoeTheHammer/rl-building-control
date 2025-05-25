@@ -1,15 +1,13 @@
 from typing import Any
 
 import gymnasium as gym
-import numpy as np
 
 from controllers.base_controller import IController
 
 
 class RandomController(IController):
     """
-    A controller that randomly selects valid actions for each actuator
-    based on the provided ActionSpace definition.
+    A controller that randomly selects a valid action from the environment's action space.
     """
 
     def __init__(self, env: gym.Env):
@@ -17,20 +15,12 @@ class RandomController(IController):
 
     def get_action(self, state: Any) -> Any:
         """
-        Generate a random valid action for each actuator.
+        Sample a random action from the environment's action space.
 
         Args:
-            state (Any): The current state or observation (ignored).
+            state (Any): The current observation or state (ignored).
 
         Returns:
-            np.ndarray: Action vector with one value per actuator, ordered by the ActionSpace.
+            Any: A randomly sampled action.
         """
-        action_space: gym.Space = self.env.action_space
-        if not action_space:
-            raise ValueError("Missing required 'action_space' argument")
-
-        action_values = []
-
-        # TODO: Get Information from the space and create reward function
-
-        return np.array(action_values, dtype=np.float32)
+        return self.env.action_space.sample()
