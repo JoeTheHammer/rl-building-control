@@ -3,17 +3,17 @@ from typing import Dict, List, Literal, Optional, Union
 from pydantic import BaseModel
 
 
-class Variable(BaseModel):
+class VariableConfig(BaseModel):
     type: str
     zone: str
 
 
-class StateSpace(BaseModel):
-    variables: Dict[str, Variable]
+class StateSpaceConfig(BaseModel):
+    variables: Dict[str, VariableConfig]
     meters: Dict[str, str]
 
 
-class Actuator(BaseModel):
+class ActuatorConfig(BaseModel):
     type: str
     component: str
     control_type: str
@@ -22,8 +22,8 @@ class Actuator(BaseModel):
     values: Optional[List[Union[str, int]]] = None
 
 
-class ActionSpace(BaseModel):
-    actuators: Dict[str, Actuator]
+class ActionSpaceConfig(BaseModel):
+    actuators: Dict[str, ActuatorConfig]
 
 class BaseRewardConfig(BaseModel):
     variables: Optional[List[str]] = None  # ← shared field
@@ -48,6 +48,6 @@ RewardConfig = Union[ExpressionRewardConfig, PythonRewardConfig]
 class SinergymEnvironmentConfig(BaseModel):
     building_model: str
     weather_data: str
-    state_space: StateSpace
-    action_space: ActionSpace
+    state_space: StateSpaceConfig
+    action_space: ActionSpaceConfig
     reward_function: RewardConfig

@@ -1,6 +1,8 @@
 from parser.config_parser import parse_experiment_list
 from typing import Dict, List
 
+from controllers.base_controller import IController
+from controllers.random_controller import RandomController
 from custom_loggers.setup_logger import logger as setup_logger
 from environments.base_provider import EnvironmentProvider
 from experiment.experiment import Experiment
@@ -11,6 +13,7 @@ class ExperimentManager:
     def __init__(self):
         self._providers: Dict[str, EnvironmentProvider] = {}
         self._experiments: List[Experiment] = []
+        self._controllers: Dict[str, IController] = {}
 
     def setup_experiments(self, config_path: str):
         """
@@ -40,11 +43,16 @@ class ExperimentManager:
             )
             return None
         env = env_provider.create_environment(experiment_config.environment_config)
+        # TODO: Add selection of controller same as for environments based on config and remove test implementation
+        controller = RandomController(env)
         return Experiment(experiment_config.name, env)
 
     def _register_experiment(self, experiment: Experiment) -> None:
         """Registers an experiment by adding it to the experiments list."""
         self._experiments.append(experiment)
+
+    def register_controller(self, controller_type: str, controller: IController) -> None:
+        self._controllers[controller_type] = controller
 
     def register_environment_provider(self, engine: str, provider: EnvironmentProvider):
         """Register an environment provider for a specific engine."""
