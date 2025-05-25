@@ -1,19 +1,21 @@
-from typing import List
+from typing import List, Literal, Union
 
 from pydantic import BaseModel
 
 
+class RandomRLControllerConfig(BaseModel):
+    algorithm: Literal["random"]
+
+
+ControllerConfig = Union[RandomRLControllerConfig]  # Just this one for now
+
+
 class ExperimentConfig(BaseModel):
-    """
-    Represents a single experiment configuration.
-    """
     name: str
     engine: str
     environment_config: str
+    controller: ControllerConfig
 
 
 class ExperimentList(BaseModel):
-    """
-    Represents a list of experiments loaded from a config file.
-    """
     experiments: List[ExperimentConfig]
