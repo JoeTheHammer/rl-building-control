@@ -42,12 +42,21 @@ class ExperimentManager:
     def _create_experiment(self, experiment_config: ExperimentConfig) -> Experiment | None:
         # TODO: Think about which attributes experiment needs, one is environment that must be provided by provider
         env = self._create_environment(experiment_config)
+
         if env is None:
+            setup_logger.error(f"Failed to create environment {experiment_config.name}")
             return None
+
+        setup_logger.info(f"Environment for engine {experiment_config.engine} created.")
 
         controller = self._create_controller(env, experiment_config.controller)
         if controller is None:
+            setup_logger.error(f"Failed to create controller {experiment_config.name}")
             return None
+
+        setup_logger.info(
+            f"Controller for algorithm {experiment_config.controller.algorithm} created."
+        )
 
         return Experiment(experiment_config.name, env, controller)
 
