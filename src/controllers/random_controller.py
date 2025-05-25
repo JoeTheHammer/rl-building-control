@@ -1,8 +1,7 @@
 from typing import Any
 
-import gym
+import gymnasium as gym
 import numpy as np
-from gymnasium import Space
 
 from controllers.base_controller import IController
 
@@ -12,7 +11,7 @@ class RandomController(IController):
     A controller that randomly selects valid actions for each actuator
     based on the provided ActionSpace definition.
     """
-    
+
     def __init__(self, env: gym.Env):
         super().__init__(env)
 
@@ -26,7 +25,7 @@ class RandomController(IController):
         Returns:
             np.ndarray: Action vector with one value per actuator, ordered by the ActionSpace.
         """
-        action_space: Space = self.env.action_space
+        action_space: gym.Space = self.env.action_space
         if not action_space:
             raise ValueError("Missing required 'action_space' argument")
 
