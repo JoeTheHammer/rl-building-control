@@ -4,14 +4,14 @@ from typing import Dict, List
 from controllers.base_controller import IController
 from controllers.random_controller import RandomController
 from custom_loggers.setup_logger import logger as setup_logger
-from environments.base_provider import EnvironmentProvider
+from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
 from experiment.experiment_config import ExperimentConfig
 
 
 class ExperimentManager:
     def __init__(self):
-        self._providers: Dict[str, EnvironmentProvider] = {}
+        self._providers: Dict[str, IEnvironmentProvider] = {}
         self._experiments: List[Experiment] = []
         self._controllers: Dict[str, IController] = {}
 
@@ -54,7 +54,7 @@ class ExperimentManager:
     def register_controller(self, controller_type: str, controller: IController) -> None:
         self._controllers[controller_type] = controller
 
-    def register_environment_provider(self, engine: str, provider: EnvironmentProvider):
+    def register_environment_provider(self, engine: str, provider: IEnvironmentProvider):
         """Register an environment provider for a specific engine."""
         self._providers[engine] = provider
 

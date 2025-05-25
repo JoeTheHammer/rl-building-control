@@ -10,7 +10,7 @@ from gymnasium.spaces import Box
 from sinergym import BaseReward
 
 from custom_loggers.setup_logger import logger
-from environments.base_provider import EnvironmentProvider
+from environments.base_provider import IEnvironmentProvider
 from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.custom_reward import MyReward
@@ -133,7 +133,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
     )
 
 
-class SinergymProvider(EnvironmentProvider):
+class SinergymProvider(IEnvironmentProvider):
 
     def create_environment(self, config_path: str) -> SinergymEnvironment:
         config = parse_sinergym_environment_config(config_path)

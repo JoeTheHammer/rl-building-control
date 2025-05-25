@@ -25,6 +25,7 @@ class Experiment:
             done = terminated or truncated
             total_reward += reward
 
+        print("\n")
         logger.info(f"Total reward: {total_reward}")
 
         self.env.close()

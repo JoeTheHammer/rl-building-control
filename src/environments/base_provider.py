@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from environments.base_env import IEnvironment
 
 
-class EnvironmentProvider(ABC):
+class IEnvironmentProvider(ABC):
     """
     Abstract factory interface for creating experiment environments.
 

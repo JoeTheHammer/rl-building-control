@@ -2,10 +2,10 @@ from typing import Any
 
 import gymnasium as gym
 
-from controllers.base_controller import IController
+from controllers.rl_controller import RLController
 
 
-class RandomController(IController):
+class RandomController(RLController):
     """
     A controller that randomly selects a valid action from the environment's action space.
     """
