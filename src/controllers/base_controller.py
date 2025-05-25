@@ -19,7 +19,7 @@ class IController(ABC):
             **kwargs (Any): Optional keyword arguments for RL-specific needs (e.g., model paths, policies).
         """
         self.env = env
-        self.extra_args = kwargs  # Store if needed by generic logic
+        self.extra_args = kwargs
 
     @abstractmethod
     def get_action(self, state: Any) -> Any:

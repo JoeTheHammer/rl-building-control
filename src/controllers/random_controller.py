@@ -4,7 +4,6 @@ import gymnasium as gym
 
 from controllers.base_controller import IController
 from controllers.controller_provider import IControllerProvider
-from experiment.experiment_config import ControllerConfig
 
 
 class RandomController(IController):
@@ -37,16 +36,8 @@ class RandomControllerProvider(IControllerProvider):
     specifies a rule-based controller with logic type 'random'.
     """
 
-    def create_controller(self, env: gym.Env, config: ControllerConfig) -> RandomController:
-        """
-        Create and return a new RandomController instance.
-
-        Args:
-            env (gym.Env): The gym-compatible environment to pass to the controller.
-            config (ControllerConfig): The configuration block from the experiment definition.
-                This implementation ignores the config, as RandomController requires only the environment.
-
-        Returns:
-            RandomController: A new controller instance using random actions.
-        """
+    def create_controller(self, env: gym.Env, config_path: str) -> RandomController:
+        # For random controller, we can ignore config path.
+        print("HALLO")
+        print(config_path)
         return RandomController(env)

@@ -2,5 +2,5 @@ experiments:
   - name: "experiment 1"
     engine: "sinergym"
     environment_config: "../rl-building-control/config/environment1.yaml"
-    controller:
-        algorithm: "random"
+    controller: "random"
+    controller_config: "../rl-building-control/config/controller1.yaml"
