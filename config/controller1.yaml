@@ -1,0 +1,16 @@
+state_space:
+  - air_temp_101
+  - humidity_101
+  - gas
+  - electricity
+
+custom_variables:
+  target_temp: 23.0
+
+rules:
+  - condition: air_temp_101 < target_temp
+    action: air_temp_101 + 1
+  - condition: air_temp_101 > target_temp
+    action: air_temp_101 - 1
+  - condition: "True"
+    action: target_temp
