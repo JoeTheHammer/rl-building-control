@@ -125,22 +125,42 @@ class RuleBasedController(IController):
                         + "\n".join(err.get_error() for err in self.aeval.error)
                     )
 
-                if isinstance(
-                    self.env.action_space, gym.spaces.Box
-                ) and self.env.action_space.shape == (1,):
-                    action_scalar = float(action_result)
-                    return np.array(
-                        [
-                            np.clip(
-                                action_scalar,
-                                self.env.action_space.low[0],
-                                self.env.action_space.high[0],
-                            )
-                        ],
-                        dtype=np.float32,
-                    )
+                if isinstance(self.env.action_space, gym.spaces.Box):
+                    # Convert whatever came out of `aeval(...)` into a numpy array of floats
+                    try:
+                        action_arr = np.asarray(action_result, dtype=np.float32)
+                    except Exception:
+                        raise ValueError(
+                            f"Action '{rule.action}' did not produce a convertible sequence or scalar."
+                        )
 
-                raise NotImplementedError("Only 1D Box action spaces supported.")
+                    # If we got a zero‐dimensional array (i.e. a scalar), only allow it if action_space is 1D
+                    if action_arr.ndim == 0:
+                        # e.g. action_result was a single number; wrap in a 1‐element array
+                        if self.env.action_space.shape == (1,):
+                            action_arr = np.array([float(action_arr)], dtype=np.float32)
+                        else:
+                            raise ValueError(
+                                f"Scalar action ({action_arr.item()}) cannot fill a multi‐dimensional action space {self.env.action_space.shape}."
+                            )
+
+                    # Ensure that the action array’s shape exactly matches action_space.shape
+                    if action_arr.shape != self.env.action_space.shape:
+                        raise ValueError(
+                            f"Action shape {action_arr.shape} does not match "
+                            f"action_space shape {self.env.action_space.shape}."
+                        )
+
+                    # Clip each component to the allowed bounds
+                    clipped = np.clip(
+                        action_arr, self.env.action_space.low, self.env.action_space.high
+                    )
+                    return clipped.astype(np.float32)
+
+                    # If not a Box, we don’t support it yet
+                raise NotImplementedError(
+                    "Only gym.spaces.Box action spaces are supported at this time."
+                )
 
         raise RuntimeError("No matching rule found.")
 
