@@ -23,6 +23,19 @@ action_space:
       component: "Schedule:Constant"
       control_type: "Schedule Value"
       actuator_key: "PythonControlledSetpoint"
+    setpoint_temp_1:
+      type: "discrete"
+      range: [18.0, 28.0]
+      step_size: 0.5
+      component: "Schedule:Constant"
+      control_type: "Schedule Value"
+      actuator_key: "PythonControlledSetpoint"
+    setpoint_temp_2:
+      type: "discrete"
+      values: [18.0, 23.0, 25.5]
+      component: "Schedule:Constant"
+      control_type: "Schedule Value"
+      actuator_key: "PythonControlledSetpoint"
 
 reward_function:
   type: "expression"

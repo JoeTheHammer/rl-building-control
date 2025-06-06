@@ -76,6 +76,8 @@ class RuleBasedController(IController):
         self.state_space = state_space
         self.custom_variables = custom_variables
         self.aeval = Interpreter(no_print=True)
+        # Indicate to sinergym env that raw values are expected.
+        self.env.expect_raw_actions = True
 
     def get_action(self, state: Any) -> Any:
         """
@@ -85,14 +87,14 @@ class RuleBasedController(IController):
             state (Any): The current environment observation (np.ndarray or dict).
 
         Returns:
-            np.ndarray: The action to apply, matching the environment’s action space.
+            Any: The action as returned by the evaluated rule expression.
 
         Raises:
-            ValueError: If an expression fails to evaluate.
+            ValueError: If a rule condition or action fails to evaluate.
             RuntimeError: If no rule condition matches the current state.
-            NotImplementedError: If the action space is not 1D Box.
         """
 
+        # Convert ndarray to named dictionary if needed
         if isinstance(state, np.ndarray):
             if len(state) != len(self.state_space):
                 raise ValueError("Mismatch between state vector and state_space length.")
@@ -100,11 +102,12 @@ class RuleBasedController(IController):
         else:
             state_dict = dict(state)
 
-        # Inject both state and custom variables into the evaluator
+        # Prepare the expression evaluator
         self.aeval.symtable.clear()
         self.aeval.symtable.update(self.custom_variables)
         self.aeval.symtable.update(state_dict)
 
+        # Evaluate rules in order
         for rule in self.rules:
             self.aeval.error = []
             condition_result = self.aeval(rule.condition)
@@ -125,42 +128,7 @@ class RuleBasedController(IController):
                         + "\n".join(err.get_error() for err in self.aeval.error)
                     )
 
-                if isinstance(self.env.action_space, gym.spaces.Box):
-                    # Convert whatever came out of `aeval(...)` into a numpy array of floats
-                    try:
-                        action_arr = np.asarray(action_result, dtype=np.float32)
-                    except Exception:
-                        raise ValueError(
-                            f"Action '{rule.action}' did not produce a convertible sequence or scalar."
-                        )
-
-                    # If we got a zero‐dimensional array (i.e. a scalar), only allow it if action_space is 1D
-                    if action_arr.ndim == 0:
-                        # e.g. action_result was a single number; wrap in a 1‐element array
-                        if self.env.action_space.shape == (1,):
-                            action_arr = np.array([float(action_arr)], dtype=np.float32)
-                        else:
-                            raise ValueError(
-                                f"Scalar action ({action_arr.item()}) cannot fill a multi‐dimensional action space {self.env.action_space.shape}."
-                            )
-
-                    # Ensure that the action array’s shape exactly matches action_space.shape
-                    if action_arr.shape != self.env.action_space.shape:
-                        raise ValueError(
-                            f"Action shape {action_arr.shape} does not match "
-                            f"action_space shape {self.env.action_space.shape}."
-                        )
-
-                    # Clip each component to the allowed bounds
-                    clipped = np.clip(
-                        action_arr, self.env.action_space.low, self.env.action_space.high
-                    )
-                    return clipped.astype(np.float32)
-
-                    # If not a Box, we don’t support it yet
-                raise NotImplementedError(
-                    "Only gym.spaces.Box action spaces are supported at this time."
-                )
+                return np.array(action_result, dtype=np.float32)
 
         raise RuntimeError("No matching rule found.")
 

@@ -10,8 +10,8 @@ custom_variables:
 
 rules:
   - condition: "air_temp_101 < target_temp"
-    action: "air_temp_101 + 1"
+    action: "[air_temp_101 + 1, 26.5, 23.0]"
   - condition: "air_temp_101 > target_temp"
-    action: "air_temp_101 - 1"
+    action: "[air_temp_101 - 1, 26.5, 23.0]"
   - condition: "True"
-    action: "target_temp"
+    action: "[target_temp, 26.5, 23.0]"

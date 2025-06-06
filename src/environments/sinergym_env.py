@@ -1,11 +1,10 @@
 from typing import Any, Dict, List, Optional, Type
 
-import numpy as np
-from gymnasium.spaces import Box
 from sinergym import BaseReward
 from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
+from spaces.custom_action_space import CustomActionSpace
 from utils.observation import build_observation_dict
 
 
@@ -19,13 +18,15 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         actuators: dict[str, tuple[str, str, str]],
         reward_variables: List[str],
         reward_function_cls: Type[BaseReward],
+        action_space: CustomActionSpace,
         reward_kwargs: Optional[Dict[str, Any]] = None,
-        action_space: Box = Box(low=0, high=0, shape=(0,), dtype=np.float32),
     ):
 
         self.variables = variables
         self.meters = meters
         self.reward_variables = reward_variables
+        self.custom_action_space = action_space
+        self.expect_raw_actions = False
 
         super().__init__(
             building_file=building_model_path,
@@ -33,12 +34,22 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             variables=variables,
             meters=meters,
             actuators=actuators,
-            action_space=action_space,
+            action_space=action_space.get_box_space(),
             reward=reward_function_cls,
             reward_kwargs=reward_kwargs,
         )
 
+    @property
+    def action_space(self):
+        return self.custom_action_space.tuple_space
+
     def step(self, action):
+
+        # Convert action from controller to "real" action supported by energy plus. This is needed,
+        # as the action of the controller might be an index in a discrete action space. This can be
+        # overruled by the controller (needed for rule-based controller)
+        if not self.expect_raw_actions:
+            action = self.custom_action_space.to_eplus_action(action)
 
         obs, reward, terminated, truncated, info = super().step(action)
 

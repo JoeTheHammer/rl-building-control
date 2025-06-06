@@ -19,8 +19,8 @@ class ActuatorConfig(BaseModel):
     control_type: str
     actuator_key: str
     range: Optional[List[float]] = None
-    values: Optional[List[Union[str, int]]] = None
-
+    values: Optional[List[float]] = None
+    step_size: Optional[float] = None
 
 class ActionSpaceConfig(BaseModel):
     actuators: Dict[str, ActuatorConfig]

@@ -2,19 +2,27 @@ import importlib
 import os
 from dataclasses import dataclass
 from parser.config_parser import parse_sinergym_environment_config
-from typing import Any, Dict, List, Optional, Tuple
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+)
 
-import gymnasium as gym
 import numpy as np
-from gymnasium.spaces import Box
+from gymnasium.spaces import (
+    Box,
+    Discrete,
+)
 from sinergym import BaseReward
 
-from custom_loggers.setup_logger import logger
 from environments.base_provider import IEnvironmentProvider
 from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.custom_reward import MyReward
 from reward.expression_reward import ExpressionReward
+from spaces.custom_action_space import CustomActionSpace
 
 
 @dataclass
@@ -27,7 +35,7 @@ class EnvironmentElements:
     reward_function_cls: type[BaseReward]
     reward_variables: List[str]
     reward_kwargs: Optional[Dict[str, Any]]
-    action_space: Box
+    action_space: CustomActionSpace
 
 
 EXPRESSION_REWARD_TYPE = "expression"
@@ -56,28 +64,43 @@ def _parse_actuators(config: SinergymEnvironmentConfig) -> dict:
     }
 
 
-def _build_action_space(config: SinergymEnvironmentConfig) -> Box:
-    low, high = [], []
+def _build_action_space(config: SinergymEnvironmentConfig) -> CustomActionSpace:
+    spaces = []
+    discrete_mappings = []
 
     for name, a in config.action_space.actuators.items():
         if a.type == "continuous":
             if a.range is None or len(a.range) != 2:
                 raise ValueError(f"Actuator '{name}' requires a 'range' of two floats.")
-            low.append(a.range[0])
-            high.append(a.range[1])
+            space = Box(
+                low=np.array([a.range[0]], dtype=np.float32),
+                high=np.array([a.range[1]], dtype=np.float32),
+                dtype=np.float32,
+            )
+            spaces.append(space)
+            discrete_mappings.append(None)
+
         elif a.type == "discrete":
-            logger.warning("Discrete actuator not yet supported and will be ignored.")
+            if a.values:
+                values = a.values
+            elif a.range and a.step_size:
+                start, end = a.range
+                values = [
+                    round(start + i * a.step_size, 10)
+                    for i in range(int((end - start) / a.step_size) + 1)
+                ]
+            else:
+                raise ValueError(
+                    f"Discrete actuator '{name}' must define 'values' or 'range' + 'step_size'."
+                )
+            space = Discrete(len(values))
+            spaces.append(space)
+            discrete_mappings.append(values)
+
         else:
             raise ValueError(f"Unsupported actuator type: {a.type}")
 
-    if not low:
-        return gym.spaces.Box(low=0, high=0, shape=(0,), dtype=np.float32)
-
-    return gym.spaces.Box(
-        low=np.array(low, dtype=np.float32),
-        high=np.array(high, dtype=np.float32),
-        dtype=np.float32,
-    )
+    return CustomActionSpace(spaces, discrete_mappings)
 
 
 def _build_reward_function(
@@ -147,6 +170,6 @@ class SinergymProvider(IEnvironmentProvider):
             env_elements.actuators,
             env_elements.reward_variables,
             env_elements.reward_function_cls,
-            env_elements.reward_kwargs,
             env_elements.action_space,
+            env_elements.reward_kwargs,
         )
