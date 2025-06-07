@@ -23,26 +23,16 @@ action_space:
       component: "Schedule:Constant"
       control_type: "Schedule Value"
       actuator_key: "PythonControlledSetpoint"
-    setpoint_temp_1:
-      type: "discrete"
-      range: [18.0, 28.0]
-      step_size: 0.5
-      component: "Schedule:Constant"
-      control_type: "Schedule Value"
-      actuator_key: "PythonControlledSetpoint"
-    setpoint_temp_2:
-      type: "discrete"
-      values: [18.0, 23.0, 25.5]
-      component: "Schedule:Constant"
-      control_type: "Schedule Value"
-      actuator_key: "PythonControlledSetpoint"
 
 reward_function:
   type: "expression"
-  variables: ["air_temp_101", "target_temp"]
-  expression: >  
-    2 * exp(-((air_temp_101 - target_temp) ** 2) / (2 * sigma ** 2)) - 1
+  variables: ["air_temp_101", "action", "target_temp", "sigma"]
+  expression: >
+    - abs(air_temp_101 - target_temp) / 10
+    - 0.005 * abs(action - target_temp)
   params:
     target_temp: 23.0
-    sigma: 1.0
+    sigma: 2.0
+    action: 0.0  # default action fallback if not provided by env
+
 

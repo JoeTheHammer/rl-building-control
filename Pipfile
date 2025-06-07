@@ -12,6 +12,7 @@ pyyaml = "*"
 gymnasium = "*"
 sinergym = "*"
 asteval = "*"
+stable-baselines3 = "*"
 
 [dev-packages]
 black = "*"

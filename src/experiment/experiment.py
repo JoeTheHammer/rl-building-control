@@ -10,6 +10,7 @@ class Experiment:
         self.controller = controller
 
     def run(self):
+        logger.info(f"Experiment {self.name} started.")
 
         # Random control to test setup
         obs, _ = self.env.reset()

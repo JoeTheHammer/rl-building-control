@@ -27,6 +27,8 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         self.reward_variables = reward_variables
         self.custom_action_space = action_space
         self.expect_raw_actions = False
+        self.continuous_action_space = False
+        self.box_action_space = action_space.get_box_space()
 
         super().__init__(
             building_file=building_model_path,
@@ -34,21 +36,24 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             variables=variables,
             meters=meters,
             actuators=actuators,
-            action_space=action_space.get_box_space(),
+            action_space=self.box_action_space,
             reward=reward_function_cls,
             reward_kwargs=reward_kwargs,
         )
 
     @property
     def action_space(self):
+        if self.continuous_action_space:
+            return self.box_action_space
         return self.custom_action_space.tuple_space
 
     def step(self, action):
 
         # Convert action from controller to "real" action supported by energy plus. This is needed,
         # as the action of the controller might be an index in a discrete action space. This can be
-        # overruled by the controller (needed for rule-based controller)
-        if not self.expect_raw_actions:
+        # overruled by the controller (needed for rule-based controller or if controller only support
+        # continuous environment)
+        if not self.expect_raw_actions and not self.continuous_action_space:
             action = self.custom_action_space.to_eplus_action(action)
 
         obs, reward, terminated, truncated, info = super().step(action)
