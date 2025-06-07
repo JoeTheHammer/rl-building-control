@@ -4,7 +4,7 @@ from sinergym import BaseReward
 from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
-from spaces.custom_action_space import CustomActionSpace
+from spaces.custom_action_space import ActuatorActionSpace
 from utils.observation import build_observation_dict
 
 
@@ -18,7 +18,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         actuators: dict[str, tuple[str, str, str]],
         reward_variables: List[str],
         reward_function_cls: Type[BaseReward],
-        action_space: CustomActionSpace,
+        action_space: ActuatorActionSpace,
         reward_kwargs: Optional[Dict[str, Any]] = None,
     ):
 

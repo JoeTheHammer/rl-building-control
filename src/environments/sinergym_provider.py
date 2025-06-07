@@ -22,7 +22,7 @@ from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.custom_reward import MyReward
 from reward.expression_reward import ExpressionReward
-from spaces.custom_action_space import CustomActionSpace
+from spaces.custom_action_space import ActuatorActionSpace
 
 
 @dataclass
@@ -35,7 +35,7 @@ class EnvironmentElements:
     reward_function_cls: type[BaseReward]
     reward_variables: List[str]
     reward_kwargs: Optional[Dict[str, Any]]
-    action_space: CustomActionSpace
+    action_space: ActuatorActionSpace
 
 
 EXPRESSION_REWARD_TYPE = "expression"
@@ -64,7 +64,7 @@ def _parse_actuators(config: SinergymEnvironmentConfig) -> dict:
     }
 
 
-def _build_action_space(config: SinergymEnvironmentConfig) -> CustomActionSpace:
+def _build_action_space(config: SinergymEnvironmentConfig) -> ActuatorActionSpace:
     spaces = []
     discrete_mappings = []
 
@@ -100,7 +100,7 @@ def _build_action_space(config: SinergymEnvironmentConfig) -> CustomActionSpace:
         else:
             raise ValueError(f"Unsupported actuator type: {a.type}")
 
-    return CustomActionSpace(spaces, discrete_mappings)
+    return ActuatorActionSpace(spaces, discrete_mappings)
 
 
 def _build_reward_function(
