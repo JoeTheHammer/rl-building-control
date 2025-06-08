@@ -37,6 +37,7 @@ def test_build_observation_dict_multiple_actions():
 
     assert result == expected
 
+
 def test_build_observation_dict_one_action():
     variables = {
         "air_temp_101": ("Zone Mean Air Temperature", "GUESTROOM101"),

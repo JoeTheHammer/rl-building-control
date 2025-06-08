@@ -24,4 +24,8 @@ def build_reward_dict(
     ordered_state_keys = list(variables.keys()) + list(meters.keys())
     state_values = dict(zip(ordered_state_keys, obs))
     action_values = dict(zip(actuators.keys(), action))
-    return {**state_values, **time_info, **action_values,}
+    return {
+        **state_values,
+        **time_info,
+        **action_values,
+    }
