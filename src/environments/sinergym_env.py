@@ -56,7 +56,8 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         if not self.expect_raw_actions and not self.continuous_action_space:
             action = self.custom_action_space.to_eplus_action(action)
 
-        obs, reward, terminated, truncated, info = super().step(action)
+        # We ignore reward as we calculate it later in this method.
+        obs, _, terminated, truncated, info = super().step(action)
 
         obs_dict = build_observation_dict(
             obs=obs,
@@ -67,5 +68,9 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             actuators=self.actuators,
         )
 
+        # Communicate to reward function that actual reward should be calculated.
+        obs_dict["__compute_reward__"] = True
+
         reward, reward_info = self.reward_fn(obs_dict)
+
         return obs, reward, terminated, truncated, {**obs_dict, **reward_info}
