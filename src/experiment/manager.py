@@ -28,16 +28,13 @@ class ExperimentManager:
         experiment_configs = parse_experiment_list(config_path)
         for experiment_config in experiment_configs.experiments:
             setup_logger.info(f"Setting up experiment {experiment_config.name}")
-            try:
-                experiment = self._create_experiment(experiment_config)
-                if experiment is None:
-                    setup_logger.warning(
-                        f"Experiment {experiment_config.name} could not be created."
-                    )
-                    continue
-                self._register_experiment(experiment)
-            except Exception as e:
-                setup_logger.error(f"Failed to create experiment {experiment_config.name}: {e}")
+            experiment = self._create_experiment(experiment_config)
+            if experiment is None:
+                setup_logger.warning(f"Experiment {experiment_config.name} could not be created.")
+                continue
+            self._register_experiment(experiment)
+
+
 
     def _create_experiment(self, experiment_config: ExperimentConfig) -> Experiment | None:
         # TODO: Think about which attributes experiment needs, one is environment that must be provided by provider
