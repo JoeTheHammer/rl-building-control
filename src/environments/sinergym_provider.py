@@ -31,7 +31,7 @@ class EnvironmentElements:
     weather_data_path: str
     variables: Dict[str, Tuple[str, str]]
     meters: Dict[str, str]
-    time_info: List[str]
+    time_info: Optional[Dict[str, Dict[str, bool]]]
     actuators: Dict[str, Tuple[str, str, str]]
     reward_function_cls: type[BaseReward]
     reward_variables: List[str]
@@ -58,8 +58,13 @@ def _parse_meters(config: SinergymEnvironmentConfig) -> dict:
     return config.state_space.meters
 
 
-def _parse_time_info(config: SinergymEnvironmentConfig) -> list[str] | None:
-    return config.state_space.time_info
+def _parse_time_info(config: SinergymEnvironmentConfig) -> Optional[Dict[str, Dict[str, bool]]]:
+    if config.state_space.time_info is None:
+        return None
+    return {
+        name: {"cyclic": bool(info.cyclic)}
+        for name, info in config.state_space.time_info.items()
+    }
 
 
 def _parse_actuators(config: SinergymEnvironmentConfig) -> dict:

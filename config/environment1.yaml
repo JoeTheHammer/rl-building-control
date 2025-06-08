@@ -2,8 +2,6 @@ building_model: "/home/johannes/workspace/rl-building-control/data/ASHRAE901_Hot
 weather_data: "/home/johannes/workspace/rl-building-control/data/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"
 
 state_space:
-  # Add other possible variables as well (the ones available in info dict, e.g. reward, is_raining, month,
-  # setpoint_temp -> which is the last action from the action space)
   variables:
     air_temp_101:
       type: "Zone Mean Air Temperature"
@@ -14,7 +12,15 @@ state_space:
   meters:
     electricity: "Electricity:Facility"
     gas: "NaturalGas:Facility"
-  time_info: ["day", "hour"]
+  time_info:
+    day_of_month:
+      cyclic: false
+    month:
+      cyclic: false
+    day_of_week:
+      cyclic: false
+    hour:
+      cyclic: false
 
 action_space:
   actuators:

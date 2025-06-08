@@ -7,11 +7,13 @@ class VariableConfig(BaseModel):
     type: str
     zone: str
 
+class TimeFeatureConfig(BaseModel):
+    cyclic: bool
 
 class StateSpaceConfig(BaseModel):
     variables: Dict[str, VariableConfig]
     meters: Dict[str, str]
-    time_info: Optional[List[str]] = None
+    time_info: Optional[Dict[str, TimeFeatureConfig]] = None
 
 
 class ActuatorConfig(BaseModel):

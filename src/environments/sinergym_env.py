@@ -1,3 +1,4 @@
+import math
 from typing import Any, Dict, List, Optional, Type
 
 import gymnasium
@@ -22,7 +23,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         reward_function_cls: Type[BaseReward],
         action_space: ActuatorActionSpace,
         reward_kwargs: Optional[Dict[str, Any]] = None,
-        time_info: List[str] | None = None,
+        time_info: dict[str, dict[str, bool]] | None = None,
     ):
 
         self.variables = variables
@@ -87,29 +88,56 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         obs_dict["__compute_reward__"] = True
         reward, reward_info = self.reward_fn(obs_dict)
 
-        state = self._add_time_information_to_state(obs, info)
+        state = self._add_time_information_to_state(obs)
 
         return state, reward, terminated, truncated, {**obs_dict, **reward_info}
 
-    def _add_time_information_to_state(self, obs, info) -> np.ndarray:
+    def _add_time_information_to_state(self, obs: np.ndarray) -> np.ndarray:
         """
-        Adds selected time-related features from the info dict to the observation array.
-        Raises an error if a required key is missing.
+        Appends time features from the EnergyPlus API to the observation.
+        Applies cyclic encoding if specified in time_info.
         """
-        state = list(obs)  # assuming obs is a NumPy array
+        state = list(obs)
 
         if self.time_info is not None:
-            for time_key in self.time_info:
-                if time_key not in info:
-                    raise KeyError(f"[step] Time feature '{time_key}' not found in info dict.")
-                state.append(info[time_key])
-        return np.array(state, dtype=np.float32)
+            sim = self.energyplus_simulator
+            state_obj = sim.energyplus_state
+            api = sim.api.exchange
 
+            for time_key, options in self.time_info.items():
+                cyclic = options.get("cyclic", False)
+
+                if time_key == "day_of_month":
+                    value = api.day_of_month(state_obj)
+                    max_val = 31
+                elif time_key == "day_of_week":
+                    value = api.day_of_week(state_obj)  # 1=Sunday, 2=Monday, ..., 7=Saturday
+                    max_val = 7
+                elif time_key == "hour":
+                    value = api.hour(state_obj)
+                    max_val = 23
+                elif time_key == "minutes":
+                    value = api.minutes(state_obj)
+                    max_val = 59
+                elif time_key == "month":
+                    value = api.month(state_obj)
+                    max_val = 12
+                else:
+                    raise ValueError(f"Unsupported time key: {time_key}")
+
+                if cyclic:
+                    radians = 2 * math.pi * value / max_val
+                    state.append(math.sin(radians))
+                    state.append(math.cos(radians))
+                else:
+                    state.append(value)
+
+        return np.array(state, dtype=np.float32)
 
     def reset(self, **kwargs):
         """
         Overwrites the reset function and adds time information as well if needed.
         """
         obs, info = super().reset(**kwargs)
-        state = self._add_time_information_to_state(obs, info)
+        state = self._add_time_information_to_state(obs)
         return state, info
