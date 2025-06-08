@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 
-import gymnasium
+import gymnasium as gym
 
 from controllers.base_controller import IController
 
 
 class IControllerProvider(ABC):
     @abstractmethod
-    def create_controller(self, env: gymnasium.Env, config_path: str | None = None) -> IController:
+    def create_controller(self, env: gym.Env, config_path: str | None = None) -> IController:
         """
         Create and return a new controller instance.
 
