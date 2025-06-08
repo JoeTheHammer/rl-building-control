@@ -12,7 +12,6 @@ class Experiment:
     def run(self):
         logger.info(f"Experiment {self.name} started.")
 
-        # Random control to test setup
         state, _ = self.env.reset()
 
         done = False
