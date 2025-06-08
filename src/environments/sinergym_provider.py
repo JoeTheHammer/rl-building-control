@@ -10,11 +10,8 @@ from typing import (
     Tuple,
 )
 
+import gymnasium as gym
 import numpy as np
-from gymnasium.spaces import (
-    Box,
-    Discrete,
-)
 from sinergym import BaseReward
 
 from environments.base_provider import IEnvironmentProvider
@@ -62,8 +59,7 @@ def _parse_time_info(config: SinergymEnvironmentConfig) -> Optional[Dict[str, Di
     if config.state_space.time_info is None:
         return None
     return {
-        name: {"cyclic": bool(info.cyclic)}
-        for name, info in config.state_space.time_info.items()
+        name: {"cyclic": bool(info.cyclic)} for name, info in config.state_space.time_info.items()
     }
 
 
@@ -82,7 +78,7 @@ def _build_action_space(config: SinergymEnvironmentConfig) -> ActuatorActionSpac
         if a.type == "continuous":
             if a.range is None or len(a.range) != 2:
                 raise ValueError(f"Actuator '{name}' requires a 'range' of two floats.")
-            space = Box(
+            space = gym.spaces.Box(
                 low=np.array([a.range[0]], dtype=np.float32),
                 high=np.array([a.range[1]], dtype=np.float32),
                 dtype=np.float32,
@@ -103,7 +99,7 @@ def _build_action_space(config: SinergymEnvironmentConfig) -> ActuatorActionSpac
                 raise ValueError(
                     f"Discrete actuator '{name}' must define 'values' or 'range' + 'step_size'."
                 )
-            space = Discrete(len(values))
+            space = gym.spaces.Discrete(len(values))
             spaces.append(space)
             discrete_mappings.append(values)
 

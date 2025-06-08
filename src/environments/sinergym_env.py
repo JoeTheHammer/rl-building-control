@@ -1,7 +1,7 @@
 import math
 from typing import Any, Dict, List, Optional, Type
 
-import gymnasium
+import gymnasium as gym
 import numpy as np
 from sinergym import BaseReward
 from sinergym.envs import EplusEnv
@@ -60,7 +60,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
         total_dim = base_dim + time_dim
 
-        return gymnasium.spaces.Box(
+        return gym.spaces.Box(
             low=-np.inf,
             high=np.inf,
             shape=(total_dim,),

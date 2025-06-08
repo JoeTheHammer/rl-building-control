@@ -1,8 +1,7 @@
 from typing import List, Optional, Union
 
-import gymnasium
+import gymnasium as gym
 import numpy as np
-from gymnasium.spaces import Box, Discrete
 
 
 class ActuatorActionSpace:
@@ -18,7 +17,9 @@ class ActuatorActionSpace:
     """
 
     def __init__(
-        self, spaces: List[Union[Box, Discrete]], discrete_mappings: List[Optional[List[float]]]
+        self,
+        spaces: List[Union[gym.spaces.Box, gym.spaces.Discrete]],
+        discrete_mappings: List[Optional[List[float]]],
     ):
         """
         Initialize the mixed action space wrapper.
@@ -29,7 +30,7 @@ class ActuatorActionSpace:
                 Use None for Box spaces.
         """
 
-        self.tuple_space = gymnasium.spaces.Tuple(spaces)
+        self.tuple_space = gym.spaces.Tuple(spaces)
         self.discrete_mappings = discrete_mappings
         self.spaces = spaces
 
@@ -46,15 +47,15 @@ class ActuatorActionSpace:
         """
         flat_action = []
         for val, space, mapping in zip(action_tuple, self.spaces, self.discrete_mappings):
-            if isinstance(space, Discrete):
+            if isinstance(space, gym.spaces.Discrete):
                 flat_action.append(mapping[val])
-            elif isinstance(space, Box):
+            elif isinstance(space, gym.spaces.Box):
                 flat_action.append(float(val[0]))
             else:
                 raise ValueError(f"Unsupported space type: {type(space)}")
         return np.array(flat_action, dtype=np.float32)
 
-    def get_box_space(self) -> Box:
+    def get_box_space(self) -> gym.spaces.Box:
         """
         Get a unified continuous Box space that reflects the actual actuator value bounds
         for all actions, including those originally defined as Discrete.
@@ -66,14 +67,14 @@ class ActuatorActionSpace:
         lows, highs = [], []
 
         for space, mapping in zip(self.spaces, self.discrete_mappings):
-            if isinstance(space, Discrete):
+            if isinstance(space, gym.spaces.Discrete):
                 # Map discrete indices to actual actuator values
                 if mapping is None or not mapping:
                     raise ValueError("Discrete space must have a value mapping.")
                 lows.append(min(mapping))
                 highs.append(max(mapping))
 
-            elif isinstance(space, Box):
+            elif isinstance(space, gym.spaces.Box):
                 # Flatten multidimensional box bounds
                 lows.extend(space.low.flatten().tolist())
                 highs.extend(space.high.flatten().tolist())
@@ -81,7 +82,7 @@ class ActuatorActionSpace:
             else:
                 raise NotImplementedError(f"Unsupported space type: {type(space)}")
 
-        return Box(
+        return gym.spaces.Box(
             low=np.array(lows, dtype=np.float32),
             high=np.array(highs, dtype=np.float32),
             dtype=np.float32,
