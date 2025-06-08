@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from utils.observation import build_observation_dict
+from utils.observation import build_reward_dict
 
 
 def test_build_observation_dict_multiple_actions():
@@ -22,7 +22,7 @@ def test_build_observation_dict_multiple_actions():
     action = np.array([23.0, 555], dtype=np.float32)
     info = {"timestep": 42, "episode": 1}
 
-    result = build_observation_dict(obs, action, info, variables, meters, actuators)
+    result = build_reward_dict(obs, action, info, variables, meters, actuators)
 
     expected = {
         "air_temp_101": pytest.approx(22.0),
@@ -54,7 +54,7 @@ def test_build_observation_dict_one_action():
     action = np.array([23.0], dtype=np.float32)
     info = {"timestep": 42, "episode": 1}
 
-    result = build_observation_dict(obs, action, info, variables, meters, actuators)
+    result = build_reward_dict(obs, action, info, variables, meters, actuators)
 
     expected = {
         "air_temp_101": pytest.approx(22.0),

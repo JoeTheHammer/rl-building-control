@@ -8,7 +8,7 @@ from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
 from spaces.custom_action_space import ActuatorActionSpace
-from utils.observation import build_observation_dict
+from utils.observation import build_reward_dict
 
 
 class SinergymEnvironment(EplusEnv, IEnvironment):
@@ -83,31 +83,41 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             action = self.custom_action_space.to_eplus_action(action)
 
         # We ignore reward as we calculate it later in this method.
-        obs, _, terminated, truncated, info = super().step(action)
+        obs, _, terminated, truncated, _ = super().step(action)
 
-        obs_dict = build_observation_dict(
+        state, time_info_dict = self._add_time_information_to_state(obs)
+
+        reward_dict = build_reward_dict(
             obs=obs,
             action=action,
-            info=info,
+            time_info=time_info_dict,
             variables=self.variables,
             meters=self.meters,
             actuators=self.actuators,
         )
 
         # Communicate to reward function that actual reward should be calculated.
-        obs_dict["__compute_reward__"] = True
-        reward, reward_info = self.reward_fn(obs_dict)
+        reward_dict["__compute_reward__"] = True
+        reward, reward_info = self.reward_fn(reward_dict)
 
-        state = self._add_time_information_to_state(obs)
+        return state, reward, terminated, truncated, {**reward_dict, **reward_info}
 
-        return state, reward, terminated, truncated, {**obs_dict, **reward_info}
-
-    def _add_time_information_to_state(self, obs: np.ndarray) -> np.ndarray:
+    def reset(self, **kwargs):
         """
-        Appends time features from the EnergyPlus API to the observation.
-        Applies cyclic encoding if specified in time_info.
+        Overwrites the reset function and adds time information as well if needed.
+        """
+        obs, info = super().reset(**kwargs)
+        state, time_info_dict = self._add_time_information_to_state(obs)
+        return state, {**info, **time_info_dict}
+
+    def _add_time_information_to_state(self, obs: np.ndarray) -> tuple[
+        np.ndarray, Dict[str, float]]:
+        """
+        Appends time features from EnergyPlus API to the observation.
+        Returns both the augmented observation and a dict of time values including sin/cos.
         """
         state = list(obs)
+        time_info_dict = {}
 
         if self.time_info is not None:
             sim = self.energyplus_simulator
@@ -121,33 +131,30 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
                     value = api.day_of_month(state_obj)
                     max_val = 31
                 elif time_key == "day_of_week":
-                    value = api.day_of_week(state_obj)  # 1=Sunday, 2=Monday, ..., 7=Saturday
+                    value = api.day_of_week(state_obj)
                     max_val = 7
                 elif time_key == "hour":
                     value = api.hour(state_obj)
                     max_val = 23
                 elif time_key == "minutes":
                     value = api.minutes(state_obj)
-                    max_val = 59
+                    max_val = 60
                 elif time_key == "month":
                     value = api.month(state_obj)
                     max_val = 12
                 else:
                     raise ValueError(f"Unsupported time key: {time_key}")
 
+                time_info_dict[time_key] = value
+
                 if cyclic:
                     radians = 2 * math.pi * value / max_val
-                    state.append(math.sin(radians))
-                    state.append(math.cos(radians))
+                    sin_val = math.sin(radians)
+                    cos_val = math.cos(radians)
+                    state.extend([sin_val, cos_val])
+                    time_info_dict[f"{time_key}_sin"] = sin_val
+                    time_info_dict[f"{time_key}_cos"] = cos_val
                 else:
                     state.append(value)
 
-        return np.array(state, dtype=np.float32)
-
-    def reset(self, **kwargs):
-        """
-        Overwrites the reset function and adds time information as well if needed.
-        """
-        obs, info = super().reset(**kwargs)
-        state = self._add_time_information_to_state(obs)
-        return state, info
+        return np.array(state, dtype=np.float32), time_info_dict
