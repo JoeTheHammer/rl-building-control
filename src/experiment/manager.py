@@ -37,7 +37,6 @@ class ExperimentManager:
 
 
     def _create_experiment(self, experiment_config: ExperimentConfig) -> Experiment | None:
-        # TODO: Think about which attributes experiment needs, one is environment that must be provided by provider
         env = self._create_environment(experiment_config)
 
         if env is None:
