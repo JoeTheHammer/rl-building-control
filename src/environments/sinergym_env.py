@@ -48,14 +48,24 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
     @property
     def observation_space(self):
+        base_dim = len(self.variables) + len(self.meters)
+
+        time_dim = 0
         if self.time_info is not None:
-            return gymnasium.spaces.Box(
-                -np.inf,
-                np.inf,
-                (len(self.variables) + len(self.meters) + len(self.time_info),),
-                np.float32,
-            )
-        return self._observation_space
+            for time_key, options in self.time_info.items():
+                if options.get("cyclic", False):
+                    time_dim += 2  # sin and cos
+                else:
+                    time_dim += 1  # scalar value
+
+        total_dim = base_dim + time_dim
+
+        return gymnasium.spaces.Box(
+            low=-np.inf,
+            high=np.inf,
+            shape=(total_dim,),
+            dtype=np.float32,
+        )
 
     @property
     def action_space(self):

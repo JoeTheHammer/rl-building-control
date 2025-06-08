@@ -14,13 +14,13 @@ state_space:
     gas: "NaturalGas:Facility"
   time_info:
     day_of_month:
-      cyclic: false
+      cyclic: true
     month:
       cyclic: false
     day_of_week:
       cyclic: false
     hour:
-      cyclic: false
+      cyclic: true
 
 action_space:
   actuators:
