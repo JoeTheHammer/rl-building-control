@@ -31,6 +31,7 @@ class EnvironmentElements:
     weather_data_path: str
     variables: Dict[str, Tuple[str, str]]
     meters: Dict[str, str]
+    time_info: List[str]
     actuators: Dict[str, Tuple[str, str, str]]
     reward_function_cls: type[BaseReward]
     reward_variables: List[str]
@@ -55,6 +56,10 @@ def _parse_variables(config: SinergymEnvironmentConfig) -> dict:
 
 def _parse_meters(config: SinergymEnvironmentConfig) -> dict:
     return config.state_space.meters
+
+
+def _parse_time_info(config: SinergymEnvironmentConfig) -> list[str] | None:
+    return config.state_space.time_info
 
 
 def _parse_actuators(config: SinergymEnvironmentConfig) -> dict:
@@ -140,6 +145,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
     variables = _parse_variables(config)
     meters = _parse_meters(config)
     actuators = _parse_actuators(config)
+    time_info = _parse_time_info(config)
     action_space = _build_action_space(config)
     reward_function_cls, reward_kwargs, reward_variables = _build_reward_function(config)
 
@@ -149,6 +155,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
         variables=variables,
         meters=meters,
         actuators=actuators,
+        time_info=time_info,
         reward_function_cls=reward_function_cls,
         reward_variables=reward_variables,
         reward_kwargs=reward_kwargs,
@@ -172,4 +179,5 @@ class SinergymProvider(IEnvironmentProvider):
             env_elements.reward_function_cls,
             env_elements.action_space,
             env_elements.reward_kwargs,
+            env_elements.time_info,
         )

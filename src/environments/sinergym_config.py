@@ -11,6 +11,7 @@ class VariableConfig(BaseModel):
 class StateSpaceConfig(BaseModel):
     variables: Dict[str, VariableConfig]
     meters: Dict[str, str]
+    time_info: Optional[List[str]] = None
 
 
 class ActuatorConfig(BaseModel):

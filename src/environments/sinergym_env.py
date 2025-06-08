@@ -1,5 +1,7 @@
 from typing import Any, Dict, List, Optional, Type
 
+import gymnasium
+import numpy as np
 from sinergym import BaseReward
 from sinergym.envs import EplusEnv
 
@@ -20,10 +22,12 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         reward_function_cls: Type[BaseReward],
         action_space: ActuatorActionSpace,
         reward_kwargs: Optional[Dict[str, Any]] = None,
+        time_info: List[str] | None = None,
     ):
 
         self.variables = variables
         self.meters = meters
+        self.time_info = time_info
         self.reward_variables = reward_variables
         self.custom_action_space = action_space
         self.expect_raw_actions = False
@@ -40,6 +44,17 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             reward=reward_function_cls,
             reward_kwargs=reward_kwargs,
         )
+
+    @property
+    def observation_space(self):
+        if self.time_info is not None:
+            return gymnasium.spaces.Box(
+                -np.inf,
+                np.inf,
+                (len(self.variables) + len(self.meters) + len(self.time_info),),
+                np.float32,
+            )
+        return self._observation_space
 
     @property
     def action_space(self):
@@ -70,7 +85,31 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
         # Communicate to reward function that actual reward should be calculated.
         obs_dict["__compute_reward__"] = True
-
         reward, reward_info = self.reward_fn(obs_dict)
 
-        return obs, reward, terminated, truncated, {**obs_dict, **reward_info}
+        state = self._add_time_information_to_state(obs, info)
+
+        return state, reward, terminated, truncated, {**obs_dict, **reward_info}
+
+    def _add_time_information_to_state(self, obs, info) -> np.ndarray:
+        """
+        Adds selected time-related features from the info dict to the observation array.
+        Raises an error if a required key is missing.
+        """
+        state = list(obs)  # assuming obs is a NumPy array
+
+        if self.time_info is not None:
+            for time_key in self.time_info:
+                if time_key not in info:
+                    raise KeyError(f"[step] Time feature '{time_key}' not found in info dict.")
+                state.append(info[time_key])
+        return np.array(state, dtype=np.float32)
+
+
+    def reset(self, **kwargs):
+        """
+        Overwrites the reset function and adds time information as well if needed.
+        """
+        obs, info = super().reset(**kwargs)
+        state = self._add_time_information_to_state(obs, info)
+        return state, info

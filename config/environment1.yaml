@@ -14,6 +14,7 @@ state_space:
   meters:
     electricity: "Electricity:Facility"
     gas: "NaturalGas:Facility"
+  time_info: ["day", "hour"]
 
 action_space:
   actuators:
@@ -26,7 +27,7 @@ action_space:
 
 reward_function:
   type: "expression"
-  variables: ["air_temp_101", "action", "target_temp", "sigma"]
+  variables: ["air_temp_101"]
   expression: >
     - abs(air_temp_101 - target_temp) / 10
     - 0.005 * abs(action - target_temp)
