@@ -61,7 +61,11 @@ class IRLControllerProvider(IControllerProvider, ABC):
         pass
 
     def _tune_hyperparameters(
-        self, env_provider: IEnvironmentProvider, env_config: str, num_trials: int
+        self,
+        env_provider: IEnvironmentProvider,
+        env_config: str,
+        num_trials: int,
+        num_episodes: int,
     ) -> Dict:
         """
         Run hyperparameter tuning using Optuna for a given environment setup.
@@ -89,7 +93,12 @@ class IRLControllerProvider(IControllerProvider, ABC):
             ctrl = self._build_controller(env_t, trial_hp)  # start from defaults
 
             # Evaluate with short experiment
-            return Experiment(name="optuna_hyperparameter_tuning", env=env_t, controller=ctrl).run()
+            return Experiment(
+                name="optuna_hyperparameter_tuning",
+                env=env_t,
+                controller=ctrl,
+                num_episodes=num_episodes,
+            ).run()
 
         study = optuna.create_study(direction="maximize")
 
@@ -132,7 +141,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         new_env = environment_provider.create_environment(environment_config)
         new_env.continuous_action_space = is_continuous_action_space
 
-        best_hp = self._tune_hyperparameters(environment_provider, environment_config, 2)
+        best_hp = self._tune_hyperparameters(environment_provider, environment_config, 5, 1)
         logger.info("Ended hyperparameter tuning.")
         logger.info(f"Best hyperparameters: {best_hp}")
 

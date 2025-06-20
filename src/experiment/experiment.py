@@ -4,29 +4,36 @@ from environments.base_env import IEnvironment
 
 
 class Experiment:
-    def __init__(self, name: str, env: IEnvironment, controller: IController):
+    def __init__(
+        self,
+        name: str,
+        env: IEnvironment,
+        controller: IController,
+        num_episodes: int = 2,
+    ):
         self.name = name
         self.env = env
         self.controller = controller
+        self.num_episodes = num_episodes
 
-    def run(self):
-        logger.info(f"Experiment {self.name} started.")
+    def run(self) -> float:
+        """Run `num_episodes` in this environment and return a list of total rewards."""
 
-        state, _ = self.env.reset()
-
-        done = False
+        logger.info(f"Experiment {self.name} started for {self.num_episodes} episodes.")
         total_reward = 0
+        for ep in range(1, self.num_episodes + 1):
+            state, _ = self.env.reset()
+            done = False
 
-        while not done:
-            action = self.controller.get_action(state)
-            state, reward, terminated, truncated, info = self.env.step(action)
-            done = terminated or truncated
-            total_reward += reward
+            while not done:
+                action = self.controller.get_action(state)
+                state, reward, terminated, truncated, info = self.env.step(action)
+                done = terminated or truncated
+                total_reward += reward
 
-        print("\n")
-        logger.info(f"Total reward: {total_reward}")
+            logger.info(f"Episode {ep}/{self.num_episodes} finished — reward: {total_reward}")
 
         self.env.close()
-        print("Experiment Finished!")
+        logger.info(f"Experiment {self.name} complete.")
 
         return total_reward
