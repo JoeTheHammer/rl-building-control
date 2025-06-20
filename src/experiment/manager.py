@@ -3,8 +3,7 @@ from typing import Dict, List
 
 import gymnasium as gym
 
-from controllers.base_controller import IController
-from controllers.controller_provider import IControllerProvider
+from controllers.base_controller import IController, IControllerProvider
 from custom_loggers.setup_logger import logger as setup_logger
 from environments.base_env import IEnvironment
 from environments.base_provider import IEnvironmentProvider

@@ -2,8 +2,7 @@ from typing import Any
 
 import gymnasium as gym
 
-from controllers.base_controller import IController
-from controllers.controller_provider import IControllerProvider
+from controllers.base_controller import IController, IControllerProvider
 from environments.base_provider import IEnvironmentProvider
 
 
