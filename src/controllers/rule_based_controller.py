@@ -97,8 +97,6 @@ class RuleBasedController(IController):
 
         # Convert ndarray to named dictionary if needed
         if isinstance(state, np.ndarray):
-            if len(state) != len(self.state_space):
-                raise ValueError("Mismatch between state vector and state_space length.")
             state_dict = {name: float(state[i]) for i, name in enumerate(self.state_space)}
         else:
             state_dict = dict(state)
