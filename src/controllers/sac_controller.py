@@ -54,9 +54,9 @@ def _build_controller(env, hyperparams):
 
 def _suggest_hyperparameters(trial):
     return {
-        "learning_rate": trial.suggest_loguniform("learning_rate", 1e-5, 1e-3),
+        "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3),
         "gamma": trial.suggest_float("gamma", 0.9, 0.9999),
-        "ent_coef": trial.suggest_loguniform("ent_coef", 1e-8, 1e-1),
+        "ent_coef": trial.suggest_float("ent_coef", 1e-8, 1e-1),
         "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128]),
     }
 
@@ -93,8 +93,11 @@ class SACProvider(IControllerProvider):
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
     ) -> SACController:
-        env.continuous_action_space = True
-        controller = _build_controller(env, {})
+
+        new_env = environment_provider.create_environment(environment_config)
+        new_env.continuous_action_space = True
+
+        controller = _build_controller(new_env, {})
 
         best_hp = _tune_hyperparameters(environment_provider, environment_config, 2, 50)
         logger.info("Ended hyperparameter tuning.")
@@ -104,5 +107,8 @@ class SACProvider(IControllerProvider):
 
         # Real training
         controller.model.learn(2000)
+
+        env.continuous_action_space = True
+        controller.env = env
 
         return controller

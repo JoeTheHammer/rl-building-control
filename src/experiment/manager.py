@@ -50,9 +50,6 @@ class ExperimentManager:
 
         setup_logger.info(f"Controller for algorithm {experiment_config.controller} created.")
 
-        # Create new env, als old was already used during training and setup of the controller
-        env, _ = self._create_environment(experiment_config)
-
         return Experiment(experiment_config.name, env, controller)
 
     def _create_environment(
