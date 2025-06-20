@@ -13,6 +13,7 @@ gymnasium = "*"
 sinergym = "*"
 asteval = "*"
 stable-baselines3 = "*"
+optuna = "*"
 
 [dev-packages]
 black = "*"

@@ -28,3 +28,5 @@ class Experiment:
 
         self.env.close()
         print("Experiment Finished!")
+
+        return total_reward

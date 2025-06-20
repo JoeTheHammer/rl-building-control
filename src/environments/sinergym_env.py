@@ -110,8 +110,9 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         state, time_info_dict = self._add_time_information_to_state(obs)
         return state, {**info, **time_info_dict}
 
-    def _add_time_information_to_state(self, obs: np.ndarray) -> tuple[
-        np.ndarray, Dict[str, float]]:
+    def _add_time_information_to_state(
+        self, obs: np.ndarray
+    ) -> tuple[np.ndarray, Dict[str, float]]:
         """
         Appends time features from EnergyPlus API to the observation.
         Returns both the augmented observation and a dict of time values including sin/cos.
