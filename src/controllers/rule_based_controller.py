@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from controllers.base_controller import IController
 from controllers.controller_provider import IControllerProvider
+from environments.base_provider import IEnvironmentProvider
 
 
 class Rule(BaseModel):
@@ -134,7 +135,13 @@ class RuleBasedController(IController):
 
 
 class RuleBasedControllerProvider(IControllerProvider):
-    def create_controller(self, env: gym.Env, config_path: str | None = None) -> IController:
+    def create_controller(
+        self,
+        env: gym.Env,
+        config_path: str | None = None,
+        environment_provider: IEnvironmentProvider | None = None,
+        environment_config: str | None = None,
+    ) -> IController:
         if not config_path:
             raise ValueError("A config_path is required for RuleBasedController.")
 

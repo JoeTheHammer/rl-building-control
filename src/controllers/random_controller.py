@@ -4,6 +4,7 @@ import gymnasium as gym
 
 from controllers.base_controller import IController
 from controllers.controller_provider import IControllerProvider
+from environments.base_provider import IEnvironmentProvider
 
 
 class RandomController(IController):
@@ -36,5 +37,11 @@ class RandomControllerProvider(IControllerProvider):
     specifies a rule-based controller with logic type 'random'.
     """
 
-    def create_controller(self, env: gym.Env, config_path: str | None = None) -> RandomController:
+    def create_controller(
+        self,
+        env: gym.Env,
+        config_path: str | None = None,
+        environment_provider: IEnvironmentProvider | None = None,
+        environment_config: str | None = None,
+    ) -> RandomController:
         return RandomController(env)

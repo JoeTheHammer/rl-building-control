@@ -16,12 +16,10 @@ class Experiment:
 
         done = False
         total_reward = 0
-        actions = []
 
         while not done:
             action = self.controller.get_action(state)
             state, reward, terminated, truncated, info = self.env.step(action)
-            actions.append(action)
             done = terminated or truncated
             total_reward += reward
 
