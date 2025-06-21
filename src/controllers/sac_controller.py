@@ -63,12 +63,23 @@ class SACProvider(IRLControllerProvider):
     def _build_controller(self, env: Env, hyper_params: Dict) -> SACController:
         return SACController(env, hyper_params)
 
-    def _suggest_hyperparameters(self, trial: optuna.Trial) -> Dict:
+    def _suggest_hyperparameters(
+        self, trial: Optional[optuna.Trial] = None, fixed_params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        fixed_params = fixed_params or {}
+
+        # Define all hyperparameters with (default, optuna_suggest_fn)
+        param_defs = {
+            "learning_rate": (1e-4, lambda t: t.suggest_float("learning_rate", 1e-5, 1e-3)),
+            "gamma": (0.99, lambda t: t.suggest_float("gamma", 0.9, 0.9999)),
+            "ent_coef": ("auto_1.0", lambda t: t.suggest_float("ent_coef", 1e-8, 1e-1)),
+            "batch_size": (64, lambda t: t.suggest_categorical("batch_size", [32, 64, 128])),
+        }
+
+        # Resolve fixed or suggested values
         return {
-            "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3),
-            "gamma": trial.suggest_float("gamma", 0.9, 0.9999),
-            "ent_coef": trial.suggest_float("ent_coef", 1e-8, 1e-1),
-            "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128]),
+            name: fixed_params.get(name, default if trial is None else suggest_fn(trial))
+            for name, (default, suggest_fn) in param_defs.items()
         }
 
     def create_controller(

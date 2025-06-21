@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Any, Callable, Dict, Optional
 
 import gymnasium as gym
 import numpy as np
@@ -28,6 +28,20 @@ class IRLController(IController, ABC):
         pass
 
 
+def get_tunable_hyperparameter_space(
+    suggest_fn: Callable[[optuna.Trial], Dict], fixed_hyperparams: Dict
+) -> Callable[[optuna.Trial], Dict]:
+    """
+    Returns a new suggest function that excludes fixed hyperparameters.
+    """
+
+    def wrapped(trial: optuna.Trial) -> Dict:
+        all_suggestions = suggest_fn(trial)
+        return {k: v for k, v in all_suggestions.items() if k not in fixed_hyperparams}
+
+    return wrapped
+
+
 class IRLControllerProvider(IControllerProvider, ABC):
     """
     Provider for IRLController instances, including hyperparameter tuning
@@ -49,16 +63,21 @@ class IRLControllerProvider(IControllerProvider, ABC):
         pass
 
     @abstractmethod
-    def _suggest_hyperparameters(self, trial: optuna.Trial) -> Dict:
+    def _suggest_hyperparameters(
+        self, trial: Optional[optuna.Trial] = None, fixed_params: Optional[Dict[str, Any]] = None
+    ) -> Dict:
         """
-        Suggest a set of hyperparameters for the current Optuna trial.
+        Suggest a complete or partial set of hyperparameters.
 
         Args:
-            trial (optuna.Trial): The current hyperparameter optimization trial.
+            trial (optuna.Trial | None): The current Optuna trial. If None, defaults are used.
+            fixed_params (dict | None): Optional dictionary of fixed hyperparameters. These are returned as-is
+                and will not be suggested/tuned.
 
         Returns:
-            Dict: A dictionary of hyperparameter names and sampled values.
+            Dict: Dictionary containing suggested or fixed hyperparameters.
         """
+
         pass
 
     def _tune_hyperparameters(
@@ -67,50 +86,44 @@ class IRLControllerProvider(IControllerProvider, ABC):
         env_config: str,
         num_trials: int,
         num_episodes: int,
+        fixed_hyperparams: Dict[str, Any] = None,
     ) -> Dict:
         """
         Run hyperparameter tuning using Optuna for a given environment setup.
 
-        This will create a new environment and controller for each trial,
-        run a short experiment to evaluate performance, and return the
-        best-performing hyperparameter set.
-
-        Args:
-            env_provider (IEnvironmentProvider): Factory to create environments.
-            env_config (str): Configuration key or path for environment creation.
-            num_trials (int): Number of Optuna trials to run.
+        This will:
+        - Create a new environment and controller for each trial
+        - Respect fixed hyperparameters and tune the rest
+        - Evaluate controller performance using a short experiment
+        - Return the best-performing combination of fixed and tuned hyperparameters
 
         Returns:
-            Dict: The best hyperparameters found by Optuna.
+            Dict: Combined dictionary of tuned and fixed hyperparameters.
         """
 
-        def objective(trial: optuna.Trial) -> float:
-            # Sample a fresh set of hyperparams
-            trial_hp = self._suggest_hyperparameters(trial)
+        fixed_hyperparams = fixed_hyperparams or {}
 
-            # Build a new env & controller per trial
+        def objective(trial: optuna.Trial) -> float:
+            trial_hp = self._suggest_hyperparameters(trial, fixed_hyperparams)
+
+            logger.info(f"Test with these hp: {trial_hp}")
+
             env_t = env_provider.create_environment(env_config)
             env_t.continuous_action_space = True
-            ctrl = self._build_controller(env_t, trial_hp)  # start from defaults
-
-            # Evaluate with short experiment
+            ctrl = self._build_controller(env_t, trial_hp)
             rewards = Experiment(
                 name="hyperparameter_tuning",
                 env=env_t,
                 controller=ctrl,
                 num_episodes=num_episodes,
             ).run()
-
             env_t.close()
-
             return float(np.mean(rewards))
 
         study = optuna.create_study(direction="maximize")
-
         logger.info("Starting hyperparameter tuning.")
-
         study.optimize(objective, n_trials=num_trials)
-        return study.best_params
+        return {**study.best_params, **fixed_hyperparams}
 
     def create_rl_controller(
         self,
@@ -152,18 +165,24 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         hp = hyperparameters
 
-        if hp is None:
+        # Perform hyperparameter tuning if no hyperparameters are provided,
+        # or if the provided set is incomplete (i.e., does not contain all required keys).
+        if hp is None or len(hp) is not len(self._suggest_hyperparameters()):
 
-            logger.info("No hyperparameters provided. Start with hyperparameter tuning.")
+            logger.info("Not all hyperparameters provided. Start with hyperparameter tuning.")
 
             hp = self._tune_hyperparameters(
-                environment_provider, environment_config, num_trials, num_episodes
+                environment_provider,
+                environment_config,
+                num_trials,
+                num_episodes,
+                fixed_hyperparams=hyperparameters or {},
             )
 
             logger.info("Ended hyperparameter tuning.")
             logger.info(f"Best hyperparameters: {hp}")
 
-        logger.info(f"Create controller with hyperparameters: {hp}")
+        logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
         controller = self._build_controller(new_env, hp)
 
         # Training the controller that was already hyperparameter tuned.

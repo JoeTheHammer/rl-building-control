@@ -1,12 +1,12 @@
-train_timesteps: 200
+train_timesteps: 100000
 
 hyperparameter_tuning:
-  num_trials: 5
-  num_episodes: 1
+ num_trials: 5
+ num_episodes: 1
 
 # Option 2: Manually specify SAC hyperparameters
-# hyperparameters:
-#   learning_rate: 0.0003
-#   gamma: 0.99
-#   ent_coef: 0.01
-#   batch_size: 64
+hyperparameters:
+  ent_coef: 'auto_5.0'
+  #learning_rate: 0.0001
+  #gamma: 0.99
+  #batch_size: 256
