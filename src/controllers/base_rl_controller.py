@@ -100,6 +100,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 controller=ctrl,
                 num_episodes=num_episodes,
             ).run()
+
+            env_t.close()
+
             return float(np.mean(rewards))
 
         study = optuna.create_study(direction="maximize")
@@ -167,6 +170,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         logger.info(f"Start training with {train_timesteps} timesteps.")
         controller.train(timesteps=train_timesteps)
+
+        # Close env instance on which training was done on.
+        controller.env.close()
 
         # Communicate to env that if this controller only supports continuous action spaces.
         env.continuous_action_space = is_continuous_action_space
