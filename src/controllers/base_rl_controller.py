@@ -63,22 +63,31 @@ class IRLControllerProvider(IControllerProvider, ABC):
         pass
 
     @abstractmethod
-    def _suggest_hyperparameters(
-        self, trial: Optional[optuna.Trial] = None, fixed_params: Optional[Dict[str, Any]] = None
-    ) -> Dict:
+    def _suggest_hyperparameters_space(
+        self, trial: Optional[optuna.Trial] = None
+    ) -> Dict[str, Any]:
         """
-        Suggest a complete or partial set of hyperparameters.
+        Suggest a set of hyperparameters available for this controller.
 
         Args:
             trial (optuna.Trial | None): The current Optuna trial. If None, defaults are used.
-            fixed_params (dict | None): Optional dictionary of fixed hyperparameters. These are returned as-is
-                and will not be suggested/tuned.
 
         Returns:
             Dict: Dictionary containing suggested or fixed hyperparameters.
         """
 
         pass
+
+    def _suggest_hyperparameters(
+        self, trial: Optional[optuna.Trial] = None, fixed_params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        fixed_params = fixed_params or {}
+
+        # First suggest everything using Optuna
+        suggested = self._suggest_hyperparameters_space(trial)
+
+        # Then override with anything the user has fixed
+        return {**suggested, **fixed_params}
 
     def _tune_hyperparameters(
         self,
@@ -186,7 +195,6 @@ class IRLControllerProvider(IControllerProvider, ABC):
         controller = self._build_controller(new_env, hp)
 
         # Training the controller that was already hyperparameter tuned.
-
         logger.info(f"Start training with {train_timesteps} timesteps.")
         controller.train(timesteps=train_timesteps)
 
