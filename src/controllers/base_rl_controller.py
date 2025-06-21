@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict
 
 import gymnasium as gym
+import numpy as np
 import optuna
 from gymnasium import Env
 
@@ -93,12 +94,13 @@ class IRLControllerProvider(IControllerProvider, ABC):
             ctrl = self._build_controller(env_t, trial_hp)  # start from defaults
 
             # Evaluate with short experiment
-            return Experiment(
-                name="optuna_hyperparameter_tuning",
+            rewards = Experiment(
+                name="hyperparameter_tuning",
                 env=env_t,
                 controller=ctrl,
                 num_episodes=num_episodes,
             ).run()
+            return float(np.mean(rewards))
 
         study = optuna.create_study(direction="maximize")
 

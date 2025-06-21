@@ -1,3 +1,5 @@
+from typing import List
+
 from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
 from environments.base_env import IEnvironment
@@ -16,12 +18,13 @@ class Experiment:
         self.controller = controller
         self.num_episodes = num_episodes
 
-    def run(self) -> float:
+    def run(self) -> List[float]:
         """Run `num_episodes` in this environment and return a list of total rewards."""
 
         logger.info(f"Experiment {self.name} started for {self.num_episodes} episodes.")
-        total_reward = 0
+        rewards = []
         for ep in range(1, self.num_episodes + 1):
+            episode_reward = 0
             state, _ = self.env.reset()
             done = False
 
@@ -29,11 +32,12 @@ class Experiment:
                 action = self.controller.get_action(state)
                 state, reward, terminated, truncated, info = self.env.step(action)
                 done = terminated or truncated
-                total_reward += reward
+                episode_reward += reward
 
-            logger.info(f"Episode {ep}/{self.num_episodes} finished — reward: {total_reward}")
+            logger.info(f"Episode {ep}/{self.num_episodes} finished — reward: {episode_reward}")
+            rewards.append(episode_reward)
 
         self.env.close()
         logger.info(f"Experiment {self.name} complete.")
 
-        return total_reward
+        return rewards

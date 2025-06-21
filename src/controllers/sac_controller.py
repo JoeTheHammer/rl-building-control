@@ -5,7 +5,7 @@ import optuna
 from gymnasium import Env
 from stable_baselines3 import SAC
 
-from controllers.base_rl_controller import IRLControllerProvider, IRLController
+from controllers.base_rl_controller import IRLController, IRLControllerProvider
 from environments.base_provider import IEnvironmentProvider
 
 
