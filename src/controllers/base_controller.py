@@ -55,6 +55,8 @@ class IControllerProvider(ABC):
         Args:
             env (gym.Env): The environment compatible with the controller.
             config_path (str | None): Optional path to the controller configuration file.
+            environment_provider (IEnvironmentProvider | None): Optional Environment provider to create environments for training and tuning.
+            environment_config (str | None): Optional path to the controller configuration file.
 
         Returns:
             IController: A controller instance.
