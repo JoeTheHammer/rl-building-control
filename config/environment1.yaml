@@ -5,10 +5,13 @@ state_space:
   variables:
     air_temp_101:
       type: "Zone Mean Air Temperature"
-      zone: "GUESTROOM101"
+      zone: "GuestRoom101"
+    air_temp_104:
+      type: "Zone Mean Air Temperature"
+      zone: "GuestRoom104"
     humidity_101:
       type: "Zone Mean Air Humidity Ratio"
-      zone: "GUESTROOM101"
+      zone: "GuestRoom101"
   meters:
     electricity: "Electricity:Facility"
     gas: "NaturalGas:Facility"
@@ -26,20 +29,25 @@ action_space:
   actuators:
     setpoint_temp:
       type: "continuous"
-      range: [18.0, 28.0]
+      range: [16.0, 28.0]
       component: "Schedule:Constant"
       control_type: "Schedule Value"
       actuator_key: "PythonControlledSetpoint"
+    setpoint_temp_2:
+      type: "continuous"
+      range: [ 16.0, 28.0 ]
+      component: "Schedule:Constant"
+      control_type: "Schedule Value"
+      actuator_key: "PythonControlledSetpoint_2"
 
 reward_function:
   type: "expression"
-  variables: ["air_temp_101"]
+  variables: ["air_temp_101", "air_temp_104"]
   expression: >
-    - abs(air_temp_101 - target_temp) / 10
-    - 0.005 * abs(action - target_temp)
+    - ((air_temp_101 - target_temp)**2 + (air_temp_104 - target_temp)**2)
+    - 0.1 * ((setpoint_temp - 23.0)**2 + (setpoint_temp_2 - 23.0)**2)
   params:
     target_temp: 23.0
-    sigma: 2.0
-    action: 0.0  # default action fallback if not provided by env
+    sigma: 1.0
 
 

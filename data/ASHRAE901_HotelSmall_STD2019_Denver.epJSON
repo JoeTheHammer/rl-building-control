@@ -34572,6 +34572,10 @@
             "hourly_value": 22.0,
             "schedule_type_limits_name": "Any Number"
         },
+        "PythonControlledSetpoint_2": {
+            "hourly_value": 22.0,
+            "schedule_type_limits_name": "Any Number"
+        },
         "SZ_system_OA_Max_Frac_SCH": {
             "hourly_value": 0.75,
             "schedule_type_limits_name": "Fraction"
@@ -36100,8 +36104,8 @@
             "heating_setpoint_temperature_schedule_name": "Office_HtgSP_Sch"
         },
         "S OccGuestRoom Thermostat Dual SP Control": {
-            "cooling_setpoint_temperature_schedule_name": "OBCReset_S_OccGuestRoom_ClgSP_Sch_20min",
-            "heating_setpoint_temperature_schedule_name": "OBCReset_S_OccGuestRoom_HtgSP_Sch_20min"
+            "cooling_setpoint_temperature_schedule_name": "PythonControlledSetpoint_2",
+            "heating_setpoint_temperature_schedule_name": "PythonControlledSetpoint_2"
         },
         "VacGuestRoom Thermostat Dual SP Control": {
             "cooling_setpoint_temperature_schedule_name": "PythonControlledSetpoint",
