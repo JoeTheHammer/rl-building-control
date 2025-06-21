@@ -6,8 +6,8 @@ import yaml
 from asteval import Interpreter
 from pydantic import BaseModel
 
-from controllers.base_controller import IController
-from controllers.controller_provider import IControllerProvider
+from controllers.base_controller import IController, IControllerProvider
+from environments.base_provider import IEnvironmentProvider
 
 
 class Rule(BaseModel):
@@ -96,8 +96,6 @@ class RuleBasedController(IController):
 
         # Convert ndarray to named dictionary if needed
         if isinstance(state, np.ndarray):
-            if len(state) != len(self.state_space):
-                raise ValueError("Mismatch between state vector and state_space length.")
             state_dict = {name: float(state[i]) for i, name in enumerate(self.state_space)}
         else:
             state_dict = dict(state)
@@ -134,7 +132,13 @@ class RuleBasedController(IController):
 
 
 class RuleBasedControllerProvider(IControllerProvider):
-    def create_controller(self, env: gym.Env, config_path: str | None = None) -> IController:
+    def create_controller(
+        self,
+        env: gym.Env,
+        config_path: str | None = None,
+        environment_provider: IEnvironmentProvider | None = None,
+        environment_config: str | None = None,
+    ) -> IController:
         if not config_path:
             raise ValueError("A config_path is required for RuleBasedController.")
 

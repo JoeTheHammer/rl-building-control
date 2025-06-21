@@ -1,32 +1,43 @@
+from typing import List
+
 from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
 from environments.base_env import IEnvironment
 
 
 class Experiment:
-    def __init__(self, name: str, env: IEnvironment, controller: IController):
+    def __init__(
+        self,
+        name: str,
+        env: IEnvironment,
+        controller: IController,
+        num_episodes: int = 2,
+    ):
         self.name = name
         self.env = env
         self.controller = controller
+        self.num_episodes = num_episodes
 
-    def run(self):
-        logger.info(f"Experiment {self.name} started.")
+    def run(self) -> List[float]:
+        """Run `num_episodes` in this environment and return a list of total rewards."""
 
-        state, _ = self.env.reset()
+        logger.info(f"Experiment {self.name} started for {self.num_episodes} episodes.")
+        rewards = []
+        for ep in range(1, self.num_episodes + 1):
+            episode_reward = 0
+            state, _ = self.env.reset()
+            done = False
 
-        done = False
-        total_reward = 0
-        actions = []
+            while not done:
+                action = self.controller.get_action(state)
+                state, reward, terminated, truncated, info = self.env.step(action)
+                done = terminated or truncated
+                episode_reward += reward
 
-        while not done:
-            action = self.controller.get_action(state)
-            state, reward, terminated, truncated, info = self.env.step(action)
-            actions.append(action)
-            done = terminated or truncated
-            total_reward += reward
-
-        print("\n")
-        logger.info(f"Total reward: {total_reward}")
+            logger.info(f"Episode {ep}/{self.num_episodes} finished — reward: {episode_reward}")
+            rewards.append(episode_reward)
 
         self.env.close()
-        print("Experiment Finished!")
+        logger.info(f"Experiment {self.name} complete.")
+
+        return rewards

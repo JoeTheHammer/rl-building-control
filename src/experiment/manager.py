@@ -3,8 +3,7 @@ from typing import Dict, List
 
 import gymnasium as gym
 
-from controllers.base_controller import IController
-from controllers.controller_provider import IControllerProvider
+from controllers.base_controller import IController, IControllerProvider
 from custom_loggers.setup_logger import logger as setup_logger
 from environments.base_env import IEnvironment
 from environments.base_provider import IEnvironmentProvider
@@ -34,10 +33,8 @@ class ExperimentManager:
                 continue
             self._register_experiment(experiment)
 
-
-
     def _create_experiment(self, experiment_config: ExperimentConfig) -> Experiment | None:
-        env = self._create_environment(experiment_config)
+        env, env_provider = self._create_environment(experiment_config)
 
         if env is None:
             setup_logger.error(f"Failed to create environment {experiment_config.name}")
@@ -45,7 +42,7 @@ class ExperimentManager:
 
         setup_logger.info(f"Environment for engine {experiment_config.engine} created.")
 
-        controller = self._create_controller(env, experiment_config)
+        controller = self._create_controller(env, experiment_config, env_provider)
         if controller is None:
             setup_logger.error(f"Failed to create controller {experiment_config.controller}")
             return None
@@ -54,17 +51,19 @@ class ExperimentManager:
 
         return Experiment(experiment_config.name, env, controller)
 
-    def _create_environment(self, experiment_config: ExperimentConfig) -> IEnvironment | None:
+    def _create_environment(
+        self, experiment_config: ExperimentConfig
+    ) -> tuple[IEnvironment, IEnvironmentProvider] | None:
         env_provider = self._env_providers.get(experiment_config.engine)
         if env_provider is None:
             setup_logger.error(
                 f"No environment provider registered for engine '{experiment_config.engine}'."
             )
             return None
-        return env_provider.create_environment(experiment_config.environment_config)
+        return env_provider.create_environment(experiment_config.environment_config), env_provider
 
     def _create_controller(
-        self, env: gym.Env, experiment_config: ExperimentConfig
+        self, env: gym.Env, experiment_config: ExperimentConfig, env_provider: IEnvironmentProvider
     ) -> IController | None:
         controller_provider = self._controller_providers.get(experiment_config.controller)
         if controller_provider is None:
@@ -72,7 +71,13 @@ class ExperimentManager:
                 f"No controller provider registered for algorithm '{experiment_config.controller}'."
             )
             return None
-        return controller_provider.create_controller(env, experiment_config.controller_config)
+
+        return controller_provider.create_controller(
+            env,
+            experiment_config.controller_config,
+            env_provider,
+            experiment_config.environment_config,
+        )
 
     def _register_experiment(self, experiment: Experiment) -> None:
         """Registers an experiment by adding it to the experiments list."""
