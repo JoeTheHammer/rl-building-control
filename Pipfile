@@ -14,6 +14,7 @@ sinergym = "*"
 asteval = "*"
 stable-baselines3 = "*"
 optuna = "*"
+matplotlib = "*"
 
 [dev-packages]
 black = "*"

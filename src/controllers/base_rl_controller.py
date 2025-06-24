@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 
 import gymnasium as gym
 import numpy as np
@@ -26,20 +26,6 @@ class IRLController(IController, ABC):
             timesteps (int): The number of environment steps to use for training.
         """
         pass
-
-
-def get_tunable_hyperparameter_space(
-    suggest_fn: Callable[[optuna.Trial], Dict], fixed_hyperparams: Dict
-) -> Callable[[optuna.Trial], Dict]:
-    """
-    Returns a new suggest function that excludes fixed hyperparameters.
-    """
-
-    def wrapped(trial: optuna.Trial) -> Dict:
-        all_suggestions = suggest_fn(trial)
-        return {k: v for k, v in all_suggestions.items() if k not in fixed_hyperparams}
-
-    return wrapped
 
 
 class IRLControllerProvider(IControllerProvider, ABC):
