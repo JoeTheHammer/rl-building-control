@@ -26663,6 +26663,11 @@
             "key_value": "*",
             "reporting_frequency": "Timestep",
             "variable_name": "Zone People Occupant Count"
+        },
+        "Output:Variable 4": {
+            "key_value": "*",
+            "reporting_frequency": "Timestep",
+            "variable_name": "Site Outdoor Air Drybulb Temperature"
         }
     },
     "Output:VariableDictionary": {
@@ -27506,7 +27511,7 @@
             "begin_month": 1,
             "day_of_week_for_start_day": "Sunday",
             "end_day_of_month": 31,
-            "end_month": 1,
+            "end_month": 12,
             "use_weather_file_daylight_saving_period": "No",
             "use_weather_file_holidays_and_special_days": "No",
             "use_weather_file_rain_indicators": "Yes",

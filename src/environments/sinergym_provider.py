@@ -12,6 +12,7 @@ from typing import (
 
 import gymnasium as gym
 import numpy as np
+from gymnasium.wrappers import NormalizeObservation
 from sinergym import BaseReward
 
 from environments.base_provider import IEnvironmentProvider
@@ -166,11 +167,11 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
 
 class SinergymProvider(IEnvironmentProvider):
 
-    def create_environment(self, config_path: str) -> SinergymEnvironment:
+    def create_environment(self, config_path: str) -> SinergymEnvironment | NormalizeObservation:
         config = parse_sinergym_environment_config(config_path)
         env_elements = _build_environment_elements(config)
 
-        return SinergymEnvironment(
+        env = SinergymEnvironment(
             env_elements.building_model_path,
             env_elements.weather_data_path,
             env_elements.variables,
@@ -182,3 +183,8 @@ class SinergymProvider(IEnvironmentProvider):
             env_elements.reward_kwargs,
             env_elements.time_info,
         )
+
+        if config.normalize_state:
+            env = NormalizeObservation(env)
+
+        return env

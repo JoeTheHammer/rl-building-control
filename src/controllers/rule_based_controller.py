@@ -77,7 +77,7 @@ class RuleBasedController(IController):
         self.custom_variables = custom_variables
         self.aeval = Interpreter(no_print=True)
         # Indicate to sinergym env that raw values are expected.
-        self.env.expect_raw_actions = True
+        self.env.unwrapped.expect_raw_actions = True
 
     def get_action(self, state: Any) -> Any:
         """

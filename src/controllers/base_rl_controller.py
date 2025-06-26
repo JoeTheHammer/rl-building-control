@@ -81,6 +81,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         env_config: str,
         num_trials: int,
         num_episodes: int,
+        is_continuous_action_space: bool = False,
         fixed_hyperparams: Dict[str, Any] = None,
     ) -> Dict:
         """
@@ -104,7 +105,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
             logger.info(f"Test with these hp: {trial_hp}")
 
             env_t = env_provider.create_environment(env_config)
-            env_t.continuous_action_space = True
+            env_t.unwrapped.continuous_action_space = is_continuous_action_space
             ctrl = self._build_controller(env_t, trial_hp)
             rewards = Experiment(
                 name="hyperparameter_tuning",
@@ -156,7 +157,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         """
 
         new_env = environment_provider.create_environment(environment_config)
-        new_env.continuous_action_space = is_continuous_action_space
+        new_env.unwrapped.continuous_action_space = is_continuous_action_space
 
         hp = hyperparameters
 
@@ -171,6 +172,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 environment_config,
                 num_trials,
                 num_episodes,
+                is_continuous_action_space=is_continuous_action_space,
                 fixed_hyperparams=hyperparameters or {},
             )
 
@@ -188,7 +190,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         controller.env.close()
 
         # Communicate to env that if this controller only supports continuous action spaces.
-        env.continuous_action_space = is_continuous_action_space
+        env.unwrapped.continuous_action_space = is_continuous_action_space
         controller.env = env
 
         return controller

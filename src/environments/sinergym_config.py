@@ -54,3 +54,4 @@ class SinergymEnvironmentConfig(BaseModel):
     state_space: StateSpaceConfig
     action_space: ActionSpaceConfig
     reward_function: RewardConfig
+    normalize_state: Optional[bool] = False
