@@ -6,7 +6,7 @@ hyperparameter_tuning:
 
 # Option 2: Manually specify SAC hyperparameters
 hyperparameters:
-  ent_coef: 'auto_2.0'
-  learning_rate: 0.0009851008761417273
-  gamma: 0.9305074409820552
-  batch_size: 32
+  #ent_coef: 'auto_2.0'
+  #learning_rate: 0.0009851008761417273
+  #gamma: 0.9305074409820552
+  #batch_size: 32

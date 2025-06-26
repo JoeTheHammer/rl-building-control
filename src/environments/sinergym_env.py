@@ -43,7 +43,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             actuators=actuators,
             action_space=self.box_action_space,
             reward=reward_function_cls,
-            reward_kwargs=reward_kwargs,
+            reward_kwargs=reward_kwargs
         )
 
     @property

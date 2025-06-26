@@ -12,6 +12,9 @@ state_space:
     humidity_101:
       type: "Zone Mean Air Humidity Ratio"
       zone: "GuestRoom101"
+    outdoor_temp:
+      type: "Site Outdoor Air Drybulb Temperature"
+      zone: "Environment"
   meters:
     electricity: "Electricity:Facility"
     gas: "NaturalGas:Facility"
@@ -44,10 +47,14 @@ reward_function:
   type: "expression"
   variables: ["air_temp_101", "air_temp_104"]
   expression: >
-    - ((air_temp_101 - target_temp)**2 + (air_temp_104 - target_temp)**2)
-    - 0.1 * ((setpoint_temp - 23.0)**2 + (setpoint_temp_2 - 23.0)**2)
+    -1.0 * (
+      max(air_temp_101 - max_temp, 0.0)**2 +
+      max(min_temp - air_temp_101, 0.0)**2 +
+      max(air_temp_104 - max_temp, 0.0)**2 +
+      max(min_temp - air_temp_104, 0.0)**2
+    )
   params:
-    target_temp: 23.0
-    sigma: 1.0
+    min_temp: 22.0
+    max_temp: 24.0
 
 normalize_state: true
