@@ -156,7 +156,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         """
 
         new_env = environment_provider.create_environment(environment_config)
-        new_env.continuous_action_space = is_continuous_action_space
+        new_env.unwrapped.continuous_action_space = is_continuous_action_space
 
         hp = hyperparameters
 
@@ -188,7 +188,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         controller.env.close()
 
         # Communicate to env that if this controller only supports continuous action spaces.
-        env.continuous_action_space = is_continuous_action_space
+        env.unwrapped.continuous_action_space = is_continuous_action_space
         controller.env = env
 
         return controller

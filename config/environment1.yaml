@@ -19,9 +19,9 @@ state_space:
     day_of_month:
       cyclic: true
     month:
-      cyclic: false
+      cyclic: true
     day_of_week:
-      cyclic: false
+      cyclic: true
     hour:
       cyclic: true
 
@@ -50,4 +50,4 @@ reward_function:
     target_temp: 23.0
     sigma: 1.0
 
-
+normalize_state: true

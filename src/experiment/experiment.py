@@ -16,7 +16,7 @@ class Experiment:
         name: str,
         env: IEnvironment,
         controller: IController,
-        num_episodes: int = 10,
+        num_episodes: int = 5,
     ):
         self.name = name
         self.env = env
