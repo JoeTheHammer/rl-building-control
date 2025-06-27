@@ -4,3 +4,5 @@ experiments:
     environment_config: "../rl-building-control/config/environment1.yaml"
     controller: "sac"
     controller_config: "../rl-building-control/config/sac_controller.yaml"
+    reporting:
+      denormalize_state: False

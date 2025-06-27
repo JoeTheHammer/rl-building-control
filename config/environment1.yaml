@@ -57,4 +57,4 @@ reward_function:
     min_temp: 22.0
     max_temp: 24.0
 
-normalize_state: true
+normalize_state: True

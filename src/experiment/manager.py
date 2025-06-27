@@ -49,7 +49,12 @@ class ExperimentManager:
 
         setup_logger.info(f"Controller for algorithm {experiment_config.controller} created.")
 
-        return Experiment(experiment_config.name, env, controller)
+        return Experiment(
+            experiment_config.name,
+            env,
+            controller,
+            denorm_state=experiment_config.reporting.denormalize_state,
+        )
 
     def _create_environment(
         self, experiment_config: ExperimentConfig

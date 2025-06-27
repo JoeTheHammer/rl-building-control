@@ -1,11 +1,10 @@
 from typing import Any, List
 
-import numpy as np
-
 from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
 from environments.base_env import IEnvironment
 from reporting.plotter import plot_timeseries
+from wrappers.normalization_utils import denormalize_state
 
 
 def print_results(rewards: List[float], actions: List[Any], states: List[Any]):
@@ -19,11 +18,13 @@ class Experiment:
         env: IEnvironment,
         controller: IController,
         num_episodes: int = 1,
+        denorm_state: bool = False,
     ):
         self.name = name
         self.env = env
         self.controller = controller
         self.num_episodes = num_episodes
+        self.denorm_state = denorm_state
 
     def run(self) -> List[float]:
         """Run `num_episodes` in this environment and return a list of total episode_rewards."""
@@ -46,7 +47,11 @@ class Experiment:
                 episode_reward += reward
 
                 total_rewards.append(reward)
-                states.append(self._denormalize_state(state))
+                # Append denormalized state if given in config, else original state.
+                states.append(
+                    state if not self.denorm_state else denormalize_state(state, self.env)
+                )
+
                 actions.append(action)
 
             logger.info(f"Episode {ep}/{self.num_episodes} finished — reward: {episode_reward}")
@@ -58,13 +63,3 @@ class Experiment:
         print_results(total_rewards, [], [])
 
         return episode_rewards
-
-
-    def _denormalize_state(self, state: Any) -> Any:
-        # Denormalize observation (state)
-        if hasattr(self.env, "obs_rms") and hasattr(self.env, "epsilon"):
-            denorm_state = (state * np.sqrt(
-                self.env.obs_rms.var + self.env.epsilon) + self.env.obs_rms.mean)
-            return denorm_state
-        else:
-            return state
