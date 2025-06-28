@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from controllers.base_controller import IController, IControllerProvider
 from environments.base_provider import IEnvironmentProvider
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
 
 class Rule(BaseModel):
@@ -71,13 +72,15 @@ class RuleBasedController(IController):
         state_space: List[str],
         custom_variables: Dict[str, float],
     ):
+        # Use continuous action wrapper to ensure that raw actions are used if Sinergym environment
+        # was provided. If not, sinergym environment tries to translate expected indices to the real
+        # values for discrete action spaces.
+        env = ContinuousActionWrapper(env)
         super().__init__(env)
         self.rules = rules
         self.state_space = state_space
         self.custom_variables = custom_variables
         self.aeval = Interpreter(no_print=True)
-        # Indicate to sinergym env that raw values are expected.
-        self.env.unwrapped.expect_raw_actions = True
 
     def get_action(self, state: Any) -> Any:
         """

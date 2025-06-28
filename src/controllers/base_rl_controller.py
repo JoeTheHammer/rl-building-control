@@ -12,6 +12,7 @@ from controllers.base_controller import IController, IControllerProvider
 from custom_loggers.setup_logger import logger
 from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.reporting_wrapper import ReportingWrapper
 
 
@@ -59,6 +60,7 @@ def reporting_context(env, enabled, output_dir="./plots-training"):
             env.create_plots(output_dir=output_dir)
     else:
         yield
+
 
 class IRLControllerProvider(IControllerProvider, ABC):
     """
@@ -137,7 +139,11 @@ class IRLControllerProvider(IControllerProvider, ABC):
             logger.info(f"Test with these hp: {trial_hp}")
 
             env_t = env_provider.create_environment(env_config)
-            env_t.unwrapped.continuous_action_space = is_continuous_action_space
+
+            if is_continuous_action_space:
+                # Controller only supports continuous action space.
+                env_t = ContinuousActionWrapper(env_t)
+
             ctrl = self._build_controller(env_t, trial_hp)
             rewards = Experiment(
                 name="hyperparameter_tuning",
@@ -205,7 +211,6 @@ class IRLControllerProvider(IControllerProvider, ABC):
         """
 
         training_env = environment_provider.create_environment(environment_config)
-        training_env.unwrapped.continuous_action_space = is_continuous_action_space
 
         hp = hyperparameters
 
@@ -229,6 +234,10 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
 
+        if is_continuous_action_space:
+            # Controller only supports continuous action space.
+            training_env = ContinuousActionWrapper(training_env)
+
         if report_training:
             training_env = ReportingWrapper(training_env, denorm_state=denorm_state)
 
@@ -242,8 +251,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
         # Close env instance on which training was done on.
         training_env.close()
 
-        # Communicate to env that if this controller only supports continuous action spaces.
-        env.unwrapped.continuous_action_space = is_continuous_action_space
+        if is_continuous_action_space:
+            # Controller only supports continuous action space.
+            env = ContinuousActionWrapper(env)
 
         # Set new environment
         controller.env = env

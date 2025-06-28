@@ -43,7 +43,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             actuators=actuators,
             action_space=self.box_action_space,
             reward=reward_function_cls,
-            reward_kwargs=reward_kwargs
+            reward_kwargs=reward_kwargs,
         )
 
     @property
@@ -75,11 +75,13 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
     def step(self, action):
 
-        # Convert action from controller to "real" action supported by energy plus. This is needed,
-        # as the action of the controller might be an index in a discrete action space. This can be
-        # overruled by the controller (needed for rule-based controller or if controller only support
-        # continuous environment)
-        if not self.expect_raw_actions and not self.continuous_action_space:
+        if self.continuous_action_space:
+            # Map controller's continuous actions to the closest allowed actuator values. No flattening
+            # of action space is needed as it is already the box action space.
+            action = self.custom_action_space.map_continuous_to_valid_actions(action)
+        else:
+            # Convert controller's tuple/discrete actions to real actuator values, as discrete values are indices.
+            # Also flattens the action space to be compatible with energy plus environment.
             action = self.custom_action_space.to_eplus_action(action)
 
         # We ignore reward as we calculate it later in this method.
