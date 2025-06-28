@@ -40,9 +40,9 @@ class ReportingWrapper(gym.Wrapper):
         self.actions = []
         self.rewards = []
         self.denorm_state = denorm_state
-        self.reset_logs()
+        self.reset_recordings()
 
-    def reset_logs(self):
+    def reset_recordings(self):
         """
         Reset all collected logs (states, actions, rewards).
         """
@@ -56,7 +56,7 @@ class ReportingWrapper(gym.Wrapper):
         Resets any previously collected logs.
         """
         self.is_recording = True
-        self.reset_logs()
+        self.reset_recordings()
 
     def end_recording(self):
         """
