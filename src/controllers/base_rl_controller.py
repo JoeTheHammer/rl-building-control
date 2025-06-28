@@ -182,14 +182,14 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
 
-        wrapped_env = ReportingWrapper(new_env)
+        wrapped_env = ReportingWrapper(new_env, denorm_state=True)
         controller = self._build_controller(wrapped_env, hp)
 
         logger.info(f"Start training with {train_timesteps} timesteps.")
         wrapped_env.start_recording()
         controller.train(timesteps=train_timesteps)
         wrapped_env.end_recording()
-        wrapped_env.create_plots()
+        wrapped_env.create_plots(output_dir="./plots-training")
 
         # Plug out reporting wrapper.
         controller.env = wrapped_env.env
