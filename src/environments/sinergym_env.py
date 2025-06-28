@@ -8,7 +8,7 @@ from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
 from spaces.custom_action_space import ActuatorActionSpace
-from utils.observation import build_reward_dict
+from utils.observation import build_info_dict
 
 
 class SinergymEnvironment(EplusEnv, IEnvironment):
@@ -89,7 +89,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
         state, time_info_dict = self._add_time_information_to_state(obs)
 
-        reward_dict = build_reward_dict(
+        info_dict = build_info_dict(
             obs=obs,
             action=action,
             time_info=time_info_dict,
@@ -99,10 +99,10 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         )
 
         # Communicate to reward function that actual reward should be calculated.
-        reward_dict["__compute_reward__"] = True
-        reward, reward_info = self.reward_fn(reward_dict)
+        info_dict["__compute_reward__"] = True
+        reward, reward_info = self.reward_fn(info_dict)
 
-        return state, reward, terminated, truncated, {**reward_dict, **reward_info}
+        return state, reward, terminated, truncated, info_dict
 
     def reset(self, **kwargs):
         """
@@ -148,8 +148,6 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
                 else:
                     raise ValueError(f"Unsupported time key: {time_key}")
 
-                time_info_dict[time_key] = value
-
                 if cyclic:
                     radians = 2 * math.pi * value / max_val
                     sin_val = math.sin(radians)
@@ -159,5 +157,6 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
                     time_info_dict[f"{time_key}_cos"] = cos_val
                 else:
                     state.append(value)
+                    time_info_dict[time_key] = value
 
         return np.array(state, dtype=np.float32), time_info_dict
