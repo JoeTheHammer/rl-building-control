@@ -1,4 +1,8 @@
-train_timesteps: 100
+train_timesteps: 1000
+
+reporting:
+ report_training: True
+ denormalize_state: True
 
 hyperparameter_tuning:
  num_trials: 50
