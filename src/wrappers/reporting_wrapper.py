@@ -2,6 +2,7 @@ import gymnasium as gym
 import numpy as np
 
 from reporting.plotter import plot_timeseries
+from wrappers.normalization_utils import denormalize_state
 
 
 def _flatten(values):
@@ -26,7 +27,7 @@ class ReportingWrapper(gym.Wrapper):
     can be visualized using the `create_plots()` method, which uses `plot_timeseries`.
     """
 
-    def __init__(self, env):
+    def __init__(self, env, denorm_state=False):
         """
         Initialize the LoggingWrapper.
 
@@ -38,6 +39,7 @@ class ReportingWrapper(gym.Wrapper):
         self.states = []
         self.actions = []
         self.rewards = []
+        self.denorm_state = denorm_state
         self.reset_logs()
 
     def reset_logs(self):
@@ -79,7 +81,7 @@ class ReportingWrapper(gym.Wrapper):
         """
         obs, reward, terminated, truncated, info = self.env.step(action)
         if self.is_recording:
-            self.states.append(obs)
+            self.states.append(obs if not self.denorm_state else denormalize_state(obs, self.env))
             self.actions.append(action)
             self.rewards.append(reward)
         return obs, reward, terminated, truncated, info
@@ -94,7 +96,7 @@ class ReportingWrapper(gym.Wrapper):
         """
         obs, info = self.env.reset(**kwargs)
         if self.is_recording:
-            self.states.append(obs)
+            self.states.append(obs if not self.denorm_state else denormalize_state(obs, self.env))
         return obs, info
 
     def create_plots(self, output_dir="./plots", file_format="png"):
