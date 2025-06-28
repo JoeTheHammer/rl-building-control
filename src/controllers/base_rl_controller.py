@@ -10,6 +10,7 @@ from controllers.base_controller import IController, IControllerProvider
 from custom_loggers.setup_logger import logger
 from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
+from wrappers.reporting_wrapper import ReportingWrapper
 
 
 class IRLController(IController, ABC):
@@ -180,17 +181,26 @@ class IRLControllerProvider(IControllerProvider, ABC):
             logger.info(f"Best hyperparameters: {hp}")
 
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
-        controller = self._build_controller(new_env, hp)
 
-        # Training the controller that was already hyperparameter tuned.
+        wrapped_env = ReportingWrapper(new_env)
+        controller = self._build_controller(wrapped_env, hp)
+
         logger.info(f"Start training with {train_timesteps} timesteps.")
+        wrapped_env.start_recording()
         controller.train(timesteps=train_timesteps)
+        wrapped_env.end_recording()
+        wrapped_env.create_plots()
+
+        # Plug out reporting wrapper.
+        controller.env = wrapped_env.env
 
         # Close env instance on which training was done on.
         controller.env.close()
 
         # Communicate to env that if this controller only supports continuous action spaces.
         env.unwrapped.continuous_action_space = is_continuous_action_space
+
+        # Set new environment
         controller.env = env
 
         return controller
