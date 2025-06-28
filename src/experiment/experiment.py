@@ -28,7 +28,7 @@ class Experiment:
         episode_rewards = []
         total_rewards = []
 
-        self.env = ReportingWrapper(self.env, denorm_state=True)
+        self.env = ReportingWrapper(self.env, denorm_state=self.denorm_state)
         self.env.start_recording()
 
         for ep in range(1, self.num_episodes + 1):

@@ -4,22 +4,10 @@ import gymnasium as gym
 import optuna
 import yaml
 from gymnasium import Env
-from pydantic import BaseModel
 from stable_baselines3 import SAC
 
-from controllers.base_rl_controller import IRLController, IRLControllerProvider
+from controllers.base_rl_controller import IRLController, IRLControllerProvider, RLControllerConfig
 from environments.base_provider import IEnvironmentProvider
-
-
-class HyperparameterTuning(BaseModel):
-    num_trials: int
-    num_episodes: int
-
-
-class SACControllerConfig(BaseModel):
-    train_timesteps: int
-    hyperparameter_tuning: Optional[HyperparameterTuning] = None
-    hyperparameters: Optional[Dict[str, Any]] = None
 
 
 class SACController(IRLController):
@@ -44,7 +32,7 @@ class SACController(IRLController):
         self.model.learn(timesteps)
 
 
-def load_controller_config(path: str) -> SACControllerConfig:
+def load_controller_config(path: str) -> RLControllerConfig:
     """
     Loads a YAML controller configuration file and parses it into a SACControllerConfig object.
 
@@ -56,7 +44,7 @@ def load_controller_config(path: str) -> SACControllerConfig:
     """
     with open(path, "r") as f:
         raw_data = yaml.safe_load(f)
-    return SACControllerConfig(**raw_data)
+    return RLControllerConfig(**raw_data)
 
 
 class SACProvider(IRLControllerProvider):
@@ -96,14 +84,17 @@ class SACProvider(IRLControllerProvider):
 
         tuning = config.hyperparameter_tuning
         hyperparams = config.hyperparameters
+        training = config.training
 
         return super().create_rl_controller(
             env=env,
             environment_provider=environment_provider,
             environment_config=environment_config,
-            train_timesteps=config.train_timesteps,
+            train_timesteps=training.timesteps,
             is_continuous_action_space=True,
             num_trials=tuning.num_trials if tuning else None,
             num_episodes=tuning.num_episodes if tuning else None,
             hyperparameters=hyperparams,
+            report_training=training.report_training,
+            denorm_state=training.report_denormalized_state,
         )

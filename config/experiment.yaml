@@ -5,4 +5,4 @@ experiments:
     controller: "sac"
     controller_config: "../rl-building-control/config/sac_controller.yaml"
     reporting:
-      denormalize_state: False
+      denormalize_state: True
