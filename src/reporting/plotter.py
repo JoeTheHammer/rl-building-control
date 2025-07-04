@@ -2,10 +2,14 @@ import os
 from typing import List
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot_timeseries(
-    name: str, values: List[float], output_dir: str = "./plots", file_format: str = "png"
+    name: str,
+    values: List[float] | np.ndarray,
+    output_dir: str = "./plots",
+    file_format: str = "png",
 ):
     """
     Plots a line chart for a time series and saves it to a file.

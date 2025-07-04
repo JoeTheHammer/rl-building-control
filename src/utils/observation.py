@@ -3,7 +3,7 @@ from typing import Any, Dict
 import numpy as np
 
 
-def build_reward_dict(
+def build_info_dict(
     obs: np.ndarray,
     action: np.ndarray,
     time_info: Dict[str, Any],
@@ -28,4 +28,6 @@ def build_reward_dict(
         **state_values,
         **time_info,
         **action_values,
+        "state_keys": ordered_state_keys + list(time_info.keys()),
+        "action_keys": list(actuators.keys()),
     }

@@ -26,7 +26,7 @@ state_space:
     day_of_week:
       cyclic: true
     hour:
-      cyclic: true
+      cyclic: false
 
 action_space:
   actuators:

@@ -37,7 +37,7 @@ class ActuatorActionSpace:
     def to_eplus_action(self, action_tuple: np.ndarray) -> np.ndarray:
         """
         Convert a tuple-style action from the agent into a flat NumPy array
-        of real values suitable for EnergyPlus or another actuator system.
+        of real values suitable for EnergyPlus.
 
         Args:
             action_tuple (np.ndarray): Action values from the agent (discrete indices or continuous values).
@@ -54,6 +54,31 @@ class ActuatorActionSpace:
             else:
                 raise ValueError(f"Unsupported space type: {type(space)}")
         return np.array(flat_action, dtype=np.float32)
+
+    def map_continuous_to_valid_actions(self, action_vec: np.ndarray) -> np.ndarray:
+        """
+        Maps a continuous action vector (as output by a continuous controller) to valid actuator values.
+        For discrete actuators, this means picking the closest allowed value.
+        For continuous actuators, the value is passed through.
+        """
+        mapped_action = []
+        for val, space, mapping in zip(action_vec, self.spaces, self.discrete_mappings):
+            if isinstance(space, gym.spaces.Discrete):
+                allowed = np.array(mapping, dtype=np.float32)
+                float_val = (
+                    float(val)
+                    if np.isscalar(val) or isinstance(val, (np.floating, float))
+                    else float(val[0])
+                )
+                idx = np.abs(allowed - float_val).argmin()
+                mapped_action.append(allowed[idx])
+            elif isinstance(space, gym.spaces.Box):
+                mapped_action.append(
+                    float(val[0]) if isinstance(val, (np.ndarray, list)) else float(val)
+                )
+            else:
+                raise ValueError(f"Unsupported space type: {type(space)}")
+        return np.array(mapped_action, dtype=np.float32)
 
     def get_box_space(self) -> gym.spaces.Box:
         """

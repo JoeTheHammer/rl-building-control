@@ -8,7 +8,7 @@ from sinergym.envs import EplusEnv
 
 from environments.base_env import IEnvironment
 from spaces.custom_action_space import ActuatorActionSpace
-from utils.observation import build_reward_dict
+from utils.observation import build_info_dict
 
 
 class SinergymEnvironment(EplusEnv, IEnvironment):
@@ -43,7 +43,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             actuators=actuators,
             action_space=self.box_action_space,
             reward=reward_function_cls,
-            reward_kwargs=reward_kwargs
+            reward_kwargs=reward_kwargs,
         )
 
     @property
@@ -75,11 +75,13 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
     def step(self, action):
 
-        # Convert action from controller to "real" action supported by energy plus. This is needed,
-        # as the action of the controller might be an index in a discrete action space. This can be
-        # overruled by the controller (needed for rule-based controller or if controller only support
-        # continuous environment)
-        if not self.expect_raw_actions and not self.continuous_action_space:
+        if self.continuous_action_space:
+            # Map controller's continuous actions to the closest allowed actuator values. No flattening
+            # of action space is needed as it is already the box action space.
+            action = self.custom_action_space.map_continuous_to_valid_actions(action)
+        else:
+            # Convert controller's tuple/discrete actions to real actuator values, as discrete values are indices.
+            # Also flattens the action space to be compatible with energy plus environment.
             action = self.custom_action_space.to_eplus_action(action)
 
         # We ignore reward as we calculate it later in this method.
@@ -87,7 +89,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
         state, time_info_dict = self._add_time_information_to_state(obs)
 
-        reward_dict = build_reward_dict(
+        info_dict = build_info_dict(
             obs=obs,
             action=action,
             time_info=time_info_dict,
@@ -97,10 +99,10 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         )
 
         # Communicate to reward function that actual reward should be calculated.
-        reward_dict["__compute_reward__"] = True
-        reward, reward_info = self.reward_fn(reward_dict)
+        info_dict["__compute_reward__"] = True
+        reward, reward_info = self.reward_fn(info_dict)
 
-        return state, reward, terminated, truncated, {**reward_dict, **reward_info}
+        return state, reward, terminated, truncated, info_dict
 
     def reset(self, **kwargs):
         """
@@ -146,8 +148,6 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
                 else:
                     raise ValueError(f"Unsupported time key: {time_key}")
 
-                time_info_dict[time_key] = value
-
                 if cyclic:
                     radians = 2 * math.pi * value / max_val
                     sin_val = math.sin(radians)
@@ -157,5 +157,6 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
                     time_info_dict[f"{time_key}_cos"] = cos_val
                 else:
                     state.append(value)
+                    time_info_dict[time_key] = value
 
         return np.array(state, dtype=np.float32), time_info_dict

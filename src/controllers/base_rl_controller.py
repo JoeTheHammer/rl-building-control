@@ -1,15 +1,36 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from typing import Any, Dict, Optional
 
 import gymnasium as gym
 import numpy as np
 import optuna
 from gymnasium import Env
+from pydantic import BaseModel
 
 from controllers.base_controller import IController, IControllerProvider
 from custom_loggers.setup_logger import logger
 from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from wrappers.reporting_wrapper import ReportingWrapper
+
+
+class Training(BaseModel):
+    timesteps: int
+    report_training: Optional[bool] = False
+    report_denormalized_state: Optional[bool] = False
+
+
+class HyperparameterTuning(BaseModel):
+    num_trials: int
+    num_episodes: int
+
+
+class RLControllerConfig(BaseModel):
+    training: Training
+    hyperparameter_tuning: HyperparameterTuning
+    hyperparameters: Optional[Dict[str, Any]] = None
 
 
 class IRLController(IController, ABC):
@@ -26,6 +47,19 @@ class IRLController(IController, ABC):
             timesteps (int): The number of environment steps to use for training.
         """
         pass
+
+
+@contextmanager
+def reporting_context(env, enabled, output_dir="./plots-training"):
+    if enabled:
+        env.start_recording()
+        try:
+            yield
+        finally:
+            env.end_recording()
+            env.create_plots(output_dir=output_dir)
+    else:
+        yield
 
 
 class IRLControllerProvider(IControllerProvider, ABC):
@@ -105,7 +139,11 @@ class IRLControllerProvider(IControllerProvider, ABC):
             logger.info(f"Test with these hp: {trial_hp}")
 
             env_t = env_provider.create_environment(env_config)
-            env_t.unwrapped.continuous_action_space = is_continuous_action_space
+
+            if is_continuous_action_space:
+                # Controller only supports continuous action space.
+                env_t = ContinuousActionWrapper(env_t)
+
             ctrl = self._build_controller(env_t, trial_hp)
             rewards = Experiment(
                 name="hyperparameter_tuning",
@@ -131,33 +169,48 @@ class IRLControllerProvider(IControllerProvider, ABC):
         num_trials: int | None = 20,
         num_episodes: int | None = 2,
         hyperparameters: Dict | None = None,
+        report_training: bool = False,
+        denorm_state: bool = False,
     ) -> IRLController:
         """
-        Create and train a reinforcement learning controller.
+        Create and train a reinforcement learning controller with optional training reporting.
 
-        If no hyperparameters are provided, Optuna-based hyperparameter tuning will be performed.
-        The controller will be built using the resulting or provided hyperparameters, trained for
-        a specified number of timesteps, and linked back to the given environment.
+        This function performs the following steps:
+        - Instantiates a new environment for training.
+        - Optionally wraps the training environment in a ReportingWrapper to log and visualize
+          training states, actions, and rewards.
+        - Optionally performs Optuna-based hyperparameter tuning if no (or incomplete) hyperparameters
+          are provided.
+        - Builds and trains the controller with the selected environment and hyperparameters.
+        - If reporting is enabled, logs and visualizes training data after training.
+        - Closes the training environment and links the controller to the (user-provided) target
+          environment for subsequent use (e.g., evaluation).
 
         Args:
-            env (gym.Env): The target environment instance to associate with the trained controller.
+            env (gym.Env): The target environment instance to associate with the trained controller
+                after training is complete (for evaluation or deployment).
             environment_provider (IEnvironmentProvider | None): Provider responsible for generating
-                new instances of the environment.
-            environment_config (str | None): Path to the environment configuration file.
+                new instances of the environment for training and tuning.
+            environment_config (str | None): Path to the environment configuration file for training.
             train_timesteps (int): Number of timesteps to train the controller.
             is_continuous_action_space (bool): Whether the controller and environment should use
                 a continuous action space.
             num_trials (int | None): Number of trials for hyperparameter tuning, if enabled.
             num_episodes (int | None): Number of evaluation episodes per trial during tuning.
             hyperparameters (Dict | None): Optional pre-defined hyperparameters for the controller.
-                If None, hyperparameter tuning is triggered.
+                If None or incomplete, hyperparameter tuning is triggered.
+            report_training (bool): If True, wraps the training environment with a ReportingWrapper
+                to record and plot states, actions, and rewards during training.
+            denorm_state (bool): If True and reporting is enabled, logs the denormalized
+                state for analysis and visualization.
 
         Returns:
-            IRLController: A trained reinforcement learning controller instance.
+            IRLController: A trained reinforcement learning controller instance, linked to the
+            user-provided environment (`env`). If reporting was enabled, training plots are saved
+            in the directory "./plots-training".
         """
 
-        new_env = environment_provider.create_environment(environment_config)
-        new_env.unwrapped.continuous_action_space = is_continuous_action_space
+        training_env = environment_provider.create_environment(environment_config)
 
         hp = hyperparameters
 
@@ -180,17 +233,29 @@ class IRLControllerProvider(IControllerProvider, ABC):
             logger.info(f"Best hyperparameters: {hp}")
 
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
-        controller = self._build_controller(new_env, hp)
 
-        # Training the controller that was already hyperparameter tuned.
+        if is_continuous_action_space:
+            # Controller only supports continuous action space.
+            training_env = ContinuousActionWrapper(training_env)
+
+        if report_training:
+            training_env = ReportingWrapper(training_env, denorm_state=denorm_state)
+
+        controller = self._build_controller(training_env, hp)
+
         logger.info(f"Start training with {train_timesteps} timesteps.")
-        controller.train(timesteps=train_timesteps)
+
+        with reporting_context(training_env, report_training):
+            controller.train(timesteps=train_timesteps)
 
         # Close env instance on which training was done on.
-        controller.env.close()
+        training_env.close()
 
-        # Communicate to env that if this controller only supports continuous action spaces.
-        env.unwrapped.continuous_action_space = is_continuous_action_space
+        if is_continuous_action_space:
+            # Controller only supports continuous action space.
+            env = ContinuousActionWrapper(env)
+
+        # Set new environment
         controller.env = env
 
         return controller
