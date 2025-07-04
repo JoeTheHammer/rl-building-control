@@ -22,8 +22,9 @@ def plot_timeseries(
     """
 
     os.makedirs(output_dir, exist_ok=True)
+    x = range(len(values))
     plt.figure()
-    plt.plot(values)
+    plt.bar(x, values)
     plt.title(f"{name} over time")
     plt.xlabel("Timestep")
     plt.ylabel(name)
