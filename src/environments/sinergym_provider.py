@@ -139,7 +139,7 @@ def _build_reward_function(
                 f"from module '{reward_cfg.module}': {e}"
             )
 
-    return MyReward, {}, reward_variables  # fallback
+    raise Exception(f"Unsupported reward type '{reward_cfg.type}'")
 
 
 def _build_environment_elements(config: SinergymEnvironmentConfig) -> EnvironmentElements:

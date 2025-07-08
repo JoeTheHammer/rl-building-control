@@ -38,6 +38,9 @@ class Experiment:
 
             while not done:
                 action = self.controller.get_action(state)
+                print(f"Action: {action}")
+                print("--------------")
+                print("--------------")
                 state, reward, terminated, truncated, info = self.env.step(action)
                 done = terminated or truncated
                 episode_reward += reward

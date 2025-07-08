@@ -1,6 +1,7 @@
 import typer
 
 from bootstrap.sinergym_loader import create_sinergym_provider
+from controllers.custom_controller_provider import CustomControllerProvider
 from controllers.random_controller import RandomControllerProvider
 from controllers.rule_based_controller import RuleBasedControllerProvider
 from controllers.sac_controller import SACProvider
@@ -21,6 +22,7 @@ def run(config: str = typer.Argument(..., help="Path to the YAML environment_con
     experiment_manager.register_controller_provider("random", RandomControllerProvider())
     experiment_manager.register_controller_provider("rule-based", RuleBasedControllerProvider())
     experiment_manager.register_controller_provider("sac", SACProvider())
+    experiment_manager.register_controller_provider("custom", CustomControllerProvider())
 
     experiment_manager.setup_experiments(config)
     experiment_manager.run_all()

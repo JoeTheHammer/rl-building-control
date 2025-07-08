@@ -1,5 +1,5 @@
 training:
- timesteps: 1000
+ timesteps: 200
  report_training: True
  report_denormalized_state: True
 
