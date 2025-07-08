@@ -149,7 +149,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 name="hyperparameter_tuning",
                 env=env_t,
                 controller=ctrl,
-                num_episodes=num_episodes,
+                episodes=num_episodes,
             ).run()
             env_t.close()
             return float(np.mean(rewards))

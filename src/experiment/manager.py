@@ -54,6 +54,9 @@ class ExperimentManager:
             env,
             controller,
             denorm_state=experiment_config.reporting.denormalize_state,
+            episodes=experiment_config.episodes,
+            plots=experiment_config.reporting.plots,
+            export=experiment_config.reporting.export,
         )
 
     def _create_environment(

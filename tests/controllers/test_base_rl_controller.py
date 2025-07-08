@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from unittest.mock import Mock
 
+import gymnasium
 import optuna
 import pytest
 from gymnasium import Env
@@ -95,7 +96,7 @@ def test_tune_hyperparameters_combines_trial_and_fixed(controller_provider):
 
 
 def test_create_rl_controller_executes_training(controller_provider):
-    env = Mock()
+    env = Mock(spec_set=gymnasium.Env)
     env_provider = Mock()
     env_provider.create_environment.return_value = env
 
@@ -111,5 +112,5 @@ def test_create_rl_controller_executes_training(controller_provider):
     )
 
     assert isinstance(controller, IRLController)
-    assert controller.env is env
+    assert controller.env.unwrapped is env.unwrapped
     assert controller.trained_timesteps == 10

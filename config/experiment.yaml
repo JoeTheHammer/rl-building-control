@@ -4,5 +4,8 @@ experiments:
     environment_config: "../rl-building-control/config/environment1.yaml"
     controller: "custom"
     controller_config: "../rl-building-control/config/custom_controller.yaml"
+    episodes: 1
     reporting:
+      plots: True
       denormalize_state: True
+      export: True

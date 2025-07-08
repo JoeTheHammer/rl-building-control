@@ -12,26 +12,31 @@ class Experiment:
         name: str,
         env: IEnvironment,
         controller: IController,
-        num_episodes: int = 1,
+        episodes: int = 1,
         denorm_state: bool = False,
+        plots: bool = False,
+        export: bool = False,
     ):
         self.name = name
         self.env = env
         self.controller = controller
-        self.num_episodes = num_episodes
+        self.episodes = episodes
         self.denorm_state = denorm_state
+        self.plots = plots
+        self.export = export
+        self.report = self.plots or self.export
 
     def run(self) -> List[float]:
         """Run `num_episodes` in this environment and return a list of total episode_rewards."""
 
-        logger.info(f"Experiment {self.name} started for {self.num_episodes} episodes.")
+        logger.info(f"Experiment {self.name} started for {self.episodes} episodes.")
         episode_rewards = []
         total_rewards = []
 
-        self.env = ReportingWrapper(self.env, denorm_state=self.denorm_state)
-        self.env.start_recording()
+        if self.report:
+            self._setup_reporting()
 
-        for ep in range(1, self.num_episodes + 1):
+        for ep in range(1, self.episodes + 1):
             episode_reward = 0
             state, _ = self.env.reset()
             done = False
@@ -45,14 +50,34 @@ class Experiment:
                 total_rewards.append(reward)
                 # Append denormalized state if given in config, else original state.
 
-            logger.info(f"Episode {ep}/{self.num_episodes} finished — reward: {episode_reward}")
+            logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
             episode_rewards.append(episode_reward)
-
-        self.env.end_recording()
-        self.env.create_plots(output_dir=f"Experiment_{self.name}")
-        self.env.reset_recordings()
+        if self.report:
+            self._report()
 
         self.env.close()
         logger.info(f"Experiment {self.name} complete.")
 
         return episode_rewards
+
+    def _setup_reporting(self):
+        self.env = ReportingWrapper(self.env, denorm_state=self.denorm_state)
+        self.env.start_recording()
+
+    def _report(self):
+
+        if not isinstance(self.env, ReportingWrapper):
+            logger.warning(
+                "Report method called, but environment is not a ReportingWrapper. Skipping report."
+            )
+            return
+
+        self.env.end_recording()
+
+        if self.plots:
+            logger.info("Creating plots...")
+            self.env.create_plots(output_dir=f"Experiment_{self.name}")
+        if self.export:
+            logger.info("Exporting data...")
+            self.env.export_to_csv(output_dir=f"Experiment_{self.name}")
+        self.env.reset_recordings()

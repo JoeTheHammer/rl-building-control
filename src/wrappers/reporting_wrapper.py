@@ -1,5 +1,8 @@
+from pathlib import Path
+
 import gymnasium as gym
 import numpy as np
+import pandas as pd
 
 from reporting.plotter import plot_timeseries
 from wrappers.normalization_utils import denormalize_state
@@ -144,3 +147,44 @@ class ReportingWrapper(gym.Wrapper):
             elif states_arr.ndim == 2:
                 for i in range(states_arr.shape[1]):
                     plot_timeseries(f"state_{i}", states_arr[:, i], state_dir, file_format)
+
+    def export_to_csv(self, output_dir="./export"):
+        """
+        Export the collected rewards, actions, and states to separate CSV files.
+        """
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Export Rewards
+        if self.rewards:
+            pd.DataFrame({"reward": self.rewards}).to_csv(
+                output_path / "rewards.csv", index=False
+            )
+
+        # Flatten collected data
+        actions_arr = _flatten(self.actions)
+        states_arr = _flatten(self.states)
+
+        # Export Actions
+        if actions_arr.size > 0:
+            num_actions = actions_arr.shape[1] if actions_arr.ndim > 1 else 1
+            if self.action_names and len(self.action_names) == num_actions:
+                action_headers = self.action_names
+            else:
+                action_headers = [f"action_{i}" for i in range(num_actions)]
+
+            pd.DataFrame(actions_arr, columns=action_headers).to_csv(
+                output_path / "actions.csv", index=False
+            )
+
+        # Export States (includes the initial state)
+        if states_arr.size > 0:
+            num_states = states_arr.shape[1] if states_arr.ndim > 1 else 1
+            if self.state_names and len(self.state_names) == num_states:
+                state_headers = self.state_names
+            else:
+                state_headers = [f"state_{i}" for i in range(num_states)]
+
+            pd.DataFrame(states_arr, columns=state_headers).to_csv(
+                output_path / "states.csv", index=False
+            )
