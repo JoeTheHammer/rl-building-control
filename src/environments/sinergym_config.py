@@ -27,8 +27,10 @@ class ActuatorConfig(BaseModel):
     values: Optional[List[float]] = None
     step_size: Optional[float] = None
 
+
 class ActionSpaceConfig(BaseModel):
     actuators: Dict[str, ActuatorConfig]
+
 
 class BaseRewardConfig(BaseModel):
     variables: Optional[List[str]] = None  # ← shared field

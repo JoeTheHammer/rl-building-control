@@ -123,7 +123,9 @@ def _build_episode(config: SinergymEnvironmentConfig) -> dict:
 
     if config.episode.period is not None:
         if len(config.episode.period) != 6:
-            raise ValueError("period must contain exactly 6 integers for [start_day, start_month, start_year, end_day, end_month, end_year].")
+            raise ValueError(
+                "period must contain exactly 6 integers for [start_day, start_month, start_year, end_day, end_month, end_year]."
+            )
         # Sinergym expects a tuple for the period
         episode_params["runperiod"] = tuple(config.episode.period)
 
@@ -183,7 +185,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
         reward_variables=reward_variables,
         reward_kwargs=reward_kwargs,
         action_space=action_space,
-        config_params = build_episode
+        config_params=build_episode,
     )
 
 
@@ -204,7 +206,7 @@ class SinergymProvider(IEnvironmentProvider):
             env_elements.action_space,
             env_elements.reward_kwargs,
             env_elements.time_info,
-            env_elements.config_params
+            env_elements.config_params,
         )
 
         if config.normalize_state:

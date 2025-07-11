@@ -60,5 +60,5 @@ reward_function:
 normalize_state: True
 
 episode:
-  timesteps_per_hour: 2
-  period: [1, 1, 2025, 10, 1, 2025]
+  timesteps_per_hour: 4
+  period: [1, 1, 2025, 30, 6, 2025]
