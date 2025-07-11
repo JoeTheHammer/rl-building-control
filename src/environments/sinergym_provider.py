@@ -18,7 +18,6 @@ from sinergym import BaseReward
 from environments.base_provider import IEnvironmentProvider
 from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
-from reward.custom_reward import MyReward
 from reward.expression_reward import ExpressionReward
 from spaces.custom_action_space import ActuatorActionSpace
 
@@ -35,6 +34,7 @@ class EnvironmentElements:
     reward_variables: List[str]
     reward_kwargs: Optional[Dict[str, Any]]
     action_space: ActuatorActionSpace
+    config_params: Optional[Dict[str, Any]]
 
 
 EXPRESSION_REWARD_TYPE = "expression"
@@ -110,6 +110,26 @@ def _build_action_space(config: SinergymEnvironmentConfig) -> ActuatorActionSpac
     return ActuatorActionSpace(spaces, discrete_mappings)
 
 
+def _build_episode(config: SinergymEnvironmentConfig) -> dict:
+    """Parses and validates episode parameters from the config."""
+    if not config.episode:
+        return {}
+
+    episode_params = {}
+    if config.episode.timesteps_per_hour is not None:
+        if config.episode.timesteps_per_hour <= 0:
+            raise ValueError("timesteps_per_hour must be a positive integer.")
+        episode_params["timesteps_per_hour"] = config.episode.timesteps_per_hour
+
+    if config.episode.period is not None:
+        if len(config.episode.period) != 6:
+            raise ValueError("period must contain exactly 6 integers for [start_day, start_month, start_year, end_day, end_month, end_year].")
+        # Sinergym expects a tuple for the period
+        episode_params["runperiod"] = tuple(config.episode.period)
+
+    return episode_params
+
+
 def _build_reward_function(
     config: SinergymEnvironmentConfig,
 ) -> Tuple[Any, Dict[str, Any], List[str]]:
@@ -149,6 +169,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
     actuators = _parse_actuators(config)
     time_info = _parse_time_info(config)
     action_space = _build_action_space(config)
+    build_episode = _build_episode(config)
     reward_function_cls, reward_kwargs, reward_variables = _build_reward_function(config)
 
     return EnvironmentElements(
@@ -162,6 +183,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
         reward_variables=reward_variables,
         reward_kwargs=reward_kwargs,
         action_space=action_space,
+        config_params = build_episode
     )
 
 
@@ -182,6 +204,7 @@ class SinergymProvider(IEnvironmentProvider):
             env_elements.action_space,
             env_elements.reward_kwargs,
             env_elements.time_info,
+            env_elements.config_params
         )
 
         if config.normalize_state:

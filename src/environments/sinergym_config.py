@@ -7,8 +7,10 @@ class VariableConfig(BaseModel):
     type: str
     zone: str
 
+
 class TimeFeatureConfig(BaseModel):
     cyclic: bool
+
 
 class StateSpaceConfig(BaseModel):
     variables: Dict[str, VariableConfig]
@@ -48,6 +50,13 @@ class PythonRewardConfig(BaseRewardConfig):
 RewardConfig = Union[ExpressionRewardConfig, PythonRewardConfig]
 
 
+class EpisodeConfig(BaseModel):
+    """Specifies optional episode parameters like simulation time."""
+
+    timesteps_per_hour: Optional[int] = None
+    period: Optional[List[int]] = None
+
+
 class SinergymEnvironmentConfig(BaseModel):
     building_model: str
     weather_data: str
@@ -55,3 +64,4 @@ class SinergymEnvironmentConfig(BaseModel):
     action_space: ActionSpaceConfig
     reward_function: RewardConfig
     normalize_state: Optional[bool] = False
+    episode: Optional[EpisodeConfig] = None

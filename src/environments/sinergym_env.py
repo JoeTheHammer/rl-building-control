@@ -24,6 +24,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         action_space: ActuatorActionSpace,
         reward_kwargs: Optional[Dict[str, Any]] = None,
         time_info: dict[str, dict[str, bool]] | None = None,
+        config_params: dict[str, Any] | None = None,
     ):
 
         self.variables = variables
@@ -44,6 +45,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
             action_space=self.box_action_space,
             reward=reward_function_cls,
             reward_kwargs=reward_kwargs,
+            config_params=config_params,
         )
 
     @property
