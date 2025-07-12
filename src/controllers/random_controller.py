@@ -38,9 +38,11 @@ class RandomControllerProvider(IControllerProvider):
 
     def create_controller(
         self,
-        env: gym.Env,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
     ) -> RandomController:
+        
+        env = environment_provider.create_environment(environment_config)
+
         return RandomController(env)

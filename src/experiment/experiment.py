@@ -1,8 +1,9 @@
 from typing import List
 
+import gymnasium as gym
+
 from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
-from environments.base_env import IEnvironment
 from wrappers.reporting_wrapper import ReportingWrapper
 
 
@@ -10,7 +11,7 @@ class Experiment:
     def __init__(
         self,
         name: str,
-        env: IEnvironment,
+        env: gym.Env,
         controller: IController,
         episodes: int = 1,
         denorm_state: bool = False,
@@ -48,7 +49,6 @@ class Experiment:
                 episode_reward += reward
 
                 total_rewards.append(reward)
-                # Append denormalized state if given in config, else original state.
 
             logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
             episode_rewards.append(episode_reward)

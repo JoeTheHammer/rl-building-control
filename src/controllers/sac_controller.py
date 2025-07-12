@@ -63,7 +63,6 @@ class SACProvider(IRLControllerProvider):
 
     def create_controller(
         self,
-        env: gym.Env,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
@@ -75,9 +74,9 @@ class SACProvider(IRLControllerProvider):
         config = load_rl_controller_config(config_path)
 
         return super().create_rl_controller(
-            env=env,
             config=config,
             environment_provider=environment_provider,
             environment_config=environment_config,
             is_continuous_action_space=True,
+            normalize_observation=True
         )

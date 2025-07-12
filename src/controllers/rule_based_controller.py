@@ -137,7 +137,6 @@ class RuleBasedController(IController):
 class RuleBasedControllerProvider(IControllerProvider):
     def create_controller(
         self,
-        env: gym.Env,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
@@ -146,6 +145,8 @@ class RuleBasedControllerProvider(IControllerProvider):
             raise ValueError("A config_path is required for RuleBasedController.")
 
         controller_config = load_controller_config(config_path)
+
+        env = environment_provider.create_environment(environment_config)
 
         return RuleBasedController(
             env=env,

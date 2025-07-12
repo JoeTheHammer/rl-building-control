@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from environments.base_env import IEnvironment
+import gymnasium as gym
 
 
 class IEnvironmentProvider(ABC):
@@ -13,7 +13,7 @@ class IEnvironmentProvider(ABC):
     """
 
     @abstractmethod
-    def create_environment(self, config_path: str) -> IEnvironment:
+    def create_environment(self, config_path: str) -> gym.Env:
         """
         Create and return an environment instance based on the provided configuration file.
 

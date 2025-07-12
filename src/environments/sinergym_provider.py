@@ -209,7 +209,4 @@ class SinergymProvider(IEnvironmentProvider):
             env_elements.config_params,
         )
 
-        if config.normalize_state:
-            env = NormalizeObservation(env)
-
         return env
