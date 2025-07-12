@@ -1,0 +1,12 @@
+training:
+ timesteps: 200
+ report_training: True
+ report_denormalized_state: True
+
+hyperparameter_tuning:
+ num_trials: 50
+ num_episodes: 5
+
+# Option 2: Manually specify SAC hyperparameters
+hyperparameters:
+  learning_rate: 0.0009851008761417273
