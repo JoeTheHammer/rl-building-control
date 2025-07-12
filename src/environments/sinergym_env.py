@@ -32,6 +32,7 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         self.time_info = time_info
         self.reward_variables = reward_variables
         self.custom_action_space = action_space
+        self.discrete_mappings = self.custom_action_space.discrete_mappings
         self.expect_raw_actions = False
         self.continuous_action_space = False
         self.box_action_space = action_space.get_box_space()
@@ -71,24 +72,14 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
 
     @property
     def action_space(self):
-        if self.continuous_action_space:
-            return self.box_action_space
         return self.custom_action_space.tuple_space
 
     def step(self, action):
 
-        if self.continuous_action_space:
-            # Map controller's continuous actions to the closest allowed actuator values. No flattening
-            # of action space is needed as it is already the box action space.
-            action = self.custom_action_space.map_continuous_to_valid_actions(action)
-        else:
-            # Convert controller's tuple/discrete actions to real actuator values, as discrete values are indices.
-            # Also flattens the action space to be compatible with energy plus environment.
-            action = self.custom_action_space.to_eplus_action(action)
+        action = self.custom_action_space.to_eplus_action(action)
 
         # We ignore reward as we calculate it later in this method.
         obs, _, terminated, truncated, _ = super().step(action)
-
         state, time_info_dict = self._add_time_information_to_state(obs)
 
         info_dict = build_info_dict(
@@ -101,7 +92,6 @@ class SinergymEnvironment(EplusEnv, IEnvironment):
         )
 
         # Communicate to reward function that actual reward should be calculated.
-        info_dict["__compute_reward__"] = True
         reward, reward_info = self.reward_fn(info_dict)
 
         return state, reward, terminated, truncated, info_dict

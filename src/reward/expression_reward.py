@@ -44,11 +44,6 @@ class ExpressionReward(BaseReward):
 
     def __call__(self, reward_dict) -> (float, Dict[str, Any]):
 
-        # Early return if reward function is not called by custom sinergym env but by sinergym's
-        # internal step function. Then the obs_dict might not contain enough information.
-        if not reward_dict.get("__compute_reward__", False):
-            return 0.0, {"reward": 0.0}
-
         # Merge and convert all values to native types
         combined = {**reward_dict, **self.params}
 
