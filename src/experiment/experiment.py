@@ -48,7 +48,6 @@ class Experiment:
                 episode_reward += reward
 
                 total_rewards.append(reward)
-                # Append denormalized state if given in config, else original state.
 
             logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
             episode_rewards.append(episode_reward)
