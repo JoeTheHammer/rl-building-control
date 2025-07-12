@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 import gymnasium as gym
 import numpy as np
 import optuna
+import yaml
 from gymnasium import Env
 from pydantic import BaseModel
 
@@ -62,6 +63,21 @@ def reporting_context(env, enabled, output_dir="./plots-training"):
         yield
 
 
+def load_rl_controller_config(path: str) -> RLControllerConfig:
+    """
+    Loads a YAML controller configuration file and parses it into a SACControllerConfig object.
+
+    Args:
+        path (str): Path to the YAML configuration file.
+
+    Returns:
+        SACControllerConfig: Parsed configuration object.
+    """
+    with open(path, "r") as f:
+        raw_data = yaml.safe_load(f)
+    return RLControllerConfig(**raw_data)
+
+
 class IRLControllerProvider(IControllerProvider, ABC):
     """
     Provider for IRLController instances, including hyperparameter tuning
@@ -71,7 +87,8 @@ class IRLControllerProvider(IControllerProvider, ABC):
     @abstractmethod
     def _build_controller(self, env: Env, hyper_params: Dict) -> IRLController:
         """
-        Construct an IRLController with the given environment and hyperparameters.
+        Construct an IRLController with the given environment and hyperparameters. Used during
+        hyperparameter tuning and to to build final controller.
 
         Args:
             env (Env): The Gym environment the controller will operate in.

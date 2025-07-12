@@ -2,11 +2,14 @@ from typing import Any, Dict, Optional
 
 import gymnasium as gym
 import optuna
-import yaml
 from gymnasium import Env
 from stable_baselines3 import SAC
 
-from controllers.base_rl_controller import IRLController, IRLControllerProvider, RLControllerConfig
+from controllers.base_rl_controller import (
+    IRLController,
+    IRLControllerProvider,
+    load_rl_controller_config,
+)
 from environments.base_provider import IEnvironmentProvider
 
 
@@ -30,21 +33,6 @@ class SACController(IRLController):
 
     def train(self, timesteps: int):
         self.model.learn(timesteps)
-
-
-def load_controller_config(path: str) -> RLControllerConfig:
-    """
-    Loads a YAML controller configuration file and parses it into a SACControllerConfig object.
-
-    Args:
-        path (str): Path to the YAML configuration file.
-
-    Returns:
-        SACControllerConfig: Parsed configuration object.
-    """
-    with open(path, "r") as f:
-        raw_data = yaml.safe_load(f)
-    return RLControllerConfig(**raw_data)
 
 
 class SACProvider(IRLControllerProvider):
@@ -80,7 +68,7 @@ class SACProvider(IRLControllerProvider):
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
     ) -> IRLController:
-        config = load_controller_config(config_path)
+        config = load_rl_controller_config(config_path)
 
         tuning = config.hyperparameter_tuning
         hyperparams = config.hyperparameters
