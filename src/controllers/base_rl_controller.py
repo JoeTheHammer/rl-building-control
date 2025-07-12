@@ -179,53 +179,40 @@ class IRLControllerProvider(IControllerProvider, ABC):
     def create_rl_controller(
         self,
         env: gym.Env,
+        config: RLControllerConfig,
+        is_continuous_action_space: bool = False,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
-        train_timesteps: int = 1000,
-        is_continuous_action_space: bool = False,
-        num_trials: int | None = 20,
-        num_episodes: int | None = 2,
-        hyperparameters: Dict | None = None,
-        report_training: bool = False,
-        denorm_state: bool = False,
     ) -> IRLController:
-        """
-        Create and train a reinforcement learning controller with optional training reporting.
+        """Creates, optionally tunes, and trains a reinforcement learning controller.
 
-        This function performs the following steps:
-        - Instantiates a new environment for training.
-        - Optionally wraps the training environment in a ReportingWrapper to log and visualize
-          training states, actions, and rewards.
-        - Optionally performs Optuna-based hyperparameter tuning if no (or incomplete) hyperparameters
-          are provided.
-        - Builds and trains the controller with the selected environment and hyperparameters.
-        - If reporting is enabled, logs and visualizes training data after training.
-        - Closes the training environment and links the controller to the (user-provided) target
-          environment for subsequent use (e.g., evaluation).
+        This method orchestrates the entire lifecycle of an RL controller based on a
+        provided configuration file. The process includes:
+        1.  Loading controller configuration (hyperparameters, tuning, training settings).
+        2.  Creating a dedicated environment for training.
+        3.  Performing hyperparameter tuning if parameters are missing or incomplete.
+        4.  Building the controller with the finalized hyperparameters.
+        5.  Wrapping the environment for specific action spaces or reporting.
+        6.  Training the controller for a specified number of timesteps.
+        7.  Setting the final evaluation environment on the trained controller.
 
         Args:
-            env (gym.Env): The target environment instance to associate with the trained controller
-                after training is complete (for evaluation or deployment).
-            environment_provider (IEnvironmentProvider | None): Provider responsible for generating
-                new instances of the environment for training and tuning.
-            environment_config (str | None): Path to the environment configuration file for training.
-            train_timesteps (int): Number of timesteps to train the controller.
-            is_continuous_action_space (bool): Whether the controller and environment should use
-                a continuous action space.
-            num_trials (int | None): Number of trials for hyperparameter tuning, if enabled.
-            num_episodes (int | None): Number of evaluation episodes per trial during tuning.
-            hyperparameters (Dict | None): Optional pre-defined hyperparameters for the controller.
-                If None or incomplete, hyperparameter tuning is triggered.
-            report_training (bool): If True, wraps the training environment with a ReportingWrapper
-                to record and plot states, actions, and rewards during training.
-            denorm_state (bool): If True and reporting is enabled, logs the denormalized
-                state for analysis and visualization.
+            env: The primary Gymnasium environment the controller will operate on after training.
+            config: The configuration object parsed from the YAML configuration file.
+            is_continuous_action_space: A flag to indicate if the environment's action
+                space should be wrapped to be continuous. Defaults to False.
+            environment_provider: An optional provider class used to create separate
+                environments for hyperparameter tuning and training.
+            environment_config: An optional configuration string or path passed to the
+                environment provider.
 
         Returns:
-            IRLController: A trained reinforcement learning controller instance, linked to the
-            user-provided environment (`env`). If reporting was enabled, training plots are saved
-            in the directory "./plots-training".
+            A fully trained and configured IRLController instance, ready for inference.
         """
+
+        tuning = config.hyperparameter_tuning
+        hyperparameters = config.hyperparameters
+        training = config.training
 
         training_env = environment_provider.create_environment(environment_config)
 
@@ -240,8 +227,8 @@ class IRLControllerProvider(IControllerProvider, ABC):
             hp = self._tune_hyperparameters(
                 environment_provider,
                 environment_config,
-                num_trials,
-                num_episodes,
+                tuning.num_trials if tuning else None,
+                tuning.num_episodes if tuning else None,
                 is_continuous_action_space=is_continuous_action_space,
                 fixed_hyperparams=hyperparameters or {},
             )
@@ -255,15 +242,17 @@ class IRLControllerProvider(IControllerProvider, ABC):
             # Controller only supports continuous action space.
             training_env = ContinuousActionWrapper(training_env)
 
-        if report_training:
-            training_env = ReportingWrapper(training_env, denorm_state=denorm_state)
+        if training.report_training:
+            training_env = ReportingWrapper(
+                training_env, denorm_state=training.report_denormalized_state
+            )
 
         controller = self._build_controller(training_env, hp)
 
-        logger.info(f"Start training with {train_timesteps} timesteps.")
+        logger.info(f"Start training with {training.timesteps} timesteps.")
 
-        with reporting_context(training_env, report_training):
-            controller.train(timesteps=train_timesteps)
+        with reporting_context(training_env, training.report_training):
+            controller.train(timesteps=training.timesteps)
 
         # Close env instance on which training was done on.
         training_env.close()

@@ -68,21 +68,16 @@ class SACProvider(IRLControllerProvider):
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
     ) -> IRLController:
-        config = load_rl_controller_config(config_path)
 
-        tuning = config.hyperparameter_tuning
-        hyperparams = config.hyperparameters
-        training = config.training
+        if config_path is None:
+            raise RuntimeError("No configuration was provided for the SAC controller.")
+
+        config = load_rl_controller_config(config_path)
 
         return super().create_rl_controller(
             env=env,
+            config=config,
             environment_provider=environment_provider,
             environment_config=environment_config,
-            train_timesteps=training.timesteps,
             is_continuous_action_space=True,
-            num_trials=tuning.num_trials if tuning else None,
-            num_episodes=tuning.num_episodes if tuning else None,
-            hyperparameters=hyperparams,
-            report_training=training.report_training,
-            denorm_state=training.report_denormalized_state,
         )
