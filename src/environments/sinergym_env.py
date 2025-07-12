@@ -6,12 +6,11 @@ import numpy as np
 from sinergym import BaseReward
 from sinergym.envs import EplusEnv
 
-from environments.base_env import IEnvironment
 from spaces.custom_action_space import ActuatorActionSpace
 from utils.observation import build_info_dict
 
 
-class SinergymEnvironment(EplusEnv, IEnvironment):
+class SinergymEnvironment(EplusEnv):
     def __init__(
         self,
         building_model_path: str,

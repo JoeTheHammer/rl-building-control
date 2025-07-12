@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Any, Dict, Optional
 
-import gymnasium as gym
 import numpy as np
 import optuna
 import yaml
 from gymnasium import Env
+from gymnasium.wrappers import NormalizeObservation
 from pydantic import BaseModel
 
 from controllers.base_controller import IController, IControllerProvider
@@ -178,8 +178,8 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
     def create_rl_controller(
         self,
-        env: gym.Env,
         config: RLControllerConfig,
+        normalize_observation: bool = False,
         is_continuous_action_space: bool = False,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
@@ -197,8 +197,8 @@ class IRLControllerProvider(IControllerProvider, ABC):
         7.  Setting the final evaluation environment on the trained controller.
 
         Args:
-            env: The primary Gymnasium environment the controller will operate on after training.
             config: The configuration object parsed from the YAML configuration file.
+            normalize_observation: Determines if the observation of the environment should be normalized.
             is_continuous_action_space: A flag to indicate if the environment's action
                 space should be wrapped to be continuous. Defaults to False.
             environment_provider: An optional provider class used to create separate
@@ -215,6 +215,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
         training = config.training
 
         training_env = environment_provider.create_environment(environment_config)
+
+        if normalize_observation:
+            training_env = NormalizeObservation(training_env)
 
         hp = hyperparameters
 
@@ -256,6 +259,11 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         # Close env instance on which training was done on.
         training_env.close()
+
+        env = environment_provider.create_environment(environment_config)
+
+        if normalize_observation:
+            env = NormalizeObservation(env)
 
         if is_continuous_action_space:
             # Controller only supports continuous action space.

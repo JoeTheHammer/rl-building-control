@@ -1,8 +1,9 @@
 from typing import List
 
+import gymnasium as gym
+
 from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
-from environments.base_env import IEnvironment
 from wrappers.reporting_wrapper import ReportingWrapper
 
 
@@ -10,7 +11,7 @@ class Experiment:
     def __init__(
         self,
         name: str,
-        env: IEnvironment,
+        env: gym.Env,
         controller: IController,
         episodes: int = 1,
         denorm_state: bool = False,

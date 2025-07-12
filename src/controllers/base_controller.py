@@ -44,7 +44,6 @@ class IControllerProvider(ABC):
     @abstractmethod
     def create_controller(
         self,
-        env: gym.Env,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
@@ -60,7 +59,6 @@ class IControllerProvider(ABC):
 
         Returns:
             IController: A controller instance.
-            :param env: Environment that is used.
             :param config_path: Path of configuration used to configure the controller.
             :param environment_config: Path to the configuration for the environment.
             :param environment_provider: Provider that allows to create new environment.
