@@ -44,9 +44,18 @@ action_space:
       actuator_key: "PythonControlledSetpoint_2"
 
 reward_function:
-  type: "python"
-  module: "reward.pure_comfort"
-  class_name: "PureComfortReward"
+  type: "expression"
+  variables: ["air_temp_101", "air_temp_104"]
+  expression: >
+    -1.0 * (
+      max(air_temp_101 - max_temp, 0.0)**2 +
+      max(min_temp - air_temp_101, 0.0)**2 +
+      max(air_temp_104 - max_temp, 0.0)**2 +
+      max(min_temp - air_temp_104, 0.0)**2
+    )
+  params:
+    min_temp: 22.0
+    max_temp: 24.0
 
 
 
