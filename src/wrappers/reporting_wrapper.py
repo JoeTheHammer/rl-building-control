@@ -111,7 +111,6 @@ class ReportingWrapper(gym.Wrapper):
         action_dir = output_dir + "/actions"
         state_dir = output_dir + "/states"
 
-
         # Actions plotting
         if (
             self.action_names is not None
@@ -157,9 +156,7 @@ class ReportingWrapper(gym.Wrapper):
 
         # Export Rewards
         if self.rewards:
-            pd.DataFrame({"reward": self.rewards}).to_csv(
-                output_path / "rewards.csv", index=False
-            )
+            pd.DataFrame({"reward": self.rewards}).to_csv(output_path / "rewards.csv", index=False)
 
         # Flatten collected data
         actions_arr = _flatten(self.actions)

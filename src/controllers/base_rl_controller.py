@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
+import gymnasium as gym
 import numpy as np
 import optuna
 import yaml
-from gymnasium import Env
 from gymnasium.wrappers import NormalizeObservation
 from pydantic import BaseModel
 
@@ -13,6 +13,7 @@ from controllers.base_controller import IController, IControllerProvider
 from custom_loggers.setup_logger import logger
 from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
+from reporting.finder import find_reporting_wrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.reporting_wrapper import ReportingWrapper
 
@@ -52,14 +53,20 @@ class IRLController(IController, ABC):
 
 @contextmanager
 def reporting_context(env, enabled, output_dir="./plots-training"):
-    if enabled:
-        env.start_recording()
+    reporting_wrapper = find_reporting_wrapper(env)
+
+    if enabled and reporting_wrapper:
+        reporting_wrapper.start_recording()
         try:
             yield
         finally:
-            env.end_recording()
-            env.create_plots(output_dir=output_dir)
+            logger.info("Training finished. Ending recording and generating reports...")
+            reporting_wrapper.end_recording()
+            reporting_wrapper.create_plots(output_dir=output_dir)
+            reporting_wrapper.export_to_csv(output_dir="./csv-training")
     else:
+        if enabled and not reporting_wrapper:
+            logger.warning("Reporting is enabled, but no ReportingWrapper was found.")
         yield
 
 
@@ -85,10 +92,10 @@ class IRLControllerProvider(IControllerProvider, ABC):
     """
 
     @abstractmethod
-    def _build_controller(self, env: Env, hyper_params: Dict) -> IRLController:
+    def _build_controller(self, env: gym.Env, hyper_params: Dict) -> IRLController:
         """
         Construct an IRLController with the given environment and hyperparameters. Used during
-        hyperparameter tuning and to to build final controller.
+        hyperparameter tuning and to build final controller.
 
         Args:
             env (Env): The Gym environment the controller will operate in.
@@ -183,6 +190,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         is_continuous_action_space: bool = False,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
+        use_vec_norm_adapter: bool = False,
     ) -> IRLController:
         """Creates, optionally tunes, and trains a reinforcement learning controller.
 
@@ -214,11 +222,6 @@ class IRLControllerProvider(IControllerProvider, ABC):
         hyperparameters = config.hyperparameters
         training = config.training
 
-        training_env = environment_provider.create_environment(environment_config)
-
-        if normalize_observation:
-            training_env = NormalizeObservation(training_env)
-
         hp = hyperparameters
 
         # Perform hyperparameter tuning if no hyperparameters are provided,
@@ -241,35 +244,44 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
 
-        if is_continuous_action_space:
-            # Controller only supports continuous action space.
-            training_env = ContinuousActionWrapper(training_env)
+        if use_vec_norm_adapter:
+            pure_env = environment_provider.create_environment(environment_config)
+            if is_continuous_action_space:
+                pure_env = ContinuousActionWrapper(pure_env)
 
-        if training.report_training:
-            training_env = ReportingWrapper(
-                training_env, denorm_state=training.report_denormalized_state
-            )
+            # If the adapter pattern is used, this returns an adapter which is an env and a controller.
+            adapter = self._build_controller(pure_env, hp)
 
-        controller = self._build_controller(training_env, hp)
+            env_for_training = adapter
 
-        logger.info(f"Start training with {training.timesteps} timesteps.")
+            with reporting_context(env_for_training, training.report_training):
+                logger.info(f"Start training with {training.timesteps} timesteps.")
+                adapter.train(timesteps=training.timesteps)
 
-        with reporting_context(training_env, training.report_training):
-            controller.train(timesteps=training.timesteps)
+            return adapter
 
-        # Close env instance on which training was done on.
-        training_env.close()
+        else:
+            training_env = environment_provider.create_environment(environment_config)
+            if normalize_observation:
+                training_env = NormalizeObservation(training_env)
+            if is_continuous_action_space:
+                training_env = ContinuousActionWrapper(training_env)
+            if training.report_training:
+                training_env = ReportingWrapper(
+                    training_env, denorm_state=training.report_denormalized_state
+                )
 
-        env = environment_provider.create_environment(environment_config)
+            controller = self._build_controller(training_env, hp)
+            logger.info(f"Start training with {training.timesteps} timesteps.")
+            with reporting_context(training_env, training.report_training):
+                controller.train(timesteps=training.timesteps)
+            training_env.close()
 
-        if normalize_observation:
-            env = NormalizeObservation(env)
+            final_env = environment_provider.create_environment(environment_config)
+            if normalize_observation:
+                final_env = NormalizeObservation(final_env)
+            if is_continuous_action_space:
+                final_env = ContinuousActionWrapper(final_env)
 
-        if is_continuous_action_space:
-            # Controller only supports continuous action space.
-            env = ContinuousActionWrapper(env)
-
-        # Set new environment
-        controller.env = env
-
-        return controller
+            controller.env = final_env
+            return controller

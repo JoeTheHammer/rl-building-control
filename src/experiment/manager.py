@@ -48,7 +48,7 @@ class ExperimentManager:
 
         return Experiment(
             experiment_config.name,
-            controller.env,
+            controller,
             controller,
             denorm_state=experiment_config.reporting.denormalize_state,
             episodes=experiment_config.episodes,
