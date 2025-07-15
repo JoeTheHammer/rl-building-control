@@ -58,7 +58,7 @@ class SACProvider(IRLControllerProvider):
             "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128]),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict) -> SACController:
+    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> SACController:
         return SACController(env, hyper_params)
 
     def create_controller(
@@ -78,5 +78,5 @@ class SACProvider(IRLControllerProvider):
             environment_provider=environment_provider,
             environment_config=environment_config,
             is_continuous_action_space=True,
-            normalize_observation=True
+            normalize_state=config.normalize_state
         )

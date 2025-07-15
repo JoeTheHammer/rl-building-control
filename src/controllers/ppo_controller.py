@@ -4,7 +4,7 @@ import optuna
 from gymnasium import Env
 from stable_baselines3 import PPO
 
-from adapters.vec_normalize import VecNormalizeAdapter
+from adapters.on_policy_vec_env import OnPolicyVecEnvAdapter
 from controllers.base_controller import IController
 from controllers.base_rl_controller import (
     IRLControllerProvider,
@@ -49,13 +49,21 @@ class PPOProvider(IRLControllerProvider):
             "ent_coef": trial.suggest_float("ent_coef", 0.0, 0.1),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict) -> VecNormalizeAdapter:
+    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyVecEnvAdapter:
         # Add this to ensure that output of controller is in defined (tanh) range.
         if "policy_kwargs" not in hyper_params:
             hyper_params["policy_kwargs"] = {}
         hyper_params["policy_kwargs"]["squash_output"] = True
         hyper_params["use_sde"] = True
-        return VecNormalizeAdapter(env=env, model_class=PPO, hyperparams=hyper_params)
+        normalize_reward = kwargs.get("normalize_reward", False)
+        report_denormalized_state = kwargs.get("report_denormalized_state", False)
+        return OnPolicyVecEnvAdapter(
+            env=env,
+            model_class=PPO,
+            hyperparams=hyper_params,
+            normalize_reward=normalize_reward,
+            report_denormalized_state=report_denormalized_state,
+        )
 
     def create_controller(
         self,
@@ -74,5 +82,6 @@ class PPOProvider(IRLControllerProvider):
             environment_provider=environment_provider,
             environment_config=environment_config,
             is_continuous_action_space=True,
-            use_vec_norm_adapter=True,
+            on_policy=True,
+            normalize_reward=config.normalize_reward,
         )

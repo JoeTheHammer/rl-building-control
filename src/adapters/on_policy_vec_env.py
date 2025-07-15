@@ -9,13 +9,20 @@ from controllers.base_controller import IController
 from wrappers.reporting_wrapper import ReportingWrapper
 
 
-class VecNormalizeAdapter(gym.Wrapper, IController):
+class OnPolicyVecEnvAdapter(gym.Wrapper, IController):
     """
     A generic adapter for any Stable Baselines3 on-policy algorithm (like PPO or A2C),
     with action logging on predict and on environment step.
     """
 
-    def __init__(self, env: gym.Env, model_class: Type[OnPolicyAlgorithm], hyperparams: dict):
+    def __init__(
+        self,
+        env: gym.Env,
+        model_class: Type[OnPolicyAlgorithm],
+        hyperparams: dict,
+        normalize_reward: bool = False,
+        report_denormalized_state: bool = False,
+    ):
         # Wrap pure_env in ActionLoggingWrapper so scaled actions are logged on step()
 
         super().__init__(env)
@@ -23,10 +30,12 @@ class VecNormalizeAdapter(gym.Wrapper, IController):
         hyperparams["max_grad_norm"] = 0.5
         hyperparams["target_kl"] = 0.03
 
-        self.reporting_env = ReportingWrapper(env, denorm_state=True)
+        self.reporting_env = ReportingWrapper(env, denorm_state=report_denormalized_state)
 
-        # CHANGED: The DummyVecEnv now gets the reporting_env instance
-        self.vec_env = VecNormalize(DummyVecEnv([lambda: self.reporting_env]), norm_reward=False)
+        # Use VecNormalize
+        self.vec_env = VecNormalize(
+            DummyVecEnv([lambda: self.reporting_env]), norm_reward=normalize_reward
+        )
 
         self._model = model_class("MlpPolicy", self.vec_env, **hyperparams)
 
