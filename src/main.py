@@ -26,8 +26,7 @@ def run(config: str = typer.Argument(..., help="Path to the YAML environment_con
     experiment_manager.register_controller_provider("custom", CustomControllerProvider())
     experiment_manager.register_controller_provider("ppo", PPOProvider())
 
-    experiment_manager.setup_experiments(config)
-    experiment_manager.run_all()
+    experiment_manager.run_experiments_from_config(config)
     logger.info("All experiments finished.")
 
 

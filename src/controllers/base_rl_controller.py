@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple, cast
 
 import gymnasium as gym
 import numpy as np
@@ -10,7 +10,7 @@ from gym.wrappers import NormalizeReward
 from gymnasium.wrappers import NormalizeObservation
 from pydantic import BaseModel
 
-from controllers.base_controller import IController, IControllerProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerProvider
 from custom_loggers.setup_logger import logger
 from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
@@ -198,7 +198,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         study.optimize(objective, n_trials=num_trials)
         return {**study.best_params, **fixed_hyperparams}
 
-    def create_rl_controller(
+    def create_rl_controller_setup(
         self,
         config: RLControllerConfig,
         normalize_state: bool = False,
@@ -207,7 +207,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         environment_config: str | None = None,
         on_policy: bool = False,
         normalize_reward: bool = False,
-    ) -> IRLController:
+    ) -> ControllerSetup:
         """Creates, optionally tunes, and trains a reinforcement learning controller.
 
         This method orchestrates the entire lifecycle of an RL controller based on a
@@ -285,7 +285,10 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 logger.info(f"Start training with {training.timesteps} timesteps.")
                 adapter.train(timesteps=training.timesteps)
 
-            return adapter
+            if isinstance(adapter, gym.Env) and isinstance(adapter, IController):
+                return ControllerSetup(adapter, cast(gym.Env, adapter))
+
+            raise RuntimeError("Adapter is not Controller and Environment.")
 
         else:
             training_env = environment_provider.create_environment(environment_config)
@@ -311,7 +314,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
             )
 
             controller.env = final_env
-            return controller
+            return ControllerSetup(controller, final_env)
 
 
 def wrap_env(

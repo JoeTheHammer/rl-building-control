@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, NamedTuple
 
 import gymnasium as gym
 
@@ -40,14 +40,19 @@ class IController(ABC):
         pass
 
 
+
+class ControllerSetup(NamedTuple):
+    controller: IController
+    environment: gym.Env
+
 class IControllerProvider(ABC):
     @abstractmethod
-    def create_controller(
+    def create_controller_setup(
         self,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
-    ) -> IController:
+    ) -> ControllerSetup:
         """
         Create and return a new controller instance.
 
@@ -64,3 +69,4 @@ class IControllerProvider(ABC):
             :param environment_provider: Provider that allows to create new environment.
         """
         pass
+

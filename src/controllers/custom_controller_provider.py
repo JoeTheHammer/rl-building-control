@@ -5,7 +5,7 @@ from typing import Dict, Optional, Union
 import yaml
 from pydantic import BaseModel
 
-from controllers.base_controller import IController, IControllerProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerProvider
 from environments.base_provider import IEnvironmentProvider
 
 
@@ -26,12 +26,12 @@ def parse_custom_controller_config(config_path: str) -> CustomControllerConfig:
 
 
 class CustomControllerProvider(IControllerProvider):
-    def create_controller(
+    def create_controller_setup(
         self,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
-    ) -> IController:
+    ) -> ControllerSetup:
 
         controller_config = parse_custom_controller_config(config_path)
 
@@ -57,4 +57,4 @@ class CustomControllerProvider(IControllerProvider):
 
         controller_instance = controller_class(env=env, **controller_args)
 
-        return controller_instance
+        return ControllerSetup(controller_instance, env)

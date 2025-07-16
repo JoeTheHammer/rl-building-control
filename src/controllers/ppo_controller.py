@@ -5,7 +5,7 @@ from gymnasium import Env
 from stable_baselines3 import PPO
 
 from adapters.on_policy_vec_env import OnPolicyVecEnvAdapter
-from controllers.base_controller import IController
+from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLControllerProvider,
     load_rl_controller_config,
@@ -65,19 +65,19 @@ class PPOProvider(IRLControllerProvider):
             report_denormalized_state=report_denormalized_state,
         )
 
-    def create_controller(
+    def create_controller_setup(
         self,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
-    ) -> IController:
+    ) -> ControllerSetup:
 
         if config_path is None:
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
         config = load_rl_controller_config(config_path)
 
-        return super().create_rl_controller(
+        return super().create_rl_controller_setup(
             config=config,
             environment_provider=environment_provider,
             environment_config=environment_config,

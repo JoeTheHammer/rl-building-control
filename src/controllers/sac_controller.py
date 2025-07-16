@@ -5,6 +5,7 @@ import optuna
 from gymnasium import Env
 from stable_baselines3 import SAC
 
+from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLController,
     IRLControllerProvider,
@@ -61,22 +62,22 @@ class SACProvider(IRLControllerProvider):
     def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> SACController:
         return SACController(env, hyper_params)
 
-    def create_controller(
+    def create_controller_setup(
         self,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
-    ) -> IRLController:
+    ) -> ControllerSetup:
 
         if config_path is None:
             raise RuntimeError("No configuration was provided for the SAC controller.")
 
         config = load_rl_controller_config(config_path)
 
-        return super().create_rl_controller(
+        return super().create_rl_controller_setup(
             config=config,
             environment_provider=environment_provider,
             environment_config=environment_config,
             is_continuous_action_space=True,
-            normalize_state=config.normalize_state
+            normalize_state=config.normalize_state,
         )
