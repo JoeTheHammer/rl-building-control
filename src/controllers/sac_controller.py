@@ -21,11 +21,8 @@ class SACController(IRLController):
         self.model = SAC(
             "MlpPolicy",
             self.env,
-            learning_rate=params["learning_rate"],
-            gamma=params["gamma"],
-            ent_coef=params["ent_coef"],
-            batch_size=params["batch_size"],
             verbose=0,
+            **params
         )
 
     def get_action(self, state: Any) -> Any:

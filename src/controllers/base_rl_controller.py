@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Dict, Optional, Tuple, cast
+from typing import Any, Dict, Optional, cast
 
 import gymnasium as gym
 import numpy as np
@@ -26,17 +26,29 @@ class Training(BaseModel):
 
 
 class HyperparameterTuning(BaseModel):
+    enabled: Optional[bool] = False
     num_trials: int
     num_episodes: int
 
 
 class RLControllerConfig(BaseModel):
     training: Training
-    hyperparameter_tuning: HyperparameterTuning
+    hyperparameter_tuning: Optional[HyperparameterTuning]
     hyperparameters: Optional[Dict[str, Any]] = None
     normalize_state: Optional[bool] = True
     normalize_reward: Optional[bool] = False
 
+
+def wrap_env(
+    env: gym.Env, normalize_state: bool, continuous_action_space: bool, normalize_reward: bool
+) -> gym.Env:
+    if normalize_state:
+        env = NormalizeObservation(env)
+    if continuous_action_space:
+        env = ContinuousActionWrapper(env)
+    if normalize_reward:
+        env = NormalizeReward(env)
+    return env
 
 class IRLController(IController, ABC):
     """
@@ -123,7 +135,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
             Dict: Dictionary containing suggested or fixed hyperparameters.
         """
 
-        pass
+        return {}
 
     def _suggest_hyperparameters(
         self, trial: Optional[optuna.Trial] = None, fixed_params: Optional[Dict[str, Any]] = None
@@ -198,6 +210,111 @@ class IRLControllerProvider(IControllerProvider, ABC):
         study.optimize(objective, n_trials=num_trials)
         return {**study.best_params, **fixed_hyperparams}
 
+    def _get_final_hyperparameters(
+        self,
+        config: RLControllerConfig,
+        environment_provider: IEnvironmentProvider,
+        environment_config: str,
+        on_policy: bool,
+        is_continuous_action_space: bool,
+        normalize_state: bool,
+        normalize_reward: bool,
+    ) -> Dict[str, Any]:
+        """Handles the optional hyperparameter tuning process and returns the final set of hyperparameters."""
+        hp = config.hyperparameters or {}
+        tuning_config = config.hyperparameter_tuning
+
+        # Proceed with tuning only if it's enabled and supported by the controller.
+        if tuning_config and tuning_config.enabled:
+            if not self._suggest_hyperparameters_space():
+                logger.warning(
+                    f"Hyperparameter tuning is enabled, but not supported by {self.__class__.__name__}. "
+                    "Using parameters from the config file."
+                )
+                return hp
+
+            logger.info("Hyperparameter tuning enabled and supported. Starting tuning process.")
+            hp = self._tune_hyperparameters(
+                env_provider=environment_provider,
+                env_config=environment_config,
+                num_trials=tuning_config.num_trials,
+                num_episodes=tuning_config.num_episodes,
+                is_continuous_action_space=is_continuous_action_space,
+                normalize_state=normalize_state,
+                normalize_reward=normalize_reward,
+                on_policy=on_policy,
+                fixed_hyperparams=hp,
+            )
+            logger.info(f"Ended hyperparameter tuning. Best hyperparameters: {hp}")
+
+        return hp
+
+    def _setup_on_policy_controller(
+        self,
+        hp: Dict[str, Any],
+        training_config: Training,
+        environment_provider: IEnvironmentProvider,
+        environment_config: str,
+        is_continuous_action_space: bool,
+        normalize_reward: bool,
+    ) -> ControllerSetup:
+        """Builds, trains, and sets up an on-policy controller."""
+        pure_env = environment_provider.create_environment(environment_config)
+        if is_continuous_action_space:
+            pure_env = ContinuousActionWrapper(pure_env)
+
+        adapter = self._build_controller(
+            pure_env,
+            hp,
+            normalize_reward=normalize_reward,
+            report_denormalized_state=training_config.report_denormalized_state,
+        )
+
+        with reporting_context(adapter, training_config.report_training):
+            logger.info(f"Start training with {training_config.timesteps} timesteps.")
+            adapter.train(timesteps=training_config.timesteps)
+
+        if isinstance(adapter, gym.Env) and isinstance(adapter, IController):
+            return ControllerSetup(adapter, cast(gym.Env, adapter))
+
+        raise RuntimeError("On-policy adapter must be both a Controller and an Environment.")
+
+    def _setup_off_policy_controller(
+        self,
+        hp: Dict[str, Any],
+        training_config: Training,
+        environment_provider: IEnvironmentProvider,
+        environment_config: str,
+        normalize_state: bool,
+        is_continuous_action_space: bool,
+        normalize_reward: bool,
+    ) -> ControllerSetup:
+        """Builds, trains, and sets up an off-policy controller."""
+        # Setup environment for training
+        training_env = environment_provider.create_environment(environment_config)
+        training_env = wrap_env(
+            training_env, normalize_state, is_continuous_action_space, normalize_reward
+        )
+        if training_config.report_training:
+            training_env = ReportingWrapper(
+                training_env, denorm_state=training_config.report_denormalized_state
+            )
+
+        # Build and train the controller
+        controller = self._build_controller(training_env, hp)
+        logger.info(f"Start training with {training_config.timesteps} timesteps.")
+        with reporting_context(training_env, training_config.report_training):
+            controller.train(timesteps=training_config.timesteps)
+        training_env.close()
+
+        # Setup final environment for evaluation
+        final_env = environment_provider.create_environment(environment_config)
+        final_env = wrap_env(
+            final_env, normalize_state, is_continuous_action_space, normalize_reward
+        )
+        controller.env = final_env
+        return ControllerSetup(controller, final_env)
+
     def create_rl_controller_setup(
         self,
         config: RLControllerConfig,
@@ -208,122 +325,77 @@ class IRLControllerProvider(IControllerProvider, ABC):
         on_policy: bool = False,
         normalize_reward: bool = False,
     ) -> ControllerSetup:
-        """Creates, optionally tunes, and trains a reinforcement learning controller.
+        """Orchestrates the setup and training of a reinforcement learning controller.
 
-        This method orchestrates the entire lifecycle of an RL controller based on a
-        provided configuration file. The process includes:
-        1.  Loading controller configuration (hyperparameters, tuning, training settings).
-        2.  Creating a dedicated environment for training.
-        3.  Performing hyperparameter tuning if parameters are missing or incomplete.
-        4.  Building the controller with the finalized hyperparameters.
-        5.  Wrapping the environment for specific action spaces or reporting.
-        6.  Training the controller for a specified number of timesteps.
-        7.  Setting the final evaluation environment on the trained controller.
+        This method serves as the main entry point for creating a controller.
+        It finalizes hyperparameters, performs tuning if configured, builds the
+        model, and runs the training process. It correctly handles the distinct
+        workflows for on-policy and off-policy algorithms, returning a fully
+        trained controller and its curresponding environment ready for evaluation.
 
         Args:
-            config: The configuration object parsed from the YAML configuration file.
-            normalize_state: Determines if the observation of the environment should be normalized.
-            is_continuous_action_space: A flag to indicate if the environment's action
-                space should be wrapped to be continuous. Defaults to False.
-            environment_provider: An optional provider class used to create separate
-                environments for hyperparameter tuning and training.
-            environment_config: An optional configuration string or path passed to the
-                environment provider.
-            on_policy: Determines if the on PolicyVecEnvAdapter is used.
-            normalize_reward: Determines if the reward will be normalized.
+            config: The configuration object parsed from the YAML file, containing
+                training, tuning, and hyperparameter settings.
+            normalize_state: If True, applies observation normalization to the
+                environment. Defaults to False.
+            is_continuous_action_space: If True, wraps the environment to ensure
+                a continuous action space. Defaults to False.
+            environment_provider: The provider class used to create environment
+                instances for tuning and training.
+            environment_config: The configuration string or path passed to the
+                environment provider to create an environment.
+            on_policy: If True, the on-policy setup workflow is used. If False,
+                the off-policy workflow is used. Defaults to False.
+            normalize_reward: If True, applies reward normalization to the
+                environment. Defaults to False.
 
         Returns:
-            A fully trained and configured IRLController instance, ready for inference.
+            A `ControllerSetup` object containing the fully trained controller
+            and its final evaluation environment.
+
+        Raises:
+            ValueError: If no hyperparameters are provided in the configuration
+                and hyperparameter tuning is either disabled or not supported
+                by the controller.
         """
 
-        tuning = config.hyperparameter_tuning
-        hyperparameters = config.hyperparameters
-        training = config.training
+        final_hp = self._get_final_hyperparameters(
+            config=config,
+            environment_provider=environment_provider,
+            environment_config=environment_config,
+            on_policy=on_policy,
+            is_continuous_action_space=is_continuous_action_space,
+            normalize_state=normalize_state,
+            normalize_reward=normalize_reward,
+        )
 
-        hp = hyperparameters
-
-        # Perform hyperparameter tuning if no hyperparameters are provided,
-        # or if the provided set is incomplete (i.e., does not contain all required keys).
-        if hp is None or len(hp) is not len(self._suggest_hyperparameters()):
-
-            logger.info("Not all hyperparameters provided. Start with hyperparameter tuning.")
-
-            hp = self._tune_hyperparameters(
-                env_provider=environment_provider,
-                env_config=environment_config,
-                num_trials=tuning.num_trials if tuning else None,
-                num_episodes=tuning.num_episodes if tuning else None,
-                is_continuous_action_space=is_continuous_action_space,
-                normalize_state=normalize_state,
-                normalize_reward=normalize_reward,
-                on_policy=on_policy,
-                fixed_hyperparams=hyperparameters or {},
+        if not final_hp:
+            raise ValueError(
+                "No hyperparameters provided and tuning was not enabled/supported. "
+                "Cannot create a controller without hyperparameters."
             )
 
-            logger.info("Ended hyperparameter tuning.")
-            logger.info(f"Best hyperparameters: {hp}")
-
-        logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
+        logger.info(f"\033[92mCreate controller with hyperparameters: {final_hp}\033[0m")
 
         if on_policy:
-            pure_env = environment_provider.create_environment(environment_config)
-            if is_continuous_action_space:
-                pure_env = ContinuousActionWrapper(pure_env)
-
-            # On policy assumes that adapter that acts as controller and env is returned from build_controller.
-            # This is because the tight coupling between environment and controller for on policy RL.
-            adapter = self._build_controller(
-                pure_env,
-                hp,
+            return self._setup_on_policy_controller(
+                hp=final_hp,
+                training_config=config.training,
+                environment_provider=environment_provider,
+                environment_config=environment_config,
+                is_continuous_action_space=is_continuous_action_space,
                 normalize_reward=normalize_reward,
-                report_denormalized_state=training.report_denormalized_state,
             )
-
-            env_for_training = adapter
-
-            with reporting_context(env_for_training, training.report_training):
-                logger.info(f"Start training with {training.timesteps} timesteps.")
-                adapter.train(timesteps=training.timesteps)
-
-            if isinstance(adapter, gym.Env) and isinstance(adapter, IController):
-                return ControllerSetup(adapter, cast(gym.Env, adapter))
-
-            raise RuntimeError("Adapter is not Controller and Environment.")
-
         else:
-            training_env = environment_provider.create_environment(environment_config)
-
-            training_env = wrap_env(
-                training_env, normalize_state, is_continuous_action_space, normalize_reward
+            return self._setup_off_policy_controller(
+                hp=final_hp,
+                training_config=config.training,
+                environment_provider=environment_provider,
+                environment_config=environment_config,
+                normalize_state=normalize_state,
+                is_continuous_action_space=is_continuous_action_space,
+                normalize_reward=normalize_reward,
             )
 
-            if training.report_training:
-                training_env = ReportingWrapper(
-                    training_env, denorm_state=training.report_denormalized_state
-                )
-
-            controller = self._build_controller(training_env, hp)
-            logger.info(f"Start training with {training.timesteps} timesteps.")
-            with reporting_context(training_env, training.report_training):
-                controller.train(timesteps=training.timesteps)
-            training_env.close()
-
-            final_env = environment_provider.create_environment(environment_config)
-            final_env = wrap_env(
-                final_env, normalize_state, is_continuous_action_space, normalize_reward
-            )
-
-            controller.env = final_env
-            return ControllerSetup(controller, final_env)
 
 
-def wrap_env(
-    env: gym.Env, normalize_state: bool, continuous_action_space: bool, normalize_reward: bool
-) -> gym.Env:
-    if normalize_state:
-        env = NormalizeObservation(env)
-    if continuous_action_space:
-        env = ContinuousActionWrapper(env)
-    if normalize_reward:
-        env = NormalizeReward(env)
-    return env
