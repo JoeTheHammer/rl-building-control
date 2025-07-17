@@ -37,7 +37,7 @@ class DummyRLControllerProvider(IRLControllerProvider):
             "gamma": trial.suggest_float("gamma", 0.9, 0.9999),
         }
 
-    def create_controller(
+    def create_controller_setup(
         self,
         env: Env,
         config_path: str = None,
@@ -100,7 +100,7 @@ def test_create_rl_controller_executes_training(controller_provider):
     env_provider = Mock()
     env_provider.create_environment.return_value = env
 
-    controller = controller_provider.create_rl_controller(
+    controller = controller_provider.create_rl_controller_setup(
         env=env,
         environment_provider=env_provider,
         environment_config="any",

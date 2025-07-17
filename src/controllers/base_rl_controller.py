@@ -1,18 +1,20 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple, cast
 
+import gymnasium as gym
 import numpy as np
 import optuna
 import yaml
-from gymnasium import Env
+from gym.wrappers import NormalizeReward
 from gymnasium.wrappers import NormalizeObservation
 from pydantic import BaseModel
 
-from controllers.base_controller import IController, IControllerProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerProvider
 from custom_loggers.setup_logger import logger
 from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
+from reporting.finder import find_reporting_wrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.reporting_wrapper import ReportingWrapper
 
@@ -32,6 +34,8 @@ class RLControllerConfig(BaseModel):
     training: Training
     hyperparameter_tuning: HyperparameterTuning
     hyperparameters: Optional[Dict[str, Any]] = None
+    normalize_state: Optional[bool] = True
+    normalize_reward: Optional[bool] = False
 
 
 class IRLController(IController, ABC):
@@ -52,14 +56,20 @@ class IRLController(IController, ABC):
 
 @contextmanager
 def reporting_context(env, enabled, output_dir="./plots-training"):
-    if enabled:
-        env.start_recording()
+    reporting_wrapper = find_reporting_wrapper(env)
+
+    if enabled and reporting_wrapper:
+        reporting_wrapper.start_recording()
         try:
             yield
         finally:
-            env.end_recording()
-            env.create_plots(output_dir=output_dir)
+            logger.info("Training finished. Ending recording and generating reports...")
+            reporting_wrapper.end_recording()
+            reporting_wrapper.create_plots(output_dir=output_dir)
+            reporting_wrapper.export_to_csv(output_dir="./csv-training")
     else:
+        if enabled and not reporting_wrapper:
+            logger.warning("Reporting is enabled, but no ReportingWrapper was found.")
         yield
 
 
@@ -85,10 +95,10 @@ class IRLControllerProvider(IControllerProvider, ABC):
     """
 
     @abstractmethod
-    def _build_controller(self, env: Env, hyper_params: Dict) -> IRLController:
+    def _build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> IRLController:
         """
         Construct an IRLController with the given environment and hyperparameters. Used during
-        hyperparameter tuning and to to build final controller.
+        hyperparameter tuning and to build final controller.
 
         Args:
             env (Env): The Gym environment the controller will operate in.
@@ -133,6 +143,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
         num_trials: int,
         num_episodes: int,
         is_continuous_action_space: bool = False,
+        normalize_state: bool = False,
+        normalize_reward: bool = False,
+        on_policy: bool = False,
         fixed_hyperparams: Dict[str, Any] = None,
     ) -> Dict:
         """
@@ -157,11 +170,20 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
             env_t = env_provider.create_environment(env_config)
 
-            if is_continuous_action_space:
-                # Controller only supports continuous action space.
-                env_t = ContinuousActionWrapper(env_t)
+            if on_policy:
+                # If on policy the wrapping will be done later in the adapter.
+                env_t = wrap_env(env_t, False, is_continuous_action_space, False)
+            else:
+                env_t = wrap_env(
+                    env_t, normalize_state, is_continuous_action_space, normalize_reward
+                )
 
-            ctrl = self._build_controller(env_t, trial_hp)
+            ctrl = self._build_controller(env_t, trial_hp, normalize_reward=normalize_reward)
+
+            if on_policy:
+                # If on policy adapter is returned by build_controller that serves as controller and env.
+                env_t = ctrl
+
             rewards = Experiment(
                 name="hyperparameter_tuning",
                 env=env_t,
@@ -176,14 +198,16 @@ class IRLControllerProvider(IControllerProvider, ABC):
         study.optimize(objective, n_trials=num_trials)
         return {**study.best_params, **fixed_hyperparams}
 
-    def create_rl_controller(
+    def create_rl_controller_setup(
         self,
         config: RLControllerConfig,
-        normalize_observation: bool = False,
+        normalize_state: bool = False,
         is_continuous_action_space: bool = False,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
-    ) -> IRLController:
+        on_policy: bool = False,
+        normalize_reward: bool = False,
+    ) -> ControllerSetup:
         """Creates, optionally tunes, and trains a reinforcement learning controller.
 
         This method orchestrates the entire lifecycle of an RL controller based on a
@@ -198,13 +222,15 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         Args:
             config: The configuration object parsed from the YAML configuration file.
-            normalize_observation: Determines if the observation of the environment should be normalized.
+            normalize_state: Determines if the observation of the environment should be normalized.
             is_continuous_action_space: A flag to indicate if the environment's action
                 space should be wrapped to be continuous. Defaults to False.
             environment_provider: An optional provider class used to create separate
                 environments for hyperparameter tuning and training.
             environment_config: An optional configuration string or path passed to the
                 environment provider.
+            on_policy: Determines if the on PolicyVecEnvAdapter is used.
+            normalize_reward: Determines if the reward will be normalized.
 
         Returns:
             A fully trained and configured IRLController instance, ready for inference.
@@ -213,11 +239,6 @@ class IRLControllerProvider(IControllerProvider, ABC):
         tuning = config.hyperparameter_tuning
         hyperparameters = config.hyperparameters
         training = config.training
-
-        training_env = environment_provider.create_environment(environment_config)
-
-        if normalize_observation:
-            training_env = NormalizeObservation(training_env)
 
         hp = hyperparameters
 
@@ -228,11 +249,14 @@ class IRLControllerProvider(IControllerProvider, ABC):
             logger.info("Not all hyperparameters provided. Start with hyperparameter tuning.")
 
             hp = self._tune_hyperparameters(
-                environment_provider,
-                environment_config,
-                tuning.num_trials if tuning else None,
-                tuning.num_episodes if tuning else None,
+                env_provider=environment_provider,
+                env_config=environment_config,
+                num_trials=tuning.num_trials if tuning else None,
+                num_episodes=tuning.num_episodes if tuning else None,
                 is_continuous_action_space=is_continuous_action_space,
+                normalize_state=normalize_state,
+                normalize_reward=normalize_reward,
+                on_policy=on_policy,
                 fixed_hyperparams=hyperparameters or {},
             )
 
@@ -241,35 +265,65 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
 
-        if is_continuous_action_space:
-            # Controller only supports continuous action space.
-            training_env = ContinuousActionWrapper(training_env)
+        if on_policy:
+            pure_env = environment_provider.create_environment(environment_config)
+            if is_continuous_action_space:
+                pure_env = ContinuousActionWrapper(pure_env)
 
-        if training.report_training:
-            training_env = ReportingWrapper(
-                training_env, denorm_state=training.report_denormalized_state
+            # On policy assumes that adapter that acts as controller and env is returned from build_controller.
+            # This is because the tight coupling between environment and controller for on policy RL.
+            adapter = self._build_controller(
+                pure_env,
+                hp,
+                normalize_reward=normalize_reward,
+                report_denormalized_state=training.report_denormalized_state,
             )
 
-        controller = self._build_controller(training_env, hp)
+            env_for_training = adapter
 
-        logger.info(f"Start training with {training.timesteps} timesteps.")
+            with reporting_context(env_for_training, training.report_training):
+                logger.info(f"Start training with {training.timesteps} timesteps.")
+                adapter.train(timesteps=training.timesteps)
 
-        with reporting_context(training_env, training.report_training):
-            controller.train(timesteps=training.timesteps)
+            if isinstance(adapter, gym.Env) and isinstance(adapter, IController):
+                return ControllerSetup(adapter, cast(gym.Env, adapter))
 
-        # Close env instance on which training was done on.
-        training_env.close()
+            raise RuntimeError("Adapter is not Controller and Environment.")
 
-        env = environment_provider.create_environment(environment_config)
+        else:
+            training_env = environment_provider.create_environment(environment_config)
 
-        if normalize_observation:
-            env = NormalizeObservation(env)
+            training_env = wrap_env(
+                training_env, normalize_state, is_continuous_action_space, normalize_reward
+            )
 
-        if is_continuous_action_space:
-            # Controller only supports continuous action space.
-            env = ContinuousActionWrapper(env)
+            if training.report_training:
+                training_env = ReportingWrapper(
+                    training_env, denorm_state=training.report_denormalized_state
+                )
 
-        # Set new environment
-        controller.env = env
+            controller = self._build_controller(training_env, hp)
+            logger.info(f"Start training with {training.timesteps} timesteps.")
+            with reporting_context(training_env, training.report_training):
+                controller.train(timesteps=training.timesteps)
+            training_env.close()
 
-        return controller
+            final_env = environment_provider.create_environment(environment_config)
+            final_env = wrap_env(
+                final_env, normalize_state, is_continuous_action_space, normalize_reward
+            )
+
+            controller.env = final_env
+            return ControllerSetup(controller, final_env)
+
+
+def wrap_env(
+    env: gym.Env, normalize_state: bool, continuous_action_space: bool, normalize_reward: bool
+) -> gym.Env:
+    if normalize_state:
+        env = NormalizeObservation(env)
+    if continuous_action_space:
+        env = ContinuousActionWrapper(env)
+    if normalize_reward:
+        env = NormalizeReward(env)
+    return env

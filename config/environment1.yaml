@@ -57,8 +57,8 @@ reward_function:
     min_temp: 22.0
     max_temp: 24.0
 
-normalize_state: True
+
 
 episode:
   timesteps_per_hour: 4
-  period: [1, 1, 2025, 30, 6, 2025]
+  period: [1, 1, 2025, 31, 12, 2025]

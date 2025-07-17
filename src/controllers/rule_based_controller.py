@@ -6,7 +6,7 @@ import yaml
 from asteval import Interpreter
 from pydantic import BaseModel
 
-from controllers.base_controller import IController, IControllerProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerProvider
 from environments.base_provider import IEnvironmentProvider
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
@@ -135,12 +135,12 @@ class RuleBasedController(IController):
 
 
 class RuleBasedControllerProvider(IControllerProvider):
-    def create_controller(
+    def create_controller_setup(
         self,
         config_path: str | None = None,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
-    ) -> IController:
+    ) -> ControllerSetup:
         if not config_path:
             raise ValueError("A config_path is required for RuleBasedController.")
 
@@ -148,9 +148,11 @@ class RuleBasedControllerProvider(IControllerProvider):
 
         env = environment_provider.create_environment(environment_config)
 
-        return RuleBasedController(
+        controller = RuleBasedController(
             env=env,
             rules=controller_config.rules,
             state_space=controller_config.state_space,
             custom_variables=controller_config.custom_variables or {},
         )
+
+        return ControllerSetup(controller, env)
