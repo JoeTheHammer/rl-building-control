@@ -1,9 +1,10 @@
 training:
- timesteps: 200
- report_training: True
+ timesteps: 20_000
+ report_training: False
  report_denormalized_state: True
 
 hyperparameter_tuning:
+ enabled: False
  num_trials: 50
  num_episodes: 5
 

@@ -121,7 +121,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         """
         pass
 
-    @abstractmethod
+
     def _suggest_hyperparameters_space(
         self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
