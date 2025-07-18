@@ -12,6 +12,15 @@ state_space:
     outdoor_temp:
       type: "Site Outdoor Air Drybulb Temperature"
       zone: "Environment"
+    humidity_101:
+      type: "Zone Mean Air Humidity Ratio"
+      zone: "GuestRoom101"
+    humidity_104:
+      type: "Zone Mean Air Humidity Ratio"
+      zone: "GuestRoom104"
+  meters:
+    electricity: "Electricity:Facility"
+    gas: "NaturalGas:Facility"
   time_info:
     day_of_month:
       cyclic: true
