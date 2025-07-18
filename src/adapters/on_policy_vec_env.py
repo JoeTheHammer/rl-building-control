@@ -2,6 +2,7 @@ from typing import Type
 
 import gymnasium as gym
 import numpy as np
+from sinergym.utils.wrappers import NormalizeAction
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
@@ -23,22 +24,25 @@ class OnPolicyAdapter(gym.Wrapper, IController):
         normalize_reward: bool = False,
         report_denormalized_state: bool = False,
         policy: str = "MlpPolicy",
-        use_vec_normalize=True,
+        normalize_action: bool = False,
     ):
         # Wrap pure_env in ActionLoggingWrapper so scaled actions are logged on step()
 
         super().__init__(env)
 
+        self.policy = policy
+        self.lstm_states = None
+        self.episode_starts = np.ones((1,), dtype=bool)
+
         hyperparams["max_grad_norm"] = 0.5
         hyperparams["target_kl"] = 0.03
 
-        self.reporting_env = ReportingWrapper(env, denorm_state=report_denormalized_state)
+        self.env = ReportingWrapper(env, denorm_state=report_denormalized_state)
 
-        self.vec_env = DummyVecEnv([lambda: self.reporting_env])
+        if normalize_action:
+            self.env = NormalizeAction(self.env)
 
-        # Use VecNormalize
-        if use_vec_normalize:
-            self.vec_env = VecNormalize(self.vec_env, norm_reward=normalize_reward)
+        self.vec_env = VecNormalize(DummyVecEnv([lambda: self.env]), norm_reward=normalize_reward)
 
         self._model = model_class(policy, self.vec_env, **hyperparams)
 
@@ -53,11 +57,23 @@ class OnPolicyAdapter(gym.Wrapper, IController):
         self._model.predict = patched_predict
 
     def get_action(self, state: np.ndarray) -> np.ndarray:
+        if self.policy == "MlpLstmPolicy":
+            action, lstm_states = self._model.predict(
+                np.expand_dims(state, axis=0),
+                state=self.lstm_states,
+                episode_start=self.episode_starts,
+                deterministic=True,
+            )
+            self.lstm_states = lstm_states
+            return action[0]
+
         action, _ = self._model.predict(np.expand_dims(state, axis=0), deterministic=True)
         return action[0]
 
     def step(self, action: np.ndarray):
         obs, reward, done, info = self.vec_env.step(np.array([action]))
+
+        self.episode_starts = done
 
         single_obs = obs[0]
         single_reward = reward[0]
@@ -72,6 +88,7 @@ class OnPolicyAdapter(gym.Wrapper, IController):
 
     def reset(self, **kwargs):
         obs = self.vec_env.reset()
+        self.lstm_states = None
         return obs[0], {}
 
     def train(self, timesteps: int):

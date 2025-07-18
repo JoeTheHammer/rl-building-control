@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from reporting.plotter import plot_timeseries
-from wrappers.normalization_utils import denormalize_state
+from wrappers.normalization_utils import denormalize_action, denormalize_state
 
 
 def _flatten(values):
@@ -96,7 +96,7 @@ class ReportingWrapper(gym.Wrapper):
         self._maybe_extract_names(info, obs=obs, action=action)
         if self.is_recording:
             self.states.append(obs if not self.denorm_state else denormalize_state(obs, self.env))
-            self.actions.append(action)
+            self.actions.append(denormalize_action(action, self.env))
             self.rewards.append(reward)
         return obs, reward, terminated, truncated, info
 

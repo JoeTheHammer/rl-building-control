@@ -9,6 +9,7 @@ import yaml
 from gym.wrappers import NormalizeReward
 from gymnasium.wrappers import NormalizeObservation
 from pydantic import BaseModel
+from stable_baselines3.common.monitor import Monitor
 
 from controllers.base_controller import ControllerSetup, IController, IControllerProvider
 from custom_loggers.setup_logger import logger
@@ -48,7 +49,8 @@ def wrap_env(
         env = ContinuousActionWrapper(env)
     if normalize_reward:
         env = NormalizeReward(env)
-    return env
+    return Monitor(env)
+
 
 class IRLController(IController, ABC):
     """
@@ -120,7 +122,6 @@ class IRLControllerProvider(IControllerProvider, ABC):
             IRLController: A new, untrained controller instance.
         """
         pass
-
 
     def _suggest_hyperparameters_space(
         self, trial: Optional[optuna.Trial] = None
@@ -396,6 +397,3 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 is_continuous_action_space=is_continuous_action_space,
                 normalize_reward=normalize_reward,
             )
-
-
-

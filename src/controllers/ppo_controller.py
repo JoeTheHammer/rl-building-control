@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 import optuna
 from gymnasium import Env
 from stable_baselines3 import PPO
+from stable_baselines3.common.monitor import Monitor
 
 from adapters.on_policy_vec_env import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
@@ -51,6 +52,9 @@ class PPOProvider(IRLControllerProvider):
 
     def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
         # Add this to ensure that output of controller is in defined (tanh) range.
+
+        env = Monitor(self.env)
+
         if "policy_kwargs" not in hyper_params:
             hyper_params["policy_kwargs"] = {}
         hyper_params["policy_kwargs"]["squash_output"] = True
