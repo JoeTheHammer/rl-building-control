@@ -14,7 +14,7 @@ class TimeFeatureConfig(BaseModel):
 
 class StateSpaceConfig(BaseModel):
     variables: Dict[str, VariableConfig]
-    meters: Dict[str, str]
+    meters: Optional[Dict[str, str]] = {}
     time_info: Optional[Dict[str, TimeFeatureConfig]] = None
 
 

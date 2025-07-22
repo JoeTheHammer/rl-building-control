@@ -1,8 +1,9 @@
-from typing import Any, Type
+from typing import Any
 
 import gymnasium
 import numpy as np
 from gymnasium.wrappers import NormalizeObservation
+from sinergym.utils.wrappers import NormalizeAction
 from stable_baselines3.common.vec_env import VecNormalize
 
 
@@ -30,14 +31,14 @@ def _find_wrapper(env: Any, wrapper_class: type) -> Any:
 
         # Case 2: Special check for the VecNormalizeAdapter pattern.
         # Look inside for the `vec_env` attribute.
-        if hasattr(current_env, 'vec_env'):
+        if hasattr(current_env, "vec_env"):
             env_queue.append(current_env.vec_env)
 
         # Case 3: Standard gym wrapper, add the inner .env to the queue.
-        if hasattr(current_env, 'env'):
+        if hasattr(current_env, "env"):
             env_queue.append(current_env.env)
 
-    # If the queue is exhausted and we haven't found the wrapper
+    # If the queue is exhausted, and we haven't found the wrapper
     return None
 
 
@@ -59,8 +60,19 @@ def denormalize_state(state: Any, env: gymnasium.Env) -> Any:
     gym_normalize_wrapper = _find_wrapper(env, NormalizeObservation)
     if gym_normalize_wrapper is not None and hasattr(gym_normalize_wrapper, "obs_rms"):
         # Use the manual calculation for this wrapper type
-        return (state * np.sqrt(
-            gym_normalize_wrapper.obs_rms.var + gym_normalize_wrapper.epsilon) + gym_normalize_wrapper.obs_rms.mean)
+        return (
+            state * np.sqrt(gym_normalize_wrapper.obs_rms.var + gym_normalize_wrapper.epsilon)
+            + gym_normalize_wrapper.obs_rms.mean
+        )
 
     # 3. If neither wrapper is found, return the original state
     return state
+
+
+def denormalize_action(action: Any, env: gymnasium.Env) -> Any:
+    action_normalize_wrapper = _find_wrapper(env, NormalizeAction)
+    if action_normalize_wrapper is not None:
+        # Use the wrapper's dedicated, safer method for denormalization
+        return action_normalize_wrapper.reverting_action(action)
+
+    return action

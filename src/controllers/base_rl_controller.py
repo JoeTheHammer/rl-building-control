@@ -9,6 +9,7 @@ import yaml
 from gym.wrappers import NormalizeReward
 from gymnasium.wrappers import NormalizeObservation
 from pydantic import BaseModel
+from stable_baselines3.common.monitor import Monitor
 
 from controllers.base_controller import ControllerSetup, IController, IControllerProvider
 from custom_loggers.setup_logger import logger
@@ -40,7 +41,11 @@ class RLControllerConfig(BaseModel):
 
 
 def wrap_env(
-    env: gym.Env, normalize_state: bool, continuous_action_space: bool, normalize_reward: bool
+    env: gym.Env,
+    normalize_state: bool,
+    continuous_action_space: bool,
+    normalize_reward: bool,
+    use_tensorboard: bool = False,
 ) -> gym.Env:
     if normalize_state:
         env = NormalizeObservation(env)
@@ -48,7 +53,10 @@ def wrap_env(
         env = ContinuousActionWrapper(env)
     if normalize_reward:
         env = NormalizeReward(env)
+    if use_tensorboard:
+        env = Monitor(env)
     return env
+
 
 class IRLController(IController, ABC):
     """
@@ -121,7 +129,6 @@ class IRLControllerProvider(IControllerProvider, ABC):
         """
         pass
 
-    @abstractmethod
     def _suggest_hyperparameters_space(
         self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
@@ -259,12 +266,18 @@ class IRLControllerProvider(IControllerProvider, ABC):
         normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an on-policy controller."""
-        pure_env = environment_provider.create_environment(environment_config)
+        env = environment_provider.create_environment(environment_config)
+
         if is_continuous_action_space:
-            pure_env = ContinuousActionWrapper(pure_env)
+            env = ContinuousActionWrapper(env)
+
+        # Determine if monitor wrapper should be added to get full functionality of tensorboard
+        # used to monitor training.
+        if "tensorboard_log" in hp and hp["tensorboard_log"]:
+            env = Monitor(env)
 
         adapter = self._build_controller(
-            pure_env,
+            env,
             hp,
             normalize_reward=normalize_reward,
             report_denormalized_state=training_config.report_denormalized_state,
@@ -292,8 +305,17 @@ class IRLControllerProvider(IControllerProvider, ABC):
         """Builds, trains, and sets up an off-policy controller."""
         # Setup environment for training
         training_env = environment_provider.create_environment(environment_config)
+
+        # Determine if monitor wrapper should be added to get full functionality of tensorboard
+        # used to monitor training.
+        use_tensorboard = "tensorboard_log" in hp and hp["tensorboard_log"]
+
         training_env = wrap_env(
-            training_env, normalize_state, is_continuous_action_space, normalize_reward
+            training_env,
+            normalize_state,
+            is_continuous_action_space,
+            normalize_reward,
+            use_tensorboard,
         )
         if training_config.report_training:
             training_env = ReportingWrapper(
@@ -396,6 +418,3 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 is_continuous_action_space=is_continuous_action_space,
                 normalize_reward=normalize_reward,
             )
-
-
-

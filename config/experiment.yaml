@@ -1,9 +1,9 @@
 experiments:
-  - name: "experiment 1"
+  - name: "experiment 3"
     engine: "sinergym"
     environment_config: "../rl-building-control/config/environment1.yaml"
-    controller: "ppo"
-    controller_config: "../rl-building-control/config/ppo_controller.yaml"
+    controller: "sac"
+    controller_config: "../rl-building-control/config/sac_controller.yaml"
     episodes: 1
     reporting:
       plots: True
