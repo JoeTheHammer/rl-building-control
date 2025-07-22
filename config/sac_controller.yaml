@@ -1,5 +1,5 @@
 training:
- timesteps: 20_000
+ timesteps: 50_000
  report_training: False
  report_denormalized_state: True
 
@@ -14,3 +14,5 @@ hyperparameters:
   learning_rate: 0.0009851008761417273
   gamma: 0.9305074409820552
   batch_size: 32
+  tensorboard_log: test_sac_logs/
+

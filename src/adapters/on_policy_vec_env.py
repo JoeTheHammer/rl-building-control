@@ -25,8 +25,8 @@ class OnPolicyAdapter(gym.Wrapper, IController):
         report_denormalized_state: bool = False,
         policy: str = "MlpPolicy",
         normalize_action: bool = False,
+        stabilize_training: bool = True,
     ):
-        # Wrap pure_env in ActionLoggingWrapper so scaled actions are logged on step()
 
         super().__init__(env)
 
@@ -34,8 +34,9 @@ class OnPolicyAdapter(gym.Wrapper, IController):
         self.lstm_states = None
         self.episode_starts = np.ones((1,), dtype=bool)
 
-        hyperparams["max_grad_norm"] = 0.5
-        hyperparams["target_kl"] = 0.03
+        if stabilize_training:
+            hyperparams["max_grad_norm"] = 0.5
+            hyperparams["target_kl"] = 0.03
 
         self.env = ReportingWrapper(env, denorm_state=report_denormalized_state)
 

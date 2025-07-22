@@ -14,6 +14,7 @@ from controllers.base_rl_controller import (
     IRLControllerProvider,
     load_rl_controller_config,
 )
+from controllers.utils import add_squash_output_to_hp
 from environments.base_provider import IEnvironmentProvider
 
 
@@ -45,14 +46,11 @@ class RecurrentPPOProvider(IRLControllerProvider):
 
     def _build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
 
-        env = Monitor(env)
+        hyper_params = add_squash_output_to_hp(hyper_params)
 
-        if "policy_kwargs" not in hyper_params:
-            hyper_params["policy_kwargs"] = {}
-        hyper_params["policy_kwargs"]["squash_output"] = True
-        hyper_params["use_sde"] = True
         normalize_reward = kwargs.get("normalize_reward", False)
         report_denormalized_state = kwargs.get("report_denormalized_state", False)
+
         return OnPolicyAdapter(
             env=env,
             model_class=RecurrentPPO,

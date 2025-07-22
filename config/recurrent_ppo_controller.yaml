@@ -9,7 +9,7 @@ hyperparameter_tuning:
  num_episodes: 5
 
 hyperparameters:
-  tensorboard_log: ppo_training_logs/
+  tensorboard_log: recurrent_ppo_training_logs/
   learning_rate: 0.00001
   n_steps: 2048
   batch_size: 64

@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any
 
 import gymnasium
 import numpy as np
@@ -38,7 +38,7 @@ def _find_wrapper(env: Any, wrapper_class: type) -> Any:
         if hasattr(current_env, "env"):
             env_queue.append(current_env.env)
 
-    # If the queue is exhausted and we haven't found the wrapper
+    # If the queue is exhausted, and we haven't found the wrapper
     return None
 
 

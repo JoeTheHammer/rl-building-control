@@ -1,6 +1,6 @@
 training:
  timesteps: 50_000
- report_training: False
+ report_training: True
  report_denormalized_state: False
 
 hyperparameter_tuning:
@@ -8,7 +8,7 @@ hyperparameter_tuning:
  num_episodes: 5
 
 hyperparameters:
-  tensorboard_log: ppo_training_logs/
+  tensorboard_log: oichel_logs/
   learning_rate: 0.00001
   n_steps: 2048
   batch_size: 64
