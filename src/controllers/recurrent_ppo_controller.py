@@ -5,7 +5,6 @@ from typing import (
 
 import gymnasium as gym
 from sb3_contrib import RecurrentPPO
-from sinergym.utils.wrappers import NormalizeAction
 from stable_baselines3.common.monitor import Monitor
 
 from adapters.on_policy_vec_env import OnPolicyAdapter

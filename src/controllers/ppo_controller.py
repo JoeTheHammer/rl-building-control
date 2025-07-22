@@ -53,7 +53,7 @@ class PPOProvider(IRLControllerProvider):
     def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
         # Add this to ensure that output of controller is in defined (tanh) range.
 
-        env = Monitor(self.env)
+        env = Monitor(env)
 
         if "policy_kwargs" not in hyper_params:
             hyper_params["policy_kwargs"] = {}
