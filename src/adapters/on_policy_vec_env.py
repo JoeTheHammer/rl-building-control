@@ -25,7 +25,6 @@ class OnPolicyAdapter(gym.Wrapper, IController):
         report_denormalized_state: bool = False,
         policy: str = "MlpPolicy",
         normalize_action: bool = False,
-        stabilize_training: bool = True,
     ):
 
         super().__init__(env)
@@ -33,10 +32,6 @@ class OnPolicyAdapter(gym.Wrapper, IController):
         self.policy = policy
         self.lstm_states = None
         self.episode_starts = np.ones((1,), dtype=bool)
-
-        if stabilize_training:
-            hyperparams["max_grad_norm"] = 0.5
-            hyperparams["target_kl"] = 0.03
 
         self.env = ReportingWrapper(env, denorm_state=report_denormalized_state)
 
@@ -93,4 +88,5 @@ class OnPolicyAdapter(gym.Wrapper, IController):
         return obs[0], {}
 
     def train(self, timesteps: int):
-        self._model.learn(total_timesteps=timesteps)
+        # Set log_interval to 1 to increase support for tensor graph integration (more regular logs).
+        self._model.learn(total_timesteps=timesteps, log_interval=1)

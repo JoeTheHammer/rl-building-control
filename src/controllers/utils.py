@@ -24,3 +24,21 @@ def add_squash_output_to_hp(hp: Dict) -> Dict:
     hp["use_sde"] = True
 
     return hp
+
+
+def stabilize_training(hp: Dict) -> Dict:
+    """
+    Stabilizes training by applying gradient clipping and limiting policy changes.
+
+    Args:
+        hp (Dict): A dictionary of hyperparameters.
+
+    Returns:
+        Dict: The updated hyperparameters with stabilization settings.
+    """
+    # Clips gradients to prevent exploding gradients and ensure stable updates.
+    hp["max_grad_norm"] = 0.5
+    # Limits the KL divergence to prevent aggressive policy updates in algorithms like PPO,
+    # ensuring smoother and more controlled optimization.
+    hp["target_kl"] = 0.03
+    return hp

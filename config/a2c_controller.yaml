@@ -10,12 +10,9 @@ hyperparameter_tuning:
 
 hyperparameters:
   tensorboard_log: logs/
-  learning_rate: 0.00001
-  n_steps: 2048
-  batch_size: 64
-  n_epochs: 10
+  ent_coef: 0.01
+  learning_rate: 0.00005
+  n_steps: 512
   gamma: 0.995
   gae_lambda: 0.95
-  clip_range: 0.2
-  ent_coef: 0.001
   vf_coef: 0.5
