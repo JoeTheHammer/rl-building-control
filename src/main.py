@@ -1,6 +1,7 @@
 import typer
 
 from bootstrap.sinergym_loader import create_sinergym_provider
+from controllers.a2c_controller import A2CProvider
 from controllers.custom_controller_provider import CustomControllerProvider
 from controllers.ppo_controller import PPOProvider
 from controllers.random_controller import RandomControllerProvider
@@ -27,6 +28,7 @@ def run(config: str = typer.Argument(..., help="Path to the YAML environment_con
     experiment_manager.register_controller_provider("custom", CustomControllerProvider())
     experiment_manager.register_controller_provider("ppo", PPOProvider())
     experiment_manager.register_controller_provider("recurrent-ppo", RecurrentPPOProvider())
+    experiment_manager.register_controller_provider("a2c", A2CProvider())
 
     experiment_manager.run_experiments_from_config(config)
     logger.info("All experiments finished.")

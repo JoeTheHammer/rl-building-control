@@ -29,3 +29,13 @@ experiments:
       plots: True
       denormalize_state: True
       export: True
+  - name: "A2C Experiment"
+    engine: "sinergym"
+    environment_config: "../rl-building-control/config/environment1.yaml"
+    controller: "a2c"
+    controller_config: "../rl-building-control/config/a2c_controller.yaml"
+    episodes: 1
+    reporting:
+      plots: True
+      denormalize_state: True
+      export: True

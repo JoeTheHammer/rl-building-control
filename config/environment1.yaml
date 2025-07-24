@@ -65,4 +65,4 @@ reward_function:
 
 episode:
   timesteps_per_hour: 4
-  period: [1, 1, 2025, 1, 7, 2025]
+  period: [1, 1, 2025, 31, 12, 2025]

@@ -26,8 +26,8 @@ class SACController(IRLController):
         return action
 
     def train(self, timesteps: int):
-        # Set log_interval to 1 to increase support for tensor flow integration (more regular logs).
-        self.model.learn(timesteps, log_interval=1)
+        # Set log_interval to 1 to increase support for tensor graph integration (more regular logs).
+        self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
 class SACProvider(IRLControllerProvider):
