@@ -39,3 +39,13 @@ experiments:
       plots: True
       denormalize_state: True
       export: True
+  - name: "DDPG Experiment"
+    engine: "sinergym"
+    environment_config: "../rl-building-control/config/environment1.yaml"
+    controller: "ddpg"
+    controller_config: "../rl-building-control/config/ddpg_controller.yaml"
+    episodes: 1
+    reporting:
+      plots: True
+      denormalize_state: True
+      export: True
