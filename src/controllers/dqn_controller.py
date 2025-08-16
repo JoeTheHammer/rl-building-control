@@ -109,7 +109,6 @@ class DQNProvider(IRLControllerProvider):
             config=config,
             environment_provider=environment_provider,
             environment_config=environment_config,
-            # DQN is for discrete action spaces, so this parameter is set to False.
-            is_continuous_action_space=False,
+            is_discrete_action_space=True,
             normalize_state=config.normalize_state,
         )
