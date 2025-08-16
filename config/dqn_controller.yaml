@@ -1,6 +1,6 @@
 training:
   timesteps: 100_000
-  report_training: true
+  report_training: false
   report_denormalized_state: false
 
 hyperparameter_tuning:
