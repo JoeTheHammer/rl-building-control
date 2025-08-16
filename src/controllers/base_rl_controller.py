@@ -6,8 +6,7 @@ import gymnasium as gym
 import numpy as np
 import optuna
 import yaml
-from gym.wrappers import NormalizeReward
-from gymnasium.wrappers import NormalizeObservation
+from gymnasium.wrappers import NormalizeObservation, NormalizeReward
 from pydantic import BaseModel
 from stable_baselines3.common.monitor import Monitor
 
