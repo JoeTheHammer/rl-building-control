@@ -9,6 +9,7 @@ from controllers.random_controller import RandomControllerProvider
 from controllers.recurrent_ppo_controller import RecurrentPPOProvider
 from controllers.rule_based_controller import RuleBasedControllerProvider
 from controllers.sac_controller import SACProvider
+from controllers.td3_controller import TD3Provider
 from custom_loggers.setup_logger import logger
 from experiment.manager import ExperimentManager
 
@@ -31,6 +32,7 @@ def run(config: str = typer.Argument(..., help="Path to the YAML environment_con
     experiment_manager.register_controller_provider("recurrent-ppo", RecurrentPPOProvider())
     experiment_manager.register_controller_provider("a2c", A2CProvider())
     experiment_manager.register_controller_provider("ddpg", DDPGProvider())
+    experiment_manager.register_controller_provider("td3", TD3Provider())
 
     experiment_manager.run_experiments_from_config(config)
     logger.info("All experiments finished.")
