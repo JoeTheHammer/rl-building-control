@@ -321,14 +321,14 @@ class IRLControllerProvider(IControllerProvider, ABC):
     ) -> ControllerSetup:
         """Builds, trains, and sets up an off-policy controller."""
         # Setup environment for training
-        training_env = environment_provider.create_environment(environment_config)
+        env = environment_provider.create_environment(environment_config)
 
         # Determine if monitor wrapper should be added to get full functionality of tensorboard
         # used to monitor training.
         use_tensorboard = "tensorboard_log" in hp and hp["tensorboard_log"]
 
-        training_env = wrap_env(
-            training_env,
+        env = wrap_env(
+            env,
             normalize_state,
             is_continuous_action_space,
             normalize_reward,
@@ -337,29 +337,15 @@ class IRLControllerProvider(IControllerProvider, ABC):
         )
 
         if training_config.report_training:
-            training_env = ReportingWrapper(
-                training_env, denorm_state=training_config.report_denormalized_state
-            )
+            env = ReportingWrapper(env, denorm_state=training_config.report_denormalized_state)
 
         # Build and train the controller
-        controller = self._build_controller(training_env, hp)
+        controller = self._build_controller(env, hp)
         logger.info(f"Start training with {training_config.timesteps} timesteps.")
-        with reporting_context(training_env, training_config.report_training):
+        with reporting_context(env, training_config.report_training):
             controller.train(timesteps=training_config.timesteps)
-        training_env.close()
 
-        # Setup final environment for evaluation
-        final_env = environment_provider.create_environment(environment_config)
-        final_env = wrap_env(
-            final_env,
-            normalize_state,
-            is_continuous_action_space,
-            normalize_reward,
-            is_discrete_action_space,
-        )
-
-        controller.env = final_env
-        return ControllerSetup(controller, final_env)
+        return ControllerSetup(controller, controller.env)
 
     def create_rl_controller_setup(
         self,
