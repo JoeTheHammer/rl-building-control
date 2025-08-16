@@ -1,9 +1,9 @@
 experiments:
-  - name: "DDPG experiment"
+  - name: "TD3 experiment"
     engine: "sinergym"
     environment_config: "../rl-building-control/config/environment1.yaml"
-    controller: "ddpg"
-    controller_config: "../rl-building-control/config/ddpg_controller.yaml"
+    controller: "td3"
+    controller_config: "../rl-building-control/config/td3_controller.yaml"
     episodes: 1
     reporting:
       plots: True
