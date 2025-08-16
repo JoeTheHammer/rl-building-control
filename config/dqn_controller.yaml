@@ -1,5 +1,5 @@
 training:
-  timesteps: 500_000
+  timesteps: 300_000
   report_training: false
   report_denormalized_state: false
 
@@ -11,8 +11,8 @@ hyperparameter_tuning:
 hyperparameters:
   learning_rate: 0.0001
   gamma: 0.99
-  buffer_size: 10000
-  learning_starts: 50000
+  buffer_size: 50000
+  learning_starts: 1000
   batch_size: 32
   target_update_interval: 1000
   exploration_fraction: 0.1
