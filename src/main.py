@@ -4,6 +4,7 @@ from bootstrap.sinergym_loader import create_sinergym_provider
 from controllers.a2c_controller import A2CProvider
 from controllers.custom_controller_provider import CustomControllerProvider
 from controllers.ddpg_controller import DDPGProvider
+from controllers.dqn_controller import DQNProvider
 from controllers.ppo_controller import PPOProvider
 from controllers.random_controller import RandomControllerProvider
 from controllers.recurrent_ppo_controller import RecurrentPPOProvider
@@ -33,6 +34,7 @@ def run(config: str = typer.Argument(..., help="Path to the YAML environment_con
     experiment_manager.register_controller_provider("a2c", A2CProvider())
     experiment_manager.register_controller_provider("ddpg", DDPGProvider())
     experiment_manager.register_controller_provider("td3", TD3Provider())
+    experiment_manager.register_controller_provider("dqn", DQNProvider())
 
     experiment_manager.run_experiments_from_config(config)
     logger.info("All experiments finished.")

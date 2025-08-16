@@ -16,6 +16,7 @@ from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
 from reporting.finder import find_reporting_wrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from wrappers.discrete_action_wrapper import DiscreteActionWrapper
 from wrappers.reporting_wrapper import ReportingWrapper
 
 
@@ -316,6 +317,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
             normalize_reward,
             use_tensorboard,
         )
+
+        training_env = DiscreteActionWrapper(training_env)
+
         if training_config.report_training:
             training_env = ReportingWrapper(
                 training_env, denorm_state=training_config.report_denormalized_state
@@ -333,6 +337,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
         final_env = wrap_env(
             final_env, normalize_state, is_continuous_action_space, normalize_reward
         )
+
+        final_env = DiscreteActionWrapper(final_env)
+
         controller.env = final_env
         return ControllerSetup(controller, final_env)
 
@@ -352,7 +359,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         It finalizes hyperparameters, performs tuning if configured, builds the
         model, and runs the training process. It correctly handles the distinct
         workflows for on-policy and off-policy algorithms, returning a fully
-        trained controller and its curresponding environment ready for evaluation.
+        trained controller and its corresponding environment ready for evaluation.
 
         Args:
             config: The configuration object parsed from the YAML file, containing

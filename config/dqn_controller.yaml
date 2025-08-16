@@ -1,5 +1,5 @@
 training:
-  timesteps: 100000
+  timesteps: 100_000
   report_training: true
   report_denormalized_state: false
 
@@ -11,10 +11,10 @@ hyperparameter_tuning:
 hyperparameters:
   learning_rate: 0.0001
   gamma: 0.99
-  buffer_size: 1000000
-  tau: 0.005
-  batch_size: 256
-  policy_delay: 2
-  target_policy_noise: 0.2
-  target_noise_clip: 0.5
+  buffer_size: 10000
+  learning_starts: 50000
+  batch_size: 32
+  target_update_interval: 1000
+  exploration_fraction: 0.1
+  exploration_final_eps: 0.05
   tensorboard_log: logs/

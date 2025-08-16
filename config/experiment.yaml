@@ -1,9 +1,9 @@
 experiments:
-  - name: "TD3 experiment"
+  - name: "DQN experiment"
     engine: "sinergym"
-    environment_config: "../rl-building-control/config/environment1.yaml"
-    controller: "td3"
-    controller_config: "../rl-building-control/config/td3_controller.yaml"
+    environment_config: "../rl-building-control/config/discrete_environment.yaml"
+    controller: "dqn"
+    controller_config: "../rl-building-control/config/dqn_controller.yaml"
     episodes: 1
     reporting:
       plots: True
