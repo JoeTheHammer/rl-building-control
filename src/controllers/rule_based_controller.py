@@ -84,7 +84,7 @@ class RuleBasedController(IController):
 
     def get_action(self, state: Any) -> Any:
         """
-        Returns an action based on the first matching rule condition.
+        Returns an action based on the first matching rule condition that is found.
 
         Args:
             state (Any): The current environment observation (np.ndarray or dict).
