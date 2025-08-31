@@ -17,6 +17,7 @@ from experiment.experiment import Experiment
 from reporting.finder import find_reporting_wrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.discrete_action_wrapper import DiscreteActionWrapper
+from wrappers.manager import EnvWrapperManager
 from wrappers.reporting_wrapper import ReportingWrapper
 
 
@@ -421,3 +422,34 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 is_discrete_action_space=is_discrete_action_space,
                 normalize_reward=normalize_reward,
             )
+
+    def create_rl_controller_setup_new(
+            self,
+            hp: Dict[str, Any],
+            env_wrap_manager: EnvWrapperManager,
+            is_env_adapter: bool,
+    ) -> ControllerSetup:
+
+        logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
+
+        env = self.env_factory.create_environment()
+        env = env_wrap_manager.apply_wrappers(env)
+
+        use_tensorboard = "tensorboard_log" in hp and hp["tensorboard_log"]
+
+        if use_tensorboard:
+            env_wrap_manager.add_wrapper(Monitor)
+
+        controller = self.build_controller(env, hp)
+        training_conf = load_rl_controller_config(self.config_path).training
+
+        with reporting_context(env, training_conf.report_training):
+            logger.info(f"Start training with {training_conf.timesteps} timesteps.")
+            controller.train(timesteps=training_conf.timesteps)
+
+        if is_env_adapter:
+            if isinstance(controller, gym.Env) and isinstance(controller, IController):
+                return ControllerSetup(controller, cast(gym.Env, controller))
+            raise RuntimeError("On-policy adapter must be both a Controller and an Environment.")
+
+        return ControllerSetup(controller, controller.env)
