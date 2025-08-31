@@ -12,6 +12,9 @@ from controllers.base_rl_controller import (
     load_rl_controller_config,
 )
 from environments.base_factory import IEnvironmentFactory
+from wrappers.manager import EnvWrapperManager
+from gymnasium.wrappers import NormalizeObservation
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
 
 class DDPGController(IRLController):
@@ -43,32 +46,8 @@ class DDPGController(IRLController):
 
 class DDPGFactory(IRLControllerFactory):
     """
-    Factory for the DDPGController, including hyperparameter tuning with Optuna.
+    Factory for the DDPGController
     """
-
-    def _suggest_hyperparameters_space(
-            self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
-        """
-        Suggests hyperparameters for DDPG, either returning defaults or using Optuna.
-        """
-        if trial is None:
-            # Return default values for DDPG if no Optuna trial is provided.
-            return {
-                "learning_rate": 1e-4,
-                "gamma": 0.99,
-                "buffer_size": 100000,
-                "tau": 0.005,
-                "batch_size": 64,
-            }
-
-        return {
-            "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
-            "gamma": trial.suggest_float("gamma", 0.9, 0.9999),
-            "buffer_size": trial.suggest_int("buffer_size", 10000, 1000000, step=10000),
-            "tau": trial.suggest_float("tau", 0.001, 0.05, log=True),
-            "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
-        }
 
     def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DDPGController:
         """
@@ -85,7 +64,7 @@ class DDPGFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
-        return super().create_rl_controller_setup(
-            is_continuous_action_space=True,
-            normalize_state=config.environment_wrapper.normalize_state,
-        )
+        env_wrap_manager = EnvWrapperManager([NormalizeObservation, ContinuousActionWrapper],
+                                             config.environment_wrapper)
+
+        return super().create_rl_controller_setup_new(config.hyperparameters, env_wrap_manager)
