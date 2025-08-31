@@ -15,6 +15,9 @@ from wrappers.manager import EnvWrapperManager
 
 
 class A2CFactory(IHPTunableControllerFactory):
+    """
+    Factory for the DDPGController, including hyperparameter tuning with Optuna.
+    """
 
     def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
         if trial is None:
@@ -52,11 +55,11 @@ class A2CFactory(IHPTunableControllerFactory):
 
     def create_controller_setup(self) -> ControllerSetup:
 
-        if self.config_path is None:
+        if self.config_path is None or self.config_path == "":
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
-        env_wrap_manager = EnvWrapperManager([ContinuousActionWrapper])
         rl_config = load_rl_controller_config(self.config_path)
+        env_wrap_manager = EnvWrapperManager([ContinuousActionWrapper], rl_config.environment_wrapper)
         hp = rl_config.hyperparameters
         hp_tuning_config = rl_config.hyperparameter_tuning
 
