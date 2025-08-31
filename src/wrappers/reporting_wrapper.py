@@ -3,6 +3,7 @@ from pathlib import Path
 import gymnasium as gym
 import numpy as np
 import pandas as pd
+import copy
 
 from reporting.plotter import plot_timeseries
 from wrappers.normalization_utils import denormalize_state, get_original_action
@@ -92,7 +93,7 @@ class ReportingWrapper(gym.Wrapper):
         """
         Step the environment with the given action and optionally log the result.
         """
-        action_copy = action.copy()
+        action_copy = copy.copy(action)
         obs, reward, terminated, truncated, info = self.env.step(action)
         self._maybe_extract_names(info, obs=obs, action=action)
         if self.is_recording:

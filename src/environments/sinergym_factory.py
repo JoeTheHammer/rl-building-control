@@ -191,8 +191,8 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
 
 class SinergymFactory(IEnvironmentFactory):
 
-    def create_environment(self, config_path: str) -> SinergymEnvironment | NormalizeObservation:
-        config = parse_sinergym_environment_config(config_path)
+    def create_environment(self) -> SinergymEnvironment | NormalizeObservation:
+        config = parse_sinergym_environment_config(self.config_path)
         env_elements = _build_environment_elements(config)
 
         env = SinergymEnvironment(

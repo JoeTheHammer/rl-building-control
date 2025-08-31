@@ -63,6 +63,7 @@ class ExperimentManager:
         self, experiment_config: ExperimentConfig
     ) -> IEnvironmentFactory | None:
         env_factory = self._env_factories.get(experiment_config.engine)
+        env_factory.set_config_path(experiment_config.environment_config)
         if env_factory is None:
             setup_logger.error(
                 f"No environment factory registered for engine '{experiment_config.engine}'."
@@ -82,7 +83,6 @@ class ExperimentManager:
         return controller_factory.create_controller_setup(
             experiment_config.controller_config,
             env_factory,
-            experiment_config.environment_config,
         )
 
     def register_controller_factory(self, controller: str, factory: IControllerFactory) -> None:

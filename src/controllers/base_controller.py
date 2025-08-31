@@ -51,7 +51,6 @@ class IControllerFactory(ABC):
         self,
         config_path: str | None = None,
         environment_factory: IEnvironmentFactory | None = None,
-        environment_config: str | None = None,
     ) -> ControllerSetup:
         """
         Create and return a new controller instance.
@@ -60,12 +59,10 @@ class IControllerFactory(ABC):
             env (gym.Env): The environment compatible with the controller.
             config_path (str | None): Optional path to the controller configuration file.
             environment_factory (IEnvironmentFactory | None): Optional Environment factory to create environments for training and tuning.
-            environment_config (str | None): Optional path to the controller configuration file.
-
+            
         Returns:
             IController: A controller instance.
             :param config_path: Path of configuration used to configure the controller.
-            :param environment_config: Path to the configuration for the environment.
             :param environment_factory: Factory that allows to create new environment.
         """
         pass

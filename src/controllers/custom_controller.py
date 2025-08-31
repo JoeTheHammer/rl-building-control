@@ -30,7 +30,6 @@ class CustomControllerFactory(IControllerFactory):
         self,
         config_path: str | None = None,
         environment_factory: IEnvironmentFactory | None = None,
-        environment_config: str | None = None,
     ) -> ControllerSetup:
 
         controller_config = parse_custom_controller_config(config_path)
@@ -53,7 +52,7 @@ class CustomControllerFactory(IControllerFactory):
 
         controller_args = controller_config.args or {}
 
-        env = environment_factory.create_environment(environment_config)
+        env = environment_factory.create_environment()
 
         controller_instance = controller_class(env=env, **controller_args)
 

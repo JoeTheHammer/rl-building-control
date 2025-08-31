@@ -72,7 +72,6 @@ class PPOFactory(IRLControllerFactory):
         self,
         config_path: str | None = None,
         environment_factory: IEnvironmentFactory | None = None,
-        environment_config: str | None = None,
     ) -> ControllerSetup:
 
         if config_path is None:
@@ -83,7 +82,6 @@ class PPOFactory(IRLControllerFactory):
         return super().create_rl_controller_setup(
             config=config,
             environment_factory=environment_factory,
-            environment_config=environment_config,
             is_continuous_action_space=True,
             on_policy=True,
             normalize_reward=False,

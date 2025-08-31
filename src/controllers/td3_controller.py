@@ -92,7 +92,6 @@ class TD3Factory(IRLControllerFactory):
         self,
         config_path: str | None = None,
         environment_factory: IEnvironmentFactory | None = None,
-        environment_config: str | None = None,
     ) -> ControllerSetup:
         """
         Creates the TD3 controller setup, loading configuration and environment.
@@ -106,7 +105,6 @@ class TD3Factory(IRLControllerFactory):
         return super().create_rl_controller_setup(
             config=config,
             environment_factory=environment_factory,
-            environment_config=environment_config,
             is_continuous_action_space=True,
             normalize_state=config.environment_wrapper.normalize_state,
         )

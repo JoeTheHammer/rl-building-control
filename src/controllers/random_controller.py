@@ -36,10 +36,9 @@ class RandomControllerFactory(IControllerFactory):
         self,
         config_path: str | None = None,
         environment_factory: IEnvironmentFactory | None = None,
-        environment_config: str | None = None,
     ) -> ControllerSetup:
 
-        env = environment_factory.create_environment(environment_config)
+        env = environment_factory.create_environment()
 
         controller = RandomController(env)
 

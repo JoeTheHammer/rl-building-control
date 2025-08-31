@@ -164,7 +164,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
     def _tune_hyperparameters(
         self,
         env_factory: IEnvironmentFactory,
-        env_config: str,
         num_trials: int,
         num_episodes: int,
         is_continuous_action_space: bool = False,
@@ -194,7 +193,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
 
             logger.info(f"Test with these hp: {trial_hp}")
 
-            env_t = env_factory.create_environment(env_config)
+            env_t = env_factory.create_environment()
 
             if on_policy:
                 # If on policy the wrapping will be done later in the adapter.
@@ -234,7 +233,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         self,
         config: RLControllerConfig,
         environment_factory: IEnvironmentFactory,
-        environment_config: str,
         on_policy: bool,
         is_continuous_action_space: bool,
         is_discrete_action_space: bool,
@@ -257,7 +255,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
             logger.info("Hyperparameter tuning enabled and supported. Starting tuning process.")
             hp = self._tune_hyperparameters(
                 env_factory=environment_factory,
-                env_config=environment_config,
                 num_trials=tuning_config.num_trials,
                 num_episodes=tuning_config.num_episodes,
                 is_continuous_action_space=is_continuous_action_space,
@@ -276,13 +273,12 @@ class IRLControllerFactory(IControllerFactory, ABC):
         hp: Dict[str, Any],
         training_config: Training,
         environment_factory: IEnvironmentFactory,
-        environment_config: str,
         is_continuous_action_space: bool,
         is_discrete_action_space: bool,
         normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an on-policy controller."""
-        env = environment_factory.create_environment(environment_config)
+        env = environment_factory.create_environment()
 
         if is_continuous_action_space:
             env = ContinuousActionWrapper(env)
@@ -316,7 +312,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         hp: Dict[str, Any],
         training_config: Training,
         environment_factory: IEnvironmentFactory,
-        environment_config: str,
         normalize_state: bool,
         is_continuous_action_space: bool,
         is_discrete_action_space: bool,
@@ -324,7 +319,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
     ) -> ControllerSetup:
         """Builds, trains, and sets up an off-policy controller."""
         # Setup environment for training
-        env = environment_factory.create_environment(environment_config)
+        env = environment_factory.create_environment()
 
         # Determine if monitor wrapper should be added to get full functionality of tensorboard
         # used to monitor training.
@@ -357,7 +352,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         is_continuous_action_space: bool = False,
         is_discrete_action_space: bool = False,
         environment_factory: IEnvironmentFactory | None = None,
-        environment_config: str | None = None,
         on_policy: bool = False,
         normalize_reward: bool = False,
     ) -> ControllerSetup:
@@ -380,8 +374,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 a discrete action space. Defaults to False.
             environment_factory: The factory class used to create environment
                 instances for tuning and training.
-            environment_config: The configuration string or path passed to the
-                environment factory to create an environment.
             on_policy: If True, the on-policy setup workflow is used. If False,
                 the off-policy workflow is used. Defaults to False.
             normalize_reward: If True, applies reward normalization to the
@@ -400,7 +392,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         final_hp = self._get_final_hyperparameters(
             config=config,
             environment_factory=environment_factory,
-            environment_config=environment_config,
             on_policy=on_policy,
             is_continuous_action_space=is_continuous_action_space,
             is_discrete_action_space=is_discrete_action_space,
@@ -421,7 +412,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 hp=final_hp,
                 training_config=config.training,
                 environment_factory=environment_factory,
-                environment_config=environment_config,
                 is_continuous_action_space=is_continuous_action_space,
                 is_discrete_action_space=is_discrete_action_space,
                 normalize_reward=normalize_reward,
@@ -431,7 +421,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 hp=final_hp,
                 training_config=config.training,
                 environment_factory=environment_factory,
-                environment_config=environment_config,
                 normalize_state=normalize_state,
                 is_continuous_action_space=is_continuous_action_space,
                 is_discrete_action_space=is_discrete_action_space,
