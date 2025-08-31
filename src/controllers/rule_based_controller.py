@@ -7,7 +7,7 @@ from asteval import Interpreter
 from pydantic import BaseModel
 
 from controllers.base_controller import ControllerSetup, IController, IControllerProvider
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
 
@@ -138,7 +138,7 @@ class RuleBasedControllerProvider(IControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
+        environment_provider: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
         if not config_path:

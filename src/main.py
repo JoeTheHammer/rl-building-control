@@ -1,6 +1,6 @@
 import typer
 
-from bootstrap.sinergym_loader import create_sinergym_provider
+from bootstrap.sinergym_loader import create_sinergym_factory
 from controllers.a2c_controller import A2CProvider
 from controllers.custom_controller_provider import CustomControllerProvider
 from controllers.ddpg_controller import DDPGProvider
@@ -19,11 +19,11 @@ app = typer.Typer()
 
 @app.command()
 def run(config: str = typer.Argument(..., help="Path to the YAML environment_config file")):
-    sinergym_provider = create_sinergym_provider()
+    sinergym_factory = create_sinergym_factory()
 
     experiment_manager = ExperimentManager()
 
-    experiment_manager.register_environment_provider("sinergym", sinergym_provider)
+    experiment_manager.register_environment_factory("sinergym", sinergym_factory)
 
     experiment_manager.register_controller_provider("random", RandomControllerProvider())
     experiment_manager.register_controller_provider("rule-based", RuleBasedControllerProvider())

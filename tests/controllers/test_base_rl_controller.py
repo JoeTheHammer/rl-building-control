@@ -7,7 +7,7 @@ import pytest
 from gymnasium import Env
 
 from controllers.base_rl_controller import IRLController, IRLControllerProvider
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 
 # ---- Dummy Test Implementation ----
 
@@ -41,7 +41,7 @@ class DummyRLControllerProvider(IRLControllerProvider):
         self,
         env: Env,
         config_path: str = None,
-        environment_provider: IEnvironmentProvider = None,
+        environment_provider: IEnvironmentFactory = None,
         environment_config: str = None,
     ) -> IRLController:
         raise NotImplementedError("create_controller not required for this test")

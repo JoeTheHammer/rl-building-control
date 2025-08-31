@@ -3,7 +3,7 @@ from typing import Any, NamedTuple
 
 import gymnasium as gym
 
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 
 
 class IController(ABC):
@@ -50,7 +50,7 @@ class IControllerProvider(ABC):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
+        environment_provider: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
         """

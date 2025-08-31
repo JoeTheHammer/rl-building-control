@@ -12,7 +12,7 @@ from stable_baselines3.common.monitor import Monitor
 
 from controllers.base_controller import ControllerSetup, IController, IControllerProvider
 from custom_loggers.setup_logger import logger
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 from experiment.experiment import Experiment
 from reporting.finder import find_reporting_wrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
@@ -160,7 +160,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
     def _tune_hyperparameters(
         self,
-        env_provider: IEnvironmentProvider,
+        env_provider: IEnvironmentFactory,
         env_config: str,
         num_trials: int,
         num_episodes: int,
@@ -230,7 +230,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
     def _get_final_hyperparameters(
         self,
         config: RLControllerConfig,
-        environment_provider: IEnvironmentProvider,
+        environment_provider: IEnvironmentFactory,
         environment_config: str,
         on_policy: bool,
         is_continuous_action_space: bool,
@@ -272,7 +272,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         self,
         hp: Dict[str, Any],
         training_config: Training,
-        environment_provider: IEnvironmentProvider,
+        environment_provider: IEnvironmentFactory,
         environment_config: str,
         is_continuous_action_space: bool,
         is_discrete_action_space: bool,
@@ -312,7 +312,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         self,
         hp: Dict[str, Any],
         training_config: Training,
-        environment_provider: IEnvironmentProvider,
+        environment_provider: IEnvironmentFactory,
         environment_config: str,
         normalize_state: bool,
         is_continuous_action_space: bool,
@@ -353,7 +353,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         normalize_state: bool = False,
         is_continuous_action_space: bool = False,
         is_discrete_action_space: bool = False,
-        environment_provider: IEnvironmentProvider | None = None,
+        environment_provider: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
         on_policy: bool = False,
         normalize_reward: bool = False,

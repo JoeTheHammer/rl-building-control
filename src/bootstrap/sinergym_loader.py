@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from custom_loggers.setup_logger import logger
+from environments.sinergym_factory import SinergymFactory
 
 ENERGY_PLUS_PATH_FILENAME = "energyplus_path.pth"
 
@@ -44,19 +45,19 @@ def check_energyplus_path() -> bool:
     return True
 
 
-def create_sinergym_provider():
+def create_sinergym_factory() -> SinergymFactory:
     """
-    Create and return a `SinergymProvider` instance, ensuring the EnergyPlus environment is correctly configured.
+    Create and return a `SinergymFactory` instance, ensuring the EnergyPlus environment is correctly configured.
 
     This function checks for the presence of the EnergyPlus path before attempting to import and
     instantiate the `SinergymProvider`. If the path is not configured or the import fails,
     the program will terminate with an error message.
 
     Returns:
-        SinergymProvider: An instance of the `SinergymProvider` class.
+        SinergymFactory: An instance of the `SinergymFactory` class.
 
     Raises:
-        SystemExit: If the EnergyPlus path is not configured or the `SinergymProvider` cannot be imported.
+        SystemExit: If the EnergyPlus path is not configured or the `SinergymFactory` cannot be imported.
 
     Logs:
         - Error if the EnergyPlus path is invalid or missing.
@@ -67,9 +68,9 @@ def create_sinergym_provider():
 
     try:
         # Do the import *after* the check
-        from environments.sinergym_provider import SinergymProvider
+        from environments.sinergym_factory import SinergymFactory
 
-        return SinergymProvider()
+        return SinergymFactory()
     except ImportError as e:
         logger.error("Could not import SinergymProvider or dependencies.")
         logger.error("Make sure the EnergyPlus path is correctly set and contains 'pyenergyplus'.")

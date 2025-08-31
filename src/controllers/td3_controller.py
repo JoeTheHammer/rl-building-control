@@ -11,7 +11,7 @@ from controllers.base_rl_controller import (
     IRLControllerProvider,
     load_rl_controller_config,
 )
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 
 
 class TD3Controller(IRLController):
@@ -91,7 +91,7 @@ class TD3Provider(IRLControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
+        environment_provider: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
         """

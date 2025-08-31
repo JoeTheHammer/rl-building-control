@@ -11,7 +11,7 @@ from controllers.base_rl_controller import (
     load_rl_controller_config,
 )
 from controllers.utils import add_squash_output_to_hp
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 
 
 class A2CProvider(IRLControllerProvider):
@@ -61,7 +61,7 @@ class A2CProvider(IRLControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
+        environment_provider: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
 

@@ -3,7 +3,7 @@ from typing import Any
 import gymnasium as gym
 
 from controllers.base_controller import ControllerSetup, IController, IControllerProvider
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 
 
 class RandomController(IController):
@@ -39,7 +39,7 @@ class RandomControllerProvider(IControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
+        environment_provider: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
 

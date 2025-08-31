@@ -3,14 +3,14 @@ from typing import Dict
 
 from controllers.base_controller import ControllerSetup, IControllerProvider
 from custom_loggers.setup_logger import logger as setup_logger
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 from experiment.experiment import Experiment
 from experiment.experiment_config import ExperimentConfig
 
 
 class ExperimentManager:
     def __init__(self):
-        self._env_providers: Dict[str, IEnvironmentProvider] = {}
+        self._env_factories: Dict[str, IEnvironmentFactory] = {}
         self._controller_providers: Dict[str, IControllerProvider] = {}
 
     def run_experiments_from_config(self, config_path: str):
@@ -61,8 +61,8 @@ class ExperimentManager:
 
     def _create_environment_provider(
         self, experiment_config: ExperimentConfig
-    ) -> IEnvironmentProvider | None:
-        env_provider = self._env_providers.get(experiment_config.engine)
+    ) -> IEnvironmentFactory | None:
+        env_provider = self._env_factories.get(experiment_config.engine)
         if env_provider is None:
             setup_logger.error(
                 f"No environment provider registered for engine '{experiment_config.engine}'."
@@ -71,7 +71,7 @@ class ExperimentManager:
         return env_provider
 
     def _create_controller(
-        self, experiment_config: ExperimentConfig, env_provider: IEnvironmentProvider
+        self, experiment_config: ExperimentConfig, env_provider: IEnvironmentFactory
     ) -> ControllerSetup | None:
         controller_provider = self._controller_providers.get(experiment_config.controller)
         if controller_provider is None:
@@ -88,5 +88,5 @@ class ExperimentManager:
     def register_controller_provider(self, controller: str, provider: IControllerProvider) -> None:
         self._controller_providers[controller] = provider
 
-    def register_environment_provider(self, engine: str, provider: IEnvironmentProvider):
-        self._env_providers[engine] = provider
+    def register_environment_factory(self, engine: str, factory: IEnvironmentFactory):
+        self._env_factories[engine] = factory

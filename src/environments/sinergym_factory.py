@@ -15,7 +15,7 @@ import numpy as np
 from gymnasium.wrappers import NormalizeObservation
 from sinergym import BaseReward
 
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.expression_reward import ExpressionReward
@@ -189,7 +189,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
     )
 
 
-class SinergymProvider(IEnvironmentProvider):
+class SinergymFactory(IEnvironmentFactory):
 
     def create_environment(self, config_path: str) -> SinergymEnvironment | NormalizeObservation:
         config = parse_sinergym_environment_config(config_path)
