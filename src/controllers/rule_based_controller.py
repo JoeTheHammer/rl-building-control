@@ -39,7 +39,7 @@ class RuleBasedControllerConfig(BaseModel):
     custom_variables: Optional[Dict[str, float]] = {}  # default to empty dict
 
 
-def load_controller_config(path: str) -> RuleBasedControllerConfig:
+def load_rule_based_controller_config(path: str) -> RuleBasedControllerConfig:
     """
     Loads a YAML controller configuration file and parses it into a RuleBasedControllerConfig object.
 
@@ -144,7 +144,7 @@ class RuleBasedControllerFactory(IControllerFactory):
         if not config_path:
             raise ValueError("A config_path is required for RuleBasedController.")
 
-        controller_config = load_controller_config(config_path)
+        controller_config = load_rule_based_controller_config(config_path)
 
         env = environment_factory.create_environment(environment_config)
 
