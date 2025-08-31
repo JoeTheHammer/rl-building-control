@@ -5,8 +5,8 @@ from typing import Dict, Optional, Union
 import yaml
 from pydantic import BaseModel
 
-from controllers.base_controller import ControllerSetup, IController, IControllerProvider
-from environments.base_provider import IEnvironmentProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerFactory
+from environments.base_factory import IEnvironmentFactory
 
 
 class CustomControllerConfig(BaseModel):
@@ -25,15 +25,13 @@ def parse_custom_controller_config(config_path: str) -> CustomControllerConfig:
     return CustomControllerConfig(**data)
 
 
-class CustomControllerProvider(IControllerProvider):
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
-        environment_config: str | None = None,
-    ) -> ControllerSetup:
+class CustomControllerFactory(IControllerFactory):
+    def create_controller_setup(self) -> ControllerSetup:
 
-        controller_config = parse_custom_controller_config(config_path)
+        if self.config_path == "":
+            raise FileNotFoundError(f"{self.config_path} not found")
+
+        controller_config = parse_custom_controller_config(self.config_path)
 
         try:
             module = importlib.import_module(controller_config.module)
@@ -53,7 +51,7 @@ class CustomControllerProvider(IControllerProvider):
 
         controller_args = controller_config.args or {}
 
-        env = environment_provider.create_environment(environment_config)
+        env = self.env_factory.create_environment()
 
         controller_instance = controller_class(env=env, **controller_args)
 

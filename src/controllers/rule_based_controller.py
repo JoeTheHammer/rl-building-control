@@ -6,8 +6,8 @@ import yaml
 from asteval import Interpreter
 from pydantic import BaseModel
 
-from controllers.base_controller import ControllerSetup, IController, IControllerProvider
-from environments.base_provider import IEnvironmentProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerFactory
+from environments.base_factory import IEnvironmentFactory
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
 
@@ -39,7 +39,7 @@ class RuleBasedControllerConfig(BaseModel):
     custom_variables: Optional[Dict[str, float]] = {}  # default to empty dict
 
 
-def load_controller_config(path: str) -> RuleBasedControllerConfig:
+def load_rule_based_controller_config(path: str) -> RuleBasedControllerConfig:
     """
     Loads a YAML controller configuration file and parses it into a RuleBasedControllerConfig object.
 
@@ -134,19 +134,14 @@ class RuleBasedController(IController):
         raise RuntimeError("No matching rule found.")
 
 
-class RuleBasedControllerProvider(IControllerProvider):
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
-        environment_config: str | None = None,
-    ) -> ControllerSetup:
-        if not config_path:
+class RuleBasedControllerFactory(IControllerFactory):
+    def create_controller_setup(self) -> ControllerSetup:
+        if not self.config_path:
             raise ValueError("A config_path is required for RuleBasedController.")
 
-        controller_config = load_controller_config(config_path)
+        controller_config = load_rule_based_controller_config(self.config_path)
 
-        env = environment_provider.create_environment(environment_config)
+        env = self.env_factory.create_environment()
 
         controller = RuleBasedController(
             env=env,

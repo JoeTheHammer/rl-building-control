@@ -2,8 +2,8 @@ from typing import Any
 
 import gymnasium as gym
 
-from controllers.base_controller import ControllerSetup, IController, IControllerProvider
-from environments.base_provider import IEnvironmentProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerFactory
+from environments.base_factory import IEnvironmentFactory
 
 
 class RandomController(IController):
@@ -27,24 +27,14 @@ class RandomController(IController):
         return self.env.action_space.sample()
 
 
-class RandomControllerProvider(IControllerProvider):
+class RandomControllerFactory(IControllerFactory):
     """
     Factory for creating instances of RandomController.
-
-    This provider implements the IControllerProvider interface and can be registered
-    in the experiment manager to instantiate RandomController objects when the configuration
-    specifies a rule-based controller with logic type 'random'.
     """
 
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
-        environment_config: str | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
 
-        env = environment_provider.create_environment(environment_config)
-
+        env = self.env_factory.create_environment()
         controller = RandomController(env)
 
         return ControllerSetup(controller, env)

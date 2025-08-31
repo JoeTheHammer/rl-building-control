@@ -1,17 +1,17 @@
 from parser.config_parser import parse_experiment_list
 from typing import Dict
 
-from controllers.base_controller import ControllerSetup, IControllerProvider
+from controllers.base_controller import ControllerSetup, IControllerFactory
 from custom_loggers.setup_logger import logger as setup_logger
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 from experiment.experiment import Experiment
 from experiment.experiment_config import ExperimentConfig
 
 
 class ExperimentManager:
     def __init__(self):
-        self._env_providers: Dict[str, IEnvironmentProvider] = {}
-        self._controller_providers: Dict[str, IControllerProvider] = {}
+        self._env_factories: Dict[str, IEnvironmentFactory] = {}
+        self._controller_factories: Dict[str, IControllerFactory] = {}
 
     def run_experiments_from_config(self, config_path: str):
         """
@@ -37,13 +37,13 @@ class ExperimentManager:
 
     def _create_experiment(self, experiment_config: ExperimentConfig) -> Experiment | None:
         # This method's internal logic remains the same
-        env_provider = self._create_environment_provider(experiment_config)
-        if env_provider is None:
+        env_factory = self._create_environment_factory(experiment_config)
+        if env_factory is None:
             setup_logger.error(f"Failed to create environment {experiment_config.name}")
             return None
         setup_logger.info(f"Environment for engine {experiment_config.engine} created.")
 
-        controller_setup = self._create_controller(experiment_config, env_provider)
+        controller_setup = self._create_controller(experiment_config, env_factory)
         if controller_setup is None:
             setup_logger.error(f"Failed to create controller {experiment_config.controller}")
             return None
@@ -59,34 +59,35 @@ class ExperimentManager:
             export=experiment_config.reporting.export,
         )
 
-    def _create_environment_provider(
+    def _create_environment_factory(
         self, experiment_config: ExperimentConfig
-    ) -> IEnvironmentProvider | None:
-        env_provider = self._env_providers.get(experiment_config.engine)
-        if env_provider is None:
+    ) -> IEnvironmentFactory | None:
+        env_factory = self._env_factories.get(experiment_config.engine)
+        env_factory.set_config_path(experiment_config.environment_config)
+        if env_factory is None:
             setup_logger.error(
-                f"No environment provider registered for engine '{experiment_config.engine}'."
+                f"No environment factory registered for engine '{experiment_config.engine}'."
             )
             return None
-        return env_provider
+        return env_factory
 
     def _create_controller(
-        self, experiment_config: ExperimentConfig, env_provider: IEnvironmentProvider
+        self, experiment_config: ExperimentConfig, env_factory: IEnvironmentFactory
     ) -> ControllerSetup | None:
-        controller_provider = self._controller_providers.get(experiment_config.controller)
-        if controller_provider is None:
+        controller_factory = self._controller_factories.get(experiment_config.controller)
+        if controller_factory is None:
             setup_logger.error(
-                f"No controller provider registered for algorithm '{experiment_config.controller}'."
+                f"No controller factory registered for algorithm '{experiment_config.controller}'."
             )
             return None
-        return controller_provider.create_controller_setup(
-            experiment_config.controller_config,
-            env_provider,
-            experiment_config.environment_config,
-        )
 
-    def register_controller_provider(self, controller: str, provider: IControllerProvider) -> None:
-        self._controller_providers[controller] = provider
+        controller_factory.set_env_factory(env_factory)
+        controller_factory.set_config_path(experiment_config.controller_config)
 
-    def register_environment_provider(self, engine: str, provider: IEnvironmentProvider):
-        self._env_providers[engine] = provider
+        return controller_factory.create_controller_setup()
+
+    def register_controller_factory(self, controller: str, factory: IControllerFactory) -> None:
+        self._controller_factories[controller] = factory
+
+    def register_environment_factory(self, engine: str, factory: IEnvironmentFactory):
+        self._env_factories[engine] = factory

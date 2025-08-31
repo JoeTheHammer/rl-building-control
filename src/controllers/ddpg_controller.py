@@ -1,17 +1,18 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import gymnasium as gym
-import optuna
 from gymnasium import Env
 from stable_baselines3 import DDPG
 
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLController,
-    IRLControllerProvider,
+    IRLControllerFactory,
     load_rl_controller_config,
 )
-from environments.base_provider import IEnvironmentProvider
+from wrappers.manager import EnvWrapperManager
+from gymnasium.wrappers import NormalizeObservation
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
 
 class DDPGController(IRLController):
@@ -41,60 +42,27 @@ class DDPGController(IRLController):
         self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
-class DDPGProvider(IRLControllerProvider):
+class DDPGFactory(IRLControllerFactory):
     """
-    Provider for the DDPGController, including hyperparameter tuning with Optuna.
+    Factory for the DDPGController
     """
 
-    def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
-        """
-        Suggests hyperparameters for DDPG, either returning defaults or using Optuna.
-        """
-        if trial is None:
-            # Return default values for DDPG if no Optuna trial is provided.
-            return {
-                "learning_rate": 1e-4,
-                "gamma": 0.99,
-                "buffer_size": 100000,
-                "tau": 0.005,
-                "batch_size": 64,
-            }
-
-        return {
-            "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
-            "gamma": trial.suggest_float("gamma", 0.9, 0.9999),
-            "buffer_size": trial.suggest_int("buffer_size", 10000, 1000000, step=10000),
-            "tau": trial.suggest_float("tau", 0.001, 0.05, log=True),
-            "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
-        }
-
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DDPGController:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DDPGController:
         """
         Builds and returns a new DDPGController instance.
         """
         return DDPGController(env, hyper_params)
 
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
-        environment_config: str | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
         """
         Creates the DDPG controller setup, loading configuration and environment.
         """
-        if config_path is None:
+        if self.config_path is None or self.config_path == "":
             raise RuntimeError("No configuration was provided for the DDPG controller.")
 
-        config = load_rl_controller_config(config_path)
+        config = load_rl_controller_config(self.config_path)
 
-        return super().create_rl_controller_setup(
-            config=config,
-            environment_provider=environment_provider,
-            environment_config=environment_config,
-            is_continuous_action_space=True,
-            normalize_state=config.normalize_state,
-        )
+        env_wrap_manager = EnvWrapperManager([NormalizeObservation, ContinuousActionWrapper],
+                                             config.environment_wrapper)
 
+        return super().create_rl_controller_setup_new(config.hyperparameters, env_wrap_manager)

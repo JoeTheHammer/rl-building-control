@@ -4,25 +4,22 @@ import optuna
 from gymnasium import Env
 from stable_baselines3 import A2C
 
-from adapters.on_policy_vec_env import OnPolicyAdapter
+from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
-from controllers.base_rl_controller import (
-    IRLControllerProvider,
-    load_rl_controller_config,
-)
+from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
+from controllers.base_rl_controller import (load_rl_controller_config)
 from controllers.utils import add_squash_output_to_hp
-from environments.base_provider import IEnvironmentProvider
+from tuning.hp_tuning import tune_hp
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from wrappers.manager import EnvWrapperManager
 
 
-class A2CProvider(IRLControllerProvider):
+class A2CFactory(IHPTunableControllerFactory):
+    """
+    Factory for the DDPGController, including hyperparameter tuning with Optuna.
+    """
 
-    def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
-        """
-        Suggests a set of hyperparameters for the PPO algorithm.
-        Provides stable defaults if no Optuna trial is given.
-        """
+    def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
         if trial is None:
             # Return a robust set of default values
             return {
@@ -40,41 +37,30 @@ class A2CProvider(IRLControllerProvider):
             "ent_coef": trial.suggest_float("ent_coef", 0.0, 0.1),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
+
         # Add this to ensure that output of controller is in defined (tanh) range.
-
         hyper_params = add_squash_output_to_hp(hyper_params)
-
-        normalize_reward = kwargs.get("normalize_reward", False)
-        report_denormalized_state = kwargs.get("report_denormalized_state", False)
 
         return OnPolicyAdapter(
             env=env,
             model_class=A2C,
-            hyperparams=hyper_params,
-            normalize_reward=normalize_reward,
-            report_denormalized_state=report_denormalized_state,
-            normalize_action=False,
+            hyper_params=hyper_params,
             policy="MlpPolicy",
         )
 
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
-        environment_config: str | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
 
-        if config_path is None:
+        if self.config_path is None or self.config_path == "":
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
-        config = load_rl_controller_config(config_path)
+        rl_config = load_rl_controller_config(self.config_path)
+        env_wrap_manager = EnvWrapperManager([ContinuousActionWrapper], rl_config.environment_wrapper)
+        hp = rl_config.hyperparameters
+        hp_tuning_config = rl_config.hyperparameter_tuning
 
-        return super().create_rl_controller_setup(
-            config=config,
-            environment_provider=environment_provider,
-            environment_config=environment_config,
-            is_continuous_action_space=True,
-            on_policy=True,
-            normalize_reward=config.normalize_reward,
-        )
+        if hp_tuning_config is not None and hp_tuning_config.enabled:
+            # This controller supports hp tuning so we can use if.
+            hp = tune_hp(self, hp_tuning_config, env_wrap_manager, hp, is_env_adapter=True)
+
+        return super().create_rl_controller_setup_new(hp, env_wrap_manager, is_env_adapter=True)

@@ -3,7 +3,7 @@ from typing import Any, NamedTuple
 
 import gymnasium as gym
 
-from environments.base_provider import IEnvironmentProvider
+from environments.base_factory import IEnvironmentFactory
 
 
 class IController(ABC):
@@ -45,28 +45,25 @@ class ControllerSetup(NamedTuple):
     controller: IController
     environment: gym.Env
 
-class IControllerProvider(ABC):
+class IControllerFactory(ABC):
+
+    def __init__(self):
+        self.config_path: str = ""
+        self.env_factory: IEnvironmentFactory | None = None
+
+    def set_config_path(self, config_path: str):
+        self.config_path = config_path
+
+    def set_env_factory(self, env_factory: IEnvironmentFactory):
+        self.env_factory = env_factory
+
     @abstractmethod
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_provider: IEnvironmentProvider | None = None,
-        environment_config: str | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
         """
         Create and return a new controller instance.
 
-        Args:
-            env (gym.Env): The environment compatible with the controller.
-            config_path (str | None): Optional path to the controller configuration file.
-            environment_provider (IEnvironmentProvider | None): Optional Environment provider to create environments for training and tuning.
-            environment_config (str | None): Optional path to the controller configuration file.
-
         Returns:
             IController: A controller instance.
-            :param config_path: Path of configuration used to configure the controller.
-            :param environment_config: Path to the configuration for the environment.
-            :param environment_provider: Provider that allows to create new environment.
         """
         pass
 
