@@ -73,5 +73,5 @@ class SACFactory(IRLControllerFactory):
             environment_factory=environment_factory,
             environment_config=environment_config,
             is_continuous_action_space=True,
-            normalize_state=config.normalize_state,
+            normalize_state=config.environment_wrapper.normalize_state,
         )

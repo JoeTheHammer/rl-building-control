@@ -31,13 +31,16 @@ class HyperparameterTuning(BaseModel):
     num_trials: int
     num_episodes: int
 
+class EnvironmentWrapper(BaseModel):
+    normalize_state: Optional[bool] = True
+    continuous_action: Optional[bool] = False
+    discrete_action: Optional[bool] = False
 
 class RLControllerConfig(BaseModel):
     training: Training
     hyperparameter_tuning: Optional[HyperparameterTuning]
+    environment_wrapper: Optional[EnvironmentWrapper] = EnvironmentWrapper()
     hyperparameters: Optional[Dict[str, Any]] = None
-    normalize_state: Optional[bool] = True
-    normalize_reward: Optional[bool] = False
 
 
 def wrap_env(

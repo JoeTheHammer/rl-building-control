@@ -76,5 +76,5 @@ class A2CFactory(IRLControllerFactory):
             environment_config=environment_config,
             is_continuous_action_space=True,
             on_policy=True,
-            normalize_reward=config.normalize_reward,
+            normalize_reward=False,
         )
