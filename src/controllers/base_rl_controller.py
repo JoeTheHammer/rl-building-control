@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
-from typing import Any, Dict, cast
+from typing import Any, Dict, Optional, cast
 
 import gymnasium as gym
 import yaml
@@ -29,44 +28,37 @@ class IRLController(IController, ABC):
         pass
 
 
-@contextmanager
-def reporting_context(env, enabled, report_denormalized_state, output_dir="./plots-training"):
-    """
-    A context manager to wrap an environment with reporting capabilities.
-    """
-    if not enabled:
-        # If reporting is disabled, just yield the original environment and do nothing else.
-        yield env
-        return
-
-    # If enabled, wrap the environment and set up reporting.
-    reporting_wrapper = ReportingWrapper(env, denorm_state=report_denormalized_state)
-    reporting_wrapper.start_recording()
-
-    try:
-        # Yield the wrapped environment for use inside the 'with' block.
-        yield reporting_wrapper
-    finally:
-        # This code runs after the 'with' block is exited, for cleanup.
-        logger.info("Training finished. Ending recording and generating reports...")
-        reporting_wrapper.end_recording()
-        reporting_wrapper.create_plots(output_dir=output_dir)
-        reporting_wrapper.export_to_csv(output_dir="./csv-training")
-
-
 def load_rl_controller_config(path: str) -> RLControllerConfig:
     """
-    Loads a YAML controller configuration file and parses it into a SACControllerConfig object.
+    Loads a YAML controller configuration file and parses it into a RLControllerConfig object.
 
     Args:
         path (str): Path to the YAML configuration file.
 
     Returns:
-        SACControllerConfig: Parsed configuration object.
+        RLControllerConfig: Parsed configuration object.
     """
     with open(path, "r") as f:
         raw_data = yaml.safe_load(f)
     return RLControllerConfig(**raw_data)
+
+
+def find_reporting_wrapper(env: gym.Env) -> Optional[ReportingWrapper]:
+    """
+    Traverses the environment wrapper stack to find an instance of ReportingWrapper.
+
+    Args:
+        env (gym.Env): The environment (potentially wrapped).
+
+    Returns:
+        Optional[ReportingWrapper]: The wrapper instance if found, otherwise None.
+    """
+    current_env = env
+    while hasattr(current_env, "env"):
+        if isinstance(current_env, ReportingWrapper):
+            return current_env
+        current_env = current_env.env
+    return None
 
 
 class IRLControllerFactory(IControllerFactory, ABC):
@@ -78,8 +70,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
     @abstractmethod
     def build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> IRLController:
         """
-        Construct an IRLController with the given environment and hyperparameters. Used during
-        hyperparameter tuning and to build final controller.
+        Construct an IRLController with the given environment and hyperparameters.
 
         Args:
             env (Env): The Gym environment the controller will operate in.
@@ -96,27 +87,46 @@ class IRLControllerFactory(IControllerFactory, ABC):
             env_wrap_manager: EnvWrapperManager,
             is_env_adapter: bool = False,
     ) -> ControllerSetup:
-
+        """
+        Builds, trains, and sets up a reinforcement learning controller.
+        """
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
 
+        # --- Environment Setup: Wrap everything BEFORE building the controller ---
         env = self.env_factory.create_environment()
         env = env_wrap_manager.apply_wrappers(env)
 
-        use_tensorboard = bool(hp.get("tensorboard_log"))
-
-        if use_tensorboard:
-            env_wrap_manager.add_wrapper(Monitor)
-
-        controller = self.build_controller(env, hp)
         training_conf = load_rl_controller_config(self.config_path).training
 
-        with reporting_context(env, training_conf.report_training, training_conf.report_denormalized_state):
-            logger.info(f"Start training with {training_conf.timesteps} timesteps.")
-            controller.train(timesteps=training_conf.timesteps)
+        if bool(hp.get("tensorboard_log")):
+            env = Monitor(env)
 
+        if training_conf.report_training:
+            env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
+
+        # --- Controller Setup: Build the controller with the FINAL environment ---
+        controller = self.build_controller(env, hp)
+
+        # --- Training ---
+        logger.info(f"Start training with {training_conf.timesteps} timesteps.")
+        reporting_wrapper = find_reporting_wrapper(controller.env)
+
+        try:
+            if reporting_wrapper:
+                reporting_wrapper.start_recording()
+            # The controller will now call the step method of the ReportingWrapper
+            controller.train(timesteps=training_conf.timesteps)
+        finally:
+            if reporting_wrapper:
+                logger.info("Training finished. Ending recording and generating reports...")
+                reporting_wrapper.end_recording()
+                reporting_wrapper.create_plots(output_dir="./plots-training")
+                reporting_wrapper.export_to_csv(output_dir="./csv-training")
+
+        # --- Finalization ---
         if is_env_adapter:
             if isinstance(controller, gym.Env) and isinstance(controller, IController):
                 return ControllerSetup(controller, cast(gym.Env, controller))
-            raise RuntimeError("On-policy adapter must be both a Controller and an Environment.")
+            raise RuntimeError("Adapter must be both a Controller and an Environment.")
 
         return ControllerSetup(controller, controller.env)
