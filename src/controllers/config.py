@@ -24,5 +24,5 @@ class EnvironmentWrapper(BaseModel):
 class RLControllerConfig(BaseModel):
     training: Training
     hyperparameter_tuning: Optional[HyperparameterTuning]
-    environment_wrapper: Optional[EnvironmentWrapper] = EnvironmentWrapper()
+    environment_wrapper: Optional[EnvironmentWrapper] = None
     hyperparameters: Optional[Dict[str, Any]] = None

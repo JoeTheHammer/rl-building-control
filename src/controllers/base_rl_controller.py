@@ -110,7 +110,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
         controller = self.build_controller(env, hp)
         training_conf = load_rl_controller_config(self.config_path).training
 
-        with reporting_context(env, training_conf.report_training):
+        with reporting_context(env, training_conf.report_training, training_conf.report_denormalized_state):
             logger.info(f"Start training with {training_conf.timesteps} timesteps.")
             controller.train(timesteps=training_conf.timesteps)
 
