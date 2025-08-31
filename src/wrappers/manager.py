@@ -1,6 +1,11 @@
 import gymnasium as gym
 from typing import List, Type, Optional
 
+from controllers.base_rl_controller import EnvironmentWrapper
+from gymnasium.wrappers import NormalizeObservation
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from wrappers.discrete_action_wrapper import DiscreteActionWrapper
+
 
 class EnvWrapperManager:
     """
@@ -8,7 +13,8 @@ class EnvWrapperManager:
     environment.
     """
 
-    def __init__(self, wrapper_classes: Optional[List[Type[gym.Wrapper]]] = None):
+    def __init__(self, wrapper_classes: Optional[List[Type[gym.Wrapper]]] = None,
+                 wrapper_config: EnvironmentWrapper = None):
         """
         Initializes the EnvWrapperManager.
 
@@ -17,6 +23,13 @@ class EnvWrapperManager:
                                    initial list of wrapper classes.
         """
         self._wrapper_classes: List[Type[gym.Wrapper]] = wrapper_classes if wrapper_classes is not None else []
+        if wrapper_config is not None:
+            if wrapper_config.normalize_state:
+                self.add_wrapper(NormalizeObservation)
+            if wrapper_config.continuous_action:
+                self.add_wrapper(ContinuousActionWrapper)
+            if wrapper_config.discrete_action:
+                self.add_wrapper(DiscreteActionWrapper)
 
     def add_wrapper(self, wrapper_class: Type[gym.Wrapper]):
         """
