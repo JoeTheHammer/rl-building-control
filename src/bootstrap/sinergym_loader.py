@@ -50,7 +50,7 @@ def create_sinergym_factory() -> SinergymFactory:
     Create and return a `SinergymFactory` instance, ensuring the EnergyPlus environment is correctly configured.
 
     This function checks for the presence of the EnergyPlus path before attempting to import and
-    instantiate the `SinergymProvider`. If the path is not configured or the import fails,
+    instantiate the `SinergymFactory`. If the path is not configured or the import fails,
     the program will terminate with an error message.
 
     Returns:
@@ -72,7 +72,7 @@ def create_sinergym_factory() -> SinergymFactory:
 
         return SinergymFactory()
     except ImportError as e:
-        logger.error("Could not import SinergymProvider or dependencies.")
+        logger.error("Could not import SinergymFactory or dependencies.")
         logger.error("Make sure the EnergyPlus path is correctly set and contains 'pyenergyplus'.")
         logger.debug(f"Original error: {e}")
         sys.exit(1)

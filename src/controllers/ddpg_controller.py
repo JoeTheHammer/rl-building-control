@@ -8,7 +8,7 @@ from stable_baselines3 import DDPG
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLController,
-    IRLControllerProvider,
+    IRLControllerFactory,
     load_rl_controller_config,
 )
 from environments.base_factory import IEnvironmentFactory
@@ -41,9 +41,9 @@ class DDPGController(IRLController):
         self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
-class DDPGProvider(IRLControllerProvider):
+class DDPGFactory(IRLControllerFactory):
     """
-    Provider for the DDPGController, including hyperparameter tuning with Optuna.
+    Factory for the DDPGController, including hyperparameter tuning with Optuna.
     """
 
     def _suggest_hyperparameters_space(
@@ -79,7 +79,7 @@ class DDPGProvider(IRLControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentFactory | None = None,
+        environment_factory: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
         """
@@ -92,7 +92,7 @@ class DDPGProvider(IRLControllerProvider):
 
         return super().create_rl_controller_setup(
             config=config,
-            environment_provider=environment_provider,
+            environment_factory=environment_factory,
             environment_config=environment_config,
             is_continuous_action_space=True,
             normalize_state=config.normalize_state,

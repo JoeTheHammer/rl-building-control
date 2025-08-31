@@ -8,7 +8,7 @@ from stable_baselines3 import SAC
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLController,
-    IRLControllerProvider,
+    IRLControllerFactory,
     load_rl_controller_config,
 )
 from environments.base_factory import IEnvironmentFactory
@@ -30,7 +30,7 @@ class SACController(IRLController):
         self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
-class SACProvider(IRLControllerProvider):
+class SACFactory(IRLControllerFactory):
 
     def _suggest_hyperparameters_space(
         self, trial: Optional[optuna.Trial] = None
@@ -59,7 +59,7 @@ class SACProvider(IRLControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentFactory | None = None,
+        environment_factory: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
 
@@ -70,7 +70,7 @@ class SACProvider(IRLControllerProvider):
 
         return super().create_rl_controller_setup(
             config=config,
-            environment_provider=environment_provider,
+            environment_factory=environment_factory,
             environment_config=environment_config,
             is_continuous_action_space=True,
             normalize_state=config.normalize_state,

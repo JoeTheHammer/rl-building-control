@@ -6,7 +6,7 @@ import yaml
 from asteval import Interpreter
 from pydantic import BaseModel
 
-from controllers.base_controller import ControllerSetup, IController, IControllerProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerFactory
 from environments.base_factory import IEnvironmentFactory
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
@@ -134,11 +134,11 @@ class RuleBasedController(IController):
         raise RuntimeError("No matching rule found.")
 
 
-class RuleBasedControllerProvider(IControllerProvider):
+class RuleBasedControllerFactory(IControllerFactory):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentFactory | None = None,
+        environment_factory: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
         if not config_path:
@@ -146,7 +146,7 @@ class RuleBasedControllerProvider(IControllerProvider):
 
         controller_config = load_controller_config(config_path)
 
-        env = environment_provider.create_environment(environment_config)
+        env = environment_factory.create_environment(environment_config)
 
         controller = RuleBasedController(
             env=env,

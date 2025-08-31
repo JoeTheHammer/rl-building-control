@@ -10,7 +10,7 @@ from gymnasium.wrappers import NormalizeObservation, NormalizeReward
 from pydantic import BaseModel
 from stable_baselines3.common.monitor import Monitor
 
-from controllers.base_controller import ControllerSetup, IController, IControllerProvider
+from controllers.base_controller import ControllerSetup, IController, IControllerFactory
 from custom_loggers.setup_logger import logger
 from environments.base_factory import IEnvironmentFactory
 from experiment.experiment import Experiment
@@ -111,9 +111,9 @@ def load_rl_controller_config(path: str) -> RLControllerConfig:
     return RLControllerConfig(**raw_data)
 
 
-class IRLControllerProvider(IControllerProvider, ABC):
+class IRLControllerFactory(IControllerFactory, ABC):
     """
-    Provider for IRLController instances, including hyperparameter tuning
+    Factory for IRLController instances, including hyperparameter tuning
     and controller creation logic.
     """
 
@@ -160,7 +160,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
     def _tune_hyperparameters(
         self,
-        env_provider: IEnvironmentFactory,
+        env_factory: IEnvironmentFactory,
         env_config: str,
         num_trials: int,
         num_episodes: int,
@@ -191,7 +191,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
             logger.info(f"Test with these hp: {trial_hp}")
 
-            env_t = env_provider.create_environment(env_config)
+            env_t = env_factory.create_environment(env_config)
 
             if on_policy:
                 # If on policy the wrapping will be done later in the adapter.
@@ -230,7 +230,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
     def _get_final_hyperparameters(
         self,
         config: RLControllerConfig,
-        environment_provider: IEnvironmentFactory,
+        environment_factory: IEnvironmentFactory,
         environment_config: str,
         on_policy: bool,
         is_continuous_action_space: bool,
@@ -253,7 +253,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
             logger.info("Hyperparameter tuning enabled and supported. Starting tuning process.")
             hp = self._tune_hyperparameters(
-                env_provider=environment_provider,
+                env_factory=environment_factory,
                 env_config=environment_config,
                 num_trials=tuning_config.num_trials,
                 num_episodes=tuning_config.num_episodes,
@@ -272,14 +272,14 @@ class IRLControllerProvider(IControllerProvider, ABC):
         self,
         hp: Dict[str, Any],
         training_config: Training,
-        environment_provider: IEnvironmentFactory,
+        environment_factory: IEnvironmentFactory,
         environment_config: str,
         is_continuous_action_space: bool,
         is_discrete_action_space: bool,
         normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an on-policy controller."""
-        env = environment_provider.create_environment(environment_config)
+        env = environment_factory.create_environment(environment_config)
 
         if is_continuous_action_space:
             env = ContinuousActionWrapper(env)
@@ -312,7 +312,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         self,
         hp: Dict[str, Any],
         training_config: Training,
-        environment_provider: IEnvironmentFactory,
+        environment_factory: IEnvironmentFactory,
         environment_config: str,
         normalize_state: bool,
         is_continuous_action_space: bool,
@@ -321,7 +321,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
     ) -> ControllerSetup:
         """Builds, trains, and sets up an off-policy controller."""
         # Setup environment for training
-        env = environment_provider.create_environment(environment_config)
+        env = environment_factory.create_environment(environment_config)
 
         # Determine if monitor wrapper should be added to get full functionality of tensorboard
         # used to monitor training.
@@ -353,7 +353,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         normalize_state: bool = False,
         is_continuous_action_space: bool = False,
         is_discrete_action_space: bool = False,
-        environment_provider: IEnvironmentFactory | None = None,
+        environment_factory: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
         on_policy: bool = False,
         normalize_reward: bool = False,
@@ -375,10 +375,10 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 a continuous action space. Defaults to False.
             is_discrete_action_space: If True, wraps the environment to ensure
                 a discrete action space. Defaults to False.
-            environment_provider: The provider class used to create environment
+            environment_factory: The factory class used to create environment
                 instances for tuning and training.
             environment_config: The configuration string or path passed to the
-                environment provider to create an environment.
+                environment factory to create an environment.
             on_policy: If True, the on-policy setup workflow is used. If False,
                 the off-policy workflow is used. Defaults to False.
             normalize_reward: If True, applies reward normalization to the
@@ -396,7 +396,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         final_hp = self._get_final_hyperparameters(
             config=config,
-            environment_provider=environment_provider,
+            environment_factory=environment_factory,
             environment_config=environment_config,
             on_policy=on_policy,
             is_continuous_action_space=is_continuous_action_space,
@@ -417,7 +417,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
             return self._setup_on_policy_controller(
                 hp=final_hp,
                 training_config=config.training,
-                environment_provider=environment_provider,
+                environment_factory=environment_factory,
                 environment_config=environment_config,
                 is_continuous_action_space=is_continuous_action_space,
                 is_discrete_action_space=is_discrete_action_space,
@@ -427,7 +427,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
             return self._setup_off_policy_controller(
                 hp=final_hp,
                 training_config=config.training,
-                environment_provider=environment_provider,
+                environment_factory=environment_factory,
                 environment_config=environment_config,
                 normalize_state=normalize_state,
                 is_continuous_action_space=is_continuous_action_space,

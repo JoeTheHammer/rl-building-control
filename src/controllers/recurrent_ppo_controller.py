@@ -11,7 +11,7 @@ from adapters.on_policy_vec_env import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLController,
-    IRLControllerProvider,
+    IRLControllerFactory,
     load_rl_controller_config,
 )
 from controllers.utils import add_squash_output_to_hp, stabilize_training
@@ -42,7 +42,7 @@ class PPOController(IRLController):
         self.model.learn(timesteps)
 
 
-class RecurrentPPOProvider(IRLControllerProvider):
+class RecurrentPPOFactory(IRLControllerFactory):
 
     def _build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
 
@@ -66,7 +66,7 @@ class RecurrentPPOProvider(IRLControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentFactory | None = None,
+        environment_factory: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
 
@@ -77,7 +77,7 @@ class RecurrentPPOProvider(IRLControllerProvider):
 
         return super().create_rl_controller_setup(
             config=config,
-            environment_provider=environment_provider,
+            environment_factory=environment_factory,
             environment_config=environment_config,
             is_continuous_action_space=True,
             on_policy=True,

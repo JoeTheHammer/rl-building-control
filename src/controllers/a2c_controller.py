@@ -7,14 +7,14 @@ from stable_baselines3 import A2C
 from adapters.on_policy_vec_env import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
-    IRLControllerProvider,
+    IRLControllerFactory,
     load_rl_controller_config,
 )
 from controllers.utils import add_squash_output_to_hp
 from environments.base_factory import IEnvironmentFactory
 
 
-class A2CProvider(IRLControllerProvider):
+class A2CFactory(IRLControllerFactory):
 
     def _suggest_hyperparameters_space(
         self, trial: Optional[optuna.Trial] = None
@@ -61,7 +61,7 @@ class A2CProvider(IRLControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentFactory | None = None,
+        environment_factory: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
 
@@ -72,7 +72,7 @@ class A2CProvider(IRLControllerProvider):
 
         return super().create_rl_controller_setup(
             config=config,
-            environment_provider=environment_provider,
+            environment_factory=environment_factory,
             environment_config=environment_config,
             is_continuous_action_space=True,
             on_policy=True,

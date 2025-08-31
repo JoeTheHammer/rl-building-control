@@ -7,7 +7,7 @@ class IEnvironmentFactory(ABC):
     """
     Abstract factory interface for creating experiment environments.
 
-    Concrete providers are responsible for interpreting the given configuration
+    Concrete factories are responsible for interpreting the given configuration
     file (typically a YAML path) and returning a fully constructed environment
     instance ready for use.
     """
@@ -19,7 +19,7 @@ class IEnvironmentFactory(ABC):
 
         Args:
             config_path (str): Path to the environment configuration file. The format
-                               and structure of this file are specific to the provider.
+                               and structure of this file are specific to the factory.
 
         Returns:
             IEnvironment: A fully constructed experiment environment instance.

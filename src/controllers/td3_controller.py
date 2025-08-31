@@ -8,7 +8,7 @@ from stable_baselines3 import TD3
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLController,
-    IRLControllerProvider,
+    IRLControllerFactory,
     load_rl_controller_config,
 )
 from environments.base_factory import IEnvironmentFactory
@@ -42,9 +42,9 @@ class TD3Controller(IRLController):
         self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
-class TD3Provider(IRLControllerProvider):
+class TD3Factory(IRLControllerFactory):
     """
-    Provider for the TD3Controller, including hyperparameter tuning with Optuna.
+    Factory for the TD3Controller, including hyperparameter tuning with Optuna.
     This class suggests and builds a TD3 controller with appropriate parameters.
     """
 
@@ -91,7 +91,7 @@ class TD3Provider(IRLControllerProvider):
     def create_controller_setup(
         self,
         config_path: str | None = None,
-        environment_provider: IEnvironmentFactory | None = None,
+        environment_factory: IEnvironmentFactory | None = None,
         environment_config: str | None = None,
     ) -> ControllerSetup:
         """
@@ -105,7 +105,7 @@ class TD3Provider(IRLControllerProvider):
 
         return super().create_rl_controller_setup(
             config=config,
-            environment_provider=environment_provider,
+            environment_factory=environment_factory,
             environment_config=environment_config,
             is_continuous_action_space=True,
             normalize_state=config.normalize_state,
