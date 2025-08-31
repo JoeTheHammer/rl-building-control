@@ -1,7 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import gymnasium as gym
-import optuna
 from gymnasium import Env
 from stable_baselines3 import DQN
 
@@ -11,7 +10,9 @@ from controllers.base_rl_controller import (
     IRLControllerFactory,
     load_rl_controller_config,
 )
-from environments.base_factory import IEnvironmentFactory
+from wrappers.manager import EnvWrapperManager
+from wrappers.discrete_action_wrapper import DiscreteActionWrapper
+from gymnasium.wrappers import NormalizeObservation
 
 
 class DQNController(IRLController):
@@ -50,40 +51,6 @@ class DQNFactory(IRLControllerFactory):
     This class suggests and builds a DQN controller with appropriate parameters.
     """
 
-    def _suggest_hyperparameters_space(
-            self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
-        """
-        Suggests hyperparameters for DQN, either returning defaults or using Optuna.
-        Key parameters for DQN include epsilon-greedy exploration settings and
-        target network update frequency.
-        """
-        if trial is None:
-            # Return default values for DQN if no Optuna trial is provided.
-            # These values are based on the stable-baselines3 DQN defaults.
-            return {
-                "learning_rate": 1e-4,
-                "gamma": 0.99,
-                "buffer_size": 100000,
-                "learning_starts": 50000,
-                "batch_size": 32,
-                "target_update_interval": 1000,
-                "exploration_fraction": 0.1,
-                "exploration_final_eps": 0.05,
-            }
-
-        # Suggest a search space for Optuna.
-        return {
-            "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
-            "gamma": trial.suggest_float("gamma", 0.9, 0.9999),
-            "buffer_size": trial.suggest_int("buffer_size", 10000, 500000, step=10000),
-            "learning_starts": trial.suggest_int("learning_starts", 10000, 100000),
-            "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
-            "target_update_interval": trial.suggest_int("target_update_interval", 100, 5000),
-            "exploration_fraction": trial.suggest_float("exploration_fraction", 0.05, 0.5),
-            "exploration_final_eps": trial.suggest_float("exploration_final_eps", 0.01, 0.1),
-        }
-
     def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DQNController:
         """
         Builds and returns a new DQNController instance.
@@ -100,7 +67,7 @@ class DQNFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
-        return super().create_rl_controller_setup(
-            is_discrete_action_space=True,
-            normalize_state=config.environment_wrapper.normalize_state,
-        )
+        env_wrap_manager = EnvWrapperManager([NormalizeObservation, DiscreteActionWrapper],
+                                             config.environment_wrapper)
+
+        return super().create_rl_controller_setup_new(config.hyperparameters, env_wrap_manager)
