@@ -6,6 +6,8 @@ from gymnasium.wrappers import NormalizeObservation
 from sinergym.utils.wrappers import NormalizeAction
 from stable_baselines3.common.vec_env import VecNormalize
 
+from wrappers.discrete_action_wrapper import DiscreteActionWrapper
+
 
 def _find_wrapper(env: Any, wrapper_class: type) -> Any:
     """
@@ -69,10 +71,13 @@ def denormalize_state(state: Any, env: gymnasium.Env) -> Any:
     return state
 
 
-def denormalize_action(action: Any, env: gymnasium.Env) -> Any:
+def get_original_action(action: Any, env: gymnasium.Env) -> Any:
     action_normalize_wrapper = _find_wrapper(env, NormalizeAction)
+    discrete_action_wrapper = _find_wrapper(env, DiscreteActionWrapper)
     if action_normalize_wrapper is not None:
-        # Use the wrapper's dedicated, safer method for denormalization
-        return action_normalize_wrapper.reverting_action(action)
+        action = action_normalize_wrapper.reverting_action(action)
+
+    if discrete_action_wrapper is not None:
+        action = discrete_action_wrapper.get_energy_plus_action(action)
 
     return action

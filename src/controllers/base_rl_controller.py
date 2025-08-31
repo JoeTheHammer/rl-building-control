@@ -16,6 +16,7 @@ from environments.base_provider import IEnvironmentProvider
 from experiment.experiment import Experiment
 from reporting.finder import find_reporting_wrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from wrappers.discrete_action_wrapper import DiscreteActionWrapper
 from wrappers.reporting_wrapper import ReportingWrapper
 
 
@@ -44,6 +45,7 @@ def wrap_env(
     normalize_state: bool,
     continuous_action_space: bool,
     normalize_reward: bool,
+    is_discrete: bool,
     use_tensorboard: bool = False,
 ) -> gym.Env:
     if normalize_state:
@@ -52,6 +54,8 @@ def wrap_env(
         env = ContinuousActionWrapper(env)
     if normalize_reward:
         env = NormalizeReward(env)
+    if is_discrete:
+        env = DiscreteActionWrapper(env)
     if use_tensorboard:
         env = Monitor(env)
     return env
@@ -161,6 +165,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         num_trials: int,
         num_episodes: int,
         is_continuous_action_space: bool = False,
+        is_discrete_action_space: bool = False,
         normalize_state: bool = False,
         normalize_reward: bool = False,
         on_policy: bool = False,
@@ -190,10 +195,16 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
             if on_policy:
                 # If on policy the wrapping will be done later in the adapter.
-                env_t = wrap_env(env_t, False, is_continuous_action_space, False)
+                env_t = wrap_env(
+                    env_t, False, is_continuous_action_space, False, is_discrete_action_space
+                )
             else:
                 env_t = wrap_env(
-                    env_t, normalize_state, is_continuous_action_space, normalize_reward
+                    env_t,
+                    normalize_state,
+                    is_continuous_action_space,
+                    normalize_reward,
+                    is_discrete_action_space,
                 )
 
             ctrl = self._build_controller(env_t, trial_hp, normalize_reward=normalize_reward)
@@ -223,6 +234,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         environment_config: str,
         on_policy: bool,
         is_continuous_action_space: bool,
+        is_discrete_action_space: bool,
         normalize_state: bool,
         normalize_reward: bool,
     ) -> Dict[str, Any]:
@@ -246,6 +258,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 num_trials=tuning_config.num_trials,
                 num_episodes=tuning_config.num_episodes,
                 is_continuous_action_space=is_continuous_action_space,
+                is_discrete_action_space=is_discrete_action_space,
                 normalize_state=normalize_state,
                 normalize_reward=normalize_reward,
                 on_policy=on_policy,
@@ -262,6 +275,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         environment_provider: IEnvironmentProvider,
         environment_config: str,
         is_continuous_action_space: bool,
+        is_discrete_action_space: bool,
         normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an on-policy controller."""
@@ -269,6 +283,9 @@ class IRLControllerProvider(IControllerProvider, ABC):
 
         if is_continuous_action_space:
             env = ContinuousActionWrapper(env)
+
+        if is_discrete_action_space:
+            env = DiscreteActionWrapper(env)
 
         # Determine if monitor wrapper should be added to get full functionality of tensorboard
         # used to monitor training.
@@ -299,48 +316,43 @@ class IRLControllerProvider(IControllerProvider, ABC):
         environment_config: str,
         normalize_state: bool,
         is_continuous_action_space: bool,
+        is_discrete_action_space: bool,
         normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an off-policy controller."""
         # Setup environment for training
-        training_env = environment_provider.create_environment(environment_config)
+        env = environment_provider.create_environment(environment_config)
 
         # Determine if monitor wrapper should be added to get full functionality of tensorboard
         # used to monitor training.
         use_tensorboard = "tensorboard_log" in hp and hp["tensorboard_log"]
 
-        training_env = wrap_env(
-            training_env,
+        env = wrap_env(
+            env,
             normalize_state,
             is_continuous_action_space,
             normalize_reward,
+            is_discrete_action_space,
             use_tensorboard,
         )
+
         if training_config.report_training:
-            training_env = ReportingWrapper(
-                training_env, denorm_state=training_config.report_denormalized_state
-            )
+            env = ReportingWrapper(env, denorm_state=training_config.report_denormalized_state)
 
         # Build and train the controller
-        controller = self._build_controller(training_env, hp)
+        controller = self._build_controller(env, hp)
         logger.info(f"Start training with {training_config.timesteps} timesteps.")
-        with reporting_context(training_env, training_config.report_training):
+        with reporting_context(env, training_config.report_training):
             controller.train(timesteps=training_config.timesteps)
-        training_env.close()
 
-        # Setup final environment for evaluation
-        final_env = environment_provider.create_environment(environment_config)
-        final_env = wrap_env(
-            final_env, normalize_state, is_continuous_action_space, normalize_reward
-        )
-        controller.env = final_env
-        return ControllerSetup(controller, final_env)
+        return ControllerSetup(controller, controller.env)
 
     def create_rl_controller_setup(
         self,
         config: RLControllerConfig,
         normalize_state: bool = False,
         is_continuous_action_space: bool = False,
+        is_discrete_action_space: bool = False,
         environment_provider: IEnvironmentProvider | None = None,
         environment_config: str | None = None,
         on_policy: bool = False,
@@ -352,7 +364,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
         It finalizes hyperparameters, performs tuning if configured, builds the
         model, and runs the training process. It correctly handles the distinct
         workflows for on-policy and off-policy algorithms, returning a fully
-        trained controller and its curresponding environment ready for evaluation.
+        trained controller and its corresponding environment ready for evaluation.
 
         Args:
             config: The configuration object parsed from the YAML file, containing
@@ -361,6 +373,8 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 environment. Defaults to False.
             is_continuous_action_space: If True, wraps the environment to ensure
                 a continuous action space. Defaults to False.
+            is_discrete_action_space: If True, wraps the environment to ensure
+                a discrete action space. Defaults to False.
             environment_provider: The provider class used to create environment
                 instances for tuning and training.
             environment_config: The configuration string or path passed to the
@@ -386,6 +400,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
             environment_config=environment_config,
             on_policy=on_policy,
             is_continuous_action_space=is_continuous_action_space,
+            is_discrete_action_space=is_discrete_action_space,
             normalize_state=normalize_state,
             normalize_reward=normalize_reward,
         )
@@ -405,6 +420,7 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 environment_provider=environment_provider,
                 environment_config=environment_config,
                 is_continuous_action_space=is_continuous_action_space,
+                is_discrete_action_space=is_discrete_action_space,
                 normalize_reward=normalize_reward,
             )
         else:
@@ -415,5 +431,6 @@ class IRLControllerProvider(IControllerProvider, ABC):
                 environment_config=environment_config,
                 normalize_state=normalize_state,
                 is_continuous_action_space=is_continuous_action_space,
+                is_discrete_action_space=is_discrete_action_space,
                 normalize_reward=normalize_reward,
             )

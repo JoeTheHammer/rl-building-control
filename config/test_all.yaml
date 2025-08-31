@@ -1,4 +1,14 @@
 experiments:
+  - name: "DQN experiment"
+    engine: "sinergym"
+    environment_config: "../rl-building-control/config/discrete_environment.yaml"
+    controller: "dqn"
+    controller_config: "../rl-building-control/config/dqn_controller.yaml"
+    episodes: 1
+    reporting:
+      plots: True
+      denormalize_state: True
+      export: True
   - name: "SAC Experiment"
     engine: "sinergym"
     environment_config: "../rl-building-control/config/environment1.yaml"
@@ -59,3 +69,5 @@ experiments:
       plots: True
       denormalize_state: True
       export: True
+
+  
