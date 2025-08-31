@@ -1,28 +1,31 @@
 import gymnasium as gym
 from typing import List, Type, Optional
 
+
 class EnvWrapperManager:
     """
-    Manages a sequence of Gymnasium wrappers to be applied to an environment.
+    Manages a sequence of Gymnasium wrapper classes to be applied to an
+    environment.
     """
-    def __init__(self, wrappers: Optional[List[gym.Wrapper]] = None):
+
+    def __init__(self, wrapper_classes: Optional[List[Type[gym.Wrapper]]] = None):
         """
         Initializes the EnvWrapperManager.
 
         Args:
-            wrappers (Optional[List[gym.Wrapper]]): An optional initial list of
-                                                    wrapper instances.
+            wrapper_classes (Optional[List[Type[gym.Wrapper]]]): An optional
+                                   initial list of wrapper classes.
         """
-        self._wrappers: List[gym.Wrapper] = wrappers if wrappers is not None else []
+        self._wrapper_classes: List[Type[gym.Wrapper]] = wrapper_classes if wrapper_classes is not None else []
 
-    def add_wrapper(self, wrapper: gym.Wrapper):
+    def add_wrapper(self, wrapper_class: Type[gym.Wrapper]):
         """
-        Adds a wrapper to the end of the list.
+        Adds a wrapper class to the end of the list.
 
         Args:
-            wrapper (gym.Wrapper): The wrapper instance to add.
+            wrapper_class (Type[gym.Wrapper]): The wrapper class to add.
         """
-        self._wrappers.append(wrapper)
+        self._wrapper_classes.append(wrapper_class)
 
     def remove_wrapper(self, wrapper_class: Type[gym.Wrapper]):
         """
@@ -31,14 +34,13 @@ class EnvWrapperManager:
         Args:
             wrapper_class (Type[gym.Wrapper]): The class of the wrapper to remove.
         """
-        self._wrappers = [
-            wrapper for wrapper in self._wrappers
-            if not isinstance(wrapper, wrapper_class)
+        self._wrapper_classes = [
+            cls for cls in self._wrapper_classes if cls is not wrapper_class
         ]
 
     def apply_wrappers(self, env: gym.Env) -> gym.Env:
         """
-        Applies the stored wrappers to an environment in order.
+        Applies the stored wrapper classes to an environment in order.
 
         Args:
             env (gym.Env): The base Gymnasium environment.
@@ -47,7 +49,7 @@ class EnvWrapperManager:
             gym.Env: The environment with all wrappers applied.
         """
         wrapped_env = env
-        for wrapper in self._wrappers:
-            # Re-initialize the wrapper with the current environment
-            wrapped_env = type(wrapper)(wrapped_env)
+        for wrapper_class in self._wrapper_classes:
+            # Instantiate the wrapper class with the current environment
+            wrapped_env = wrapper_class(wrapped_env)
         return wrapped_env
