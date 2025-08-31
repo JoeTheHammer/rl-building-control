@@ -2,7 +2,7 @@ from typing import Dict
 from gymnasium import Env
 from stable_baselines3 import PPO
 
-from adapters.on_policy_vec_env import OnPolicyAdapter
+from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLControllerFactory, load_rl_controller_config,
@@ -20,13 +20,10 @@ class PPOFactory(IRLControllerFactory):
         hyper_params = add_squash_output_to_hp(hyper_params)
         hyper_params = stabilize_training(hyper_params)
 
-        training_config = load_rl_controller_config(self.config_path).training
-
         return OnPolicyAdapter(
             env=env,
             model_class=PPO,
-            hyperparams=hyper_params,
-            report_denormalized_state=training_config.report_denormalized_state,
+            hyper_params=hyper_params,
             policy="MlpPolicy",
         )
 

@@ -5,7 +5,7 @@ from typing import (
 import gymnasium as gym
 from sb3_contrib import RecurrentPPO
 
-from adapters.on_policy_vec_env import OnPolicyAdapter
+from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLControllerFactory, load_rl_controller_config,
@@ -13,6 +13,7 @@ from controllers.base_rl_controller import (
 from controllers.utils import add_squash_output_to_hp, stabilize_training
 from wrappers.manager import EnvWrapperManager
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from sinergym.utils.wrappers import NormalizeAction
 
 
 class RecurrentPPOFactory(IRLControllerFactory):
@@ -21,14 +22,10 @@ class RecurrentPPOFactory(IRLControllerFactory):
         hyper_params = add_squash_output_to_hp(hyper_params)
         hyper_params = stabilize_training(hyper_params)
 
-        training_config = load_rl_controller_config(self.config_path).training
-
         return OnPolicyAdapter(
             env=env,
             model_class=RecurrentPPO,
-            hyperparams=hyper_params,
-            report_denormalized_state=training_config.report_denormalized_state,
-            normalize_action=True,
+            hyper_params=hyper_params,
             policy="MlpLstmPolicy",
         )
 
@@ -37,7 +34,7 @@ class RecurrentPPOFactory(IRLControllerFactory):
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
         rl_config = load_rl_controller_config(self.config_path)
-        env_wrap_manager = EnvWrapperManager([ContinuousActionWrapper], rl_config.environment_wrapper)
+        env_wrap_manager = EnvWrapperManager([ContinuousActionWrapper, NormalizeAction], rl_config.environment_wrapper)
         hp = rl_config.hyperparameters
 
         return super().create_rl_controller_setup_new(hp, env_wrap_manager, is_env_adapter=True)

@@ -2,12 +2,10 @@ from typing import Type
 
 import gymnasium as gym
 import numpy as np
-from sinergym.utils.wrappers import NormalizeAction
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from controllers.base_controller import IController
-from wrappers.reporting_wrapper import ReportingWrapper
 
 
 class OnPolicyAdapter(gym.Wrapper, IController):
@@ -17,30 +15,21 @@ class OnPolicyAdapter(gym.Wrapper, IController):
     """
 
     def __init__(
-        self,
-        env: gym.Env,
-        model_class: Type[OnPolicyAlgorithm],
-        hyperparams: dict,
-        normalize_reward: bool = False,
-        report_denormalized_state: bool = False,
-        policy: str = "MlpPolicy",
-        normalize_action: bool = False,
+            self,
+            env: gym.Env,
+            model_class: Type[OnPolicyAlgorithm],
+            hyper_params: dict,
+            policy: str = "MlpPolicy",
     ):
-
         super().__init__(env)
 
         self.policy = policy
         self.lstm_states = None
         self.episode_starts = np.ones((1,), dtype=bool)
 
-        self.env = ReportingWrapper(env, denorm_state=report_denormalized_state)
+        self.vec_env = VecNormalize(DummyVecEnv([lambda: self.env]), norm_reward=False)
 
-        if normalize_action:
-            self.env = NormalizeAction(self.env)
-
-        self.vec_env = VecNormalize(DummyVecEnv([lambda: self.env]), norm_reward=normalize_reward)
-
-        self._model = model_class(policy, self.vec_env, **hyperparams)
+        self._model = model_class(policy, self.vec_env, **hyper_params)
 
         self.action_space = self._model.action_space
 
