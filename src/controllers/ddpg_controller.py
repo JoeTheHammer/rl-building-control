@@ -1,7 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import gymnasium as gym
-import optuna
 from gymnasium import Env
 from stable_baselines3 import DDPG
 
@@ -11,7 +10,6 @@ from controllers.base_rl_controller import (
     IRLControllerFactory,
     load_rl_controller_config,
 )
-from environments.base_factory import IEnvironmentFactory
 from wrappers.manager import EnvWrapperManager
 from gymnasium.wrappers import NormalizeObservation
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
