@@ -8,16 +8,14 @@ from adapters.on_policy_vec_env import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_rl_controller import (
     IRLControllerFactory,
-    load_rl_controller_config,
 )
 from controllers.utils import add_squash_output_to_hp
-from environments.base_factory import IEnvironmentFactory
 
 
 class A2CFactory(IRLControllerFactory):
 
     def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
+            self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
         """
         Suggests a set of hyperparameters for the PPO algorithm.
@@ -40,7 +38,7 @@ class A2CFactory(IRLControllerFactory):
             "ent_coef": trial.suggest_float("ent_coef", 0.0, 0.1),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
         # Add this to ensure that output of controller is in defined (tanh) range.
 
         hyper_params = add_squash_output_to_hp(hyper_params)

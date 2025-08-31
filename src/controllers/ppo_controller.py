@@ -17,7 +17,7 @@ from environments.base_factory import IEnvironmentFactory
 class PPOFactory(IRLControllerFactory):
 
     def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
+            self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
         """
         Suggests a set of hyperparameters for the PPO algorithm.
@@ -50,7 +50,7 @@ class PPOFactory(IRLControllerFactory):
             "ent_coef": trial.suggest_float("ent_coef", 0.0, 0.1),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
         # Add this to ensure that output of controller is in defined (tanh) range.
 
         hyper_params = add_squash_output_to_hp(hyper_params)

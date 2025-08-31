@@ -51,7 +51,7 @@ class DQNFactory(IRLControllerFactory):
     """
 
     def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
+            self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
         """
         Suggests hyperparameters for DQN, either returning defaults or using Optuna.
@@ -84,7 +84,7 @@ class DQNFactory(IRLControllerFactory):
             "exploration_final_eps": trial.suggest_float("exploration_final_eps", 0.01, 0.1),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DQNController:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DQNController:
         """
         Builds and returns a new DQNController instance.
         """

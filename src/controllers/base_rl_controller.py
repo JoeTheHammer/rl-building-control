@@ -31,10 +31,12 @@ class HyperparameterTuning(BaseModel):
     num_trials: int
     num_episodes: int
 
+
 class EnvironmentWrapper(BaseModel):
     normalize_state: Optional[bool] = True
     continuous_action: Optional[bool] = False
     discrete_action: Optional[bool] = False
+
 
 class RLControllerConfig(BaseModel):
     training: Training
@@ -44,12 +46,12 @@ class RLControllerConfig(BaseModel):
 
 
 def wrap_env(
-    env: gym.Env,
-    normalize_state: bool,
-    continuous_action_space: bool,
-    normalize_reward: bool,
-    is_discrete: bool,
-    use_tensorboard: bool = False,
+        env: gym.Env,
+        normalize_state: bool,
+        continuous_action_space: bool,
+        normalize_reward: bool,
+        is_discrete: bool,
+        use_tensorboard: bool = False,
 ) -> gym.Env:
     if normalize_state:
         env = NormalizeObservation(env)
@@ -121,7 +123,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
     """
 
     @abstractmethod
-    def _build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> IRLController:
+    def build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> IRLController:
         """
         Construct an IRLController with the given environment and hyperparameters. Used during
         hyperparameter tuning and to build final controller.
@@ -136,7 +138,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
         pass
 
     def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
+            self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
         """
         Suggest a set of hyperparameters available for this controller.
@@ -151,7 +153,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
         return {}
 
     def _suggest_hyperparameters(
-        self, trial: Optional[optuna.Trial] = None, fixed_params: Optional[Dict[str, Any]] = None
+            self, trial: Optional[optuna.Trial] = None, fixed_params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         fixed_params = fixed_params or {}
 
@@ -162,16 +164,16 @@ class IRLControllerFactory(IControllerFactory, ABC):
         return {**suggested, **fixed_params}
 
     def _tune_hyperparameters(
-        self,
-        env_factory: IEnvironmentFactory,
-        num_trials: int,
-        num_episodes: int,
-        is_continuous_action_space: bool = False,
-        is_discrete_action_space: bool = False,
-        normalize_state: bool = False,
-        normalize_reward: bool = False,
-        on_policy: bool = False,
-        fixed_hyperparams: Dict[str, Any] = None,
+            self,
+            env_factory: IEnvironmentFactory,
+            num_trials: int,
+            num_episodes: int,
+            is_continuous_action_space: bool = False,
+            is_discrete_action_space: bool = False,
+            normalize_state: bool = False,
+            normalize_reward: bool = False,
+            on_policy: bool = False,
+            fixed_hyperparams: Dict[str, Any] = None,
     ) -> Dict:
         """
         Run hyperparameter tuning using Optuna for a given environment setup.
@@ -209,7 +211,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
                     is_discrete_action_space,
                 )
 
-            ctrl = self._build_controller(env_t, trial_hp, normalize_reward=normalize_reward)
+            ctrl = self.build_controller(env_t, trial_hp, normalize_reward=normalize_reward)
 
             if on_policy:
                 # If on policy adapter is returned by build_controller that serves as controller and env.
@@ -230,14 +232,14 @@ class IRLControllerFactory(IControllerFactory, ABC):
         return {**study.best_params, **fixed_hyperparams}
 
     def _get_final_hyperparameters(
-        self,
-        config: RLControllerConfig,
-        environment_factory: IEnvironmentFactory,
-        on_policy: bool,
-        is_continuous_action_space: bool,
-        is_discrete_action_space: bool,
-        normalize_state: bool,
-        normalize_reward: bool,
+            self,
+            config: RLControllerConfig,
+            environment_factory: IEnvironmentFactory,
+            on_policy: bool,
+            is_continuous_action_space: bool,
+            is_discrete_action_space: bool,
+            normalize_state: bool,
+            normalize_reward: bool,
     ) -> Dict[str, Any]:
         """Handles the optional hyperparameter tuning process and returns the final set of hyperparameters."""
         hp = config.hyperparameters or {}
@@ -269,11 +271,11 @@ class IRLControllerFactory(IControllerFactory, ABC):
         return hp
 
     def _setup_on_policy_controller(
-        self,
-        hp: Dict[str, Any],
-        is_continuous_action_space: bool,
-        is_discrete_action_space: bool,
-        normalize_reward: bool,
+            self,
+            hp: Dict[str, Any],
+            is_continuous_action_space: bool,
+            is_discrete_action_space: bool,
+            normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an on-policy controller."""
         env = self.env_factory.create_environment()
@@ -292,7 +294,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
         if "tensorboard_log" in hp and hp["tensorboard_log"]:
             env = Monitor(env)
 
-        adapter = self._build_controller(
+        adapter = self.build_controller(
             env,
             hp,
             normalize_reward=normalize_reward,
@@ -309,12 +311,12 @@ class IRLControllerFactory(IControllerFactory, ABC):
         raise RuntimeError("On-policy adapter must be both a Controller and an Environment.")
 
     def _setup_off_policy_controller(
-        self,
-        hp: Dict[str, Any],
-        normalize_state: bool,
-        is_continuous_action_space: bool,
-        is_discrete_action_space: bool,
-        normalize_reward: bool,
+            self,
+            hp: Dict[str, Any],
+            normalize_state: bool,
+            is_continuous_action_space: bool,
+            is_discrete_action_space: bool,
+            normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an off-policy controller."""
         # Setup environment for training
@@ -340,7 +342,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
             env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
 
         # Build and train the controller
-        controller = self._build_controller(env, hp)
+        controller = self.build_controller(env, hp)
         logger.info(f"Start training with {training_conf.timesteps} timesteps.")
         with reporting_context(env, training_conf.report_training):
             controller.train(timesteps=training_conf.timesteps)
@@ -348,12 +350,12 @@ class IRLControllerFactory(IControllerFactory, ABC):
         return ControllerSetup(controller, controller.env)
 
     def create_rl_controller_setup(
-        self,
-        normalize_state: bool = False,
-        is_continuous_action_space: bool = False,
-        is_discrete_action_space: bool = False,
-        on_policy: bool = False,
-        normalize_reward: bool = False,
+            self,
+            normalize_state: bool = False,
+            is_continuous_action_space: bool = False,
+            is_discrete_action_space: bool = False,
+            on_policy: bool = False,
+            normalize_reward: bool = False,
     ) -> ControllerSetup:
         """Orchestrates the setup and training of a reinforcement learning controller.
 

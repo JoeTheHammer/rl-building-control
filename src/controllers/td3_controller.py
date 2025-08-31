@@ -49,7 +49,7 @@ class TD3Factory(IRLControllerFactory):
     """
 
     def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
+            self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
         """
         Suggests hyperparameters for TD3, either returning defaults or using Optuna.
@@ -82,7 +82,7 @@ class TD3Factory(IRLControllerFactory):
             "target_noise_clip": trial.suggest_float("target_noise_clip", 0.1, 0.5),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> TD3Controller:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> TD3Controller:
         """
         Builds and returns a new TD3Controller instance.
         """

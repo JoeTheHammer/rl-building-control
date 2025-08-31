@@ -44,8 +44,7 @@ class PPOController(IRLController):
 
 class RecurrentPPOFactory(IRLControllerFactory):
 
-    def _build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
-
+    def build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
         hyper_params = add_squash_output_to_hp(hyper_params)
         hyper_params = stabilize_training(hyper_params)
 
@@ -64,7 +63,6 @@ class RecurrentPPOFactory(IRLControllerFactory):
         # return PPOController(env, hyper_params)
 
     def create_controller_setup(self) -> ControllerSetup:
-
         if self.config_path is None or self.config_path == "":
             raise RuntimeError("No configuration was provided for the PPO controller.")
 

@@ -47,7 +47,7 @@ class DDPGFactory(IRLControllerFactory):
     """
 
     def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
+            self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
         """
         Suggests hyperparameters for DDPG, either returning defaults or using Optuna.
@@ -70,7 +70,7 @@ class DDPGFactory(IRLControllerFactory):
             "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DDPGController:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DDPGController:
         """
         Builds and returns a new DDPGController instance.
         """
@@ -89,4 +89,3 @@ class DDPGFactory(IRLControllerFactory):
             is_continuous_action_space=True,
             normalize_state=config.environment_wrapper.normalize_state,
         )
-

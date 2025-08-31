@@ -33,7 +33,7 @@ class SACController(IRLController):
 class SACFactory(IRLControllerFactory):
 
     def _suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
+            self, trial: Optional[optuna.Trial] = None
     ) -> Dict[str, Any]:
 
         if trial is None:
@@ -53,7 +53,7 @@ class SACFactory(IRLControllerFactory):
             "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128]),
         }
 
-    def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> SACController:
+    def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> SACController:
         return SACController(env, hyper_params)
 
     def create_controller_setup(self) -> ControllerSetup:
