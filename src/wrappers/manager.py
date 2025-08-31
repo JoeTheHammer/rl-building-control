@@ -1,8 +1,9 @@
 import gymnasium as gym
 from typing import List, Type, Optional
 
-from controllers.base_rl_controller import EnvironmentWrapper
 from gymnasium.wrappers import NormalizeObservation
+
+from controllers.config import EnvironmentWrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.discrete_action_wrapper import DiscreteActionWrapper
 

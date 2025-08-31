@@ -4,7 +4,7 @@ import numpy as np
 import optuna
 
 from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
-from controllers.base_rl_controller import HyperparameterTuning
+from controllers.config import HyperparameterTuning
 from custom_loggers.setup_logger import logger
 from experiment.experiment import Experiment
 from wrappers.manager import EnvWrapperManager
