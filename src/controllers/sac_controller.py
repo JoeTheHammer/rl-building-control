@@ -1,7 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import gymnasium as gym
-import optuna
 from gymnasium import Env
 from stable_baselines3 import SAC
 
@@ -11,7 +10,9 @@ from controllers.base_rl_controller import (
     IRLControllerFactory,
     load_rl_controller_config,
 )
-from environments.base_factory import IEnvironmentFactory
+from gymnasium.wrappers import NormalizeObservation
+from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from wrappers.manager import EnvWrapperManager
 
 
 class SACController(IRLController):
@@ -32,38 +33,16 @@ class SACController(IRLController):
 
 class SACFactory(IRLControllerFactory):
 
-    def _suggest_hyperparameters_space(
-            self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
-
-        if trial is None:
-            # Return default values
-            return {
-                "learning_rate": 1e-4,
-                "gamma": 0.99,
-                "ent_coef": "auto_1.0",
-                "batch_size": 64,
-            }
-
-        # Use Optuna to suggest values
-        return {
-            "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3),
-            "gamma": trial.suggest_float("gamma", 0.9, 0.9999),
-            "ent_coef": trial.suggest_float("ent_coef", 1e-8, 1e-1),
-            "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128]),
-        }
-
     def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> SACController:
         return SACController(env, hyper_params)
 
     def create_controller_setup(self) -> ControllerSetup:
-
         if self.config_path is None or self.config_path == "":
             raise RuntimeError("No configuration was provided for the SAC controller.")
 
         config = load_rl_controller_config(self.config_path)
 
-        return super().create_rl_controller_setup(
-            is_continuous_action_space=True,
-            normalize_state=config.environment_wrapper.normalize_state,
-        )
+        env_wrap_manager = EnvWrapperManager([NormalizeObservation, ContinuousActionWrapper],
+                                             config.environment_wrapper)
+
+        return super().create_rl_controller_setup_new(config.hyperparameters, env_wrap_manager)
