@@ -104,7 +104,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         if training_conf.report_training:
             env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
 
-        # --- Controller Setup: Build the controller with the FINAL environment ---
         controller = self.build_controller(env, hp)
 
         # --- Training ---
@@ -114,7 +113,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         try:
             if reporting_wrapper:
                 reporting_wrapper.start_recording()
-            # The controller will now call the step method of the ReportingWrapper
             controller.train(timesteps=training_conf.timesteps)
         finally:
             if reporting_wrapper:
@@ -123,7 +121,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 reporting_wrapper.create_plots(output_dir="./plots-training")
                 reporting_wrapper.export_to_csv(output_dir="./csv-training")
 
-        # --- Finalization ---
         if is_env_adapter:
             if isinstance(controller, gym.Env) and isinstance(controller, IController):
                 return ControllerSetup(controller, cast(gym.Env, controller))
