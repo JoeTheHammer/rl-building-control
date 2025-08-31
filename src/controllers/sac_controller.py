@@ -56,20 +56,14 @@ class SACFactory(IRLControllerFactory):
     def _build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> SACController:
         return SACController(env, hyper_params)
 
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_factory: IEnvironmentFactory | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
 
-        if config_path is None:
+        if self.config_path is None or self.config_path == "":
             raise RuntimeError("No configuration was provided for the SAC controller.")
 
-        config = load_rl_controller_config(config_path)
+        config = load_rl_controller_config(self.config_path)
 
         return super().create_rl_controller_setup(
-            config=config,
-            environment_factory=environment_factory,
             is_continuous_action_space=True,
             normalize_state=config.environment_wrapper.normalize_state,
         )

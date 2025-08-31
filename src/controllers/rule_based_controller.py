@@ -135,17 +135,13 @@ class RuleBasedController(IController):
 
 
 class RuleBasedControllerFactory(IControllerFactory):
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_factory: IEnvironmentFactory | None = None,
-    ) -> ControllerSetup:
-        if not config_path:
+    def create_controller_setup(self) -> ControllerSetup:
+        if not self.config_path:
             raise ValueError("A config_path is required for RuleBasedController.")
 
-        controller_config = load_rule_based_controller_config(config_path)
+        controller_config = load_rule_based_controller_config(self.config_path)
 
-        env = environment_factory.create_environment()
+        env = self.env_factory.create_environment()
 
         controller = RuleBasedController(
             env=env,

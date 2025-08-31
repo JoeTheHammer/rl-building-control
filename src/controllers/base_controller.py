@@ -46,24 +46,24 @@ class ControllerSetup(NamedTuple):
     environment: gym.Env
 
 class IControllerFactory(ABC):
+
+    def __init__(self):
+        self.config_path: str = ""
+        self.env_factory: IEnvironmentFactory | None = None
+
+    def set_config_path(self, config_path: str):
+        self.config_path = config_path
+
+    def set_env_factory(self, env_factory: IEnvironmentFactory):
+        self.env_factory = env_factory
+
     @abstractmethod
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_factory: IEnvironmentFactory | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
         """
         Create and return a new controller instance.
 
-        Args:
-            env (gym.Env): The environment compatible with the controller.
-            config_path (str | None): Optional path to the controller configuration file.
-            environment_factory (IEnvironmentFactory | None): Optional Environment factory to create environments for training and tuning.
-            
         Returns:
             IController: A controller instance.
-            :param config_path: Path of configuration used to configure the controller.
-            :param environment_factory: Factory that allows to create new environment.
         """
         pass
 

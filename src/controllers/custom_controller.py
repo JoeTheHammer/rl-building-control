@@ -26,13 +26,12 @@ def parse_custom_controller_config(config_path: str) -> CustomControllerConfig:
 
 
 class CustomControllerFactory(IControllerFactory):
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_factory: IEnvironmentFactory | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
 
-        controller_config = parse_custom_controller_config(config_path)
+        if self.config_path == "":
+            raise FileNotFoundError(f"{self.config_path} not found")
+
+        controller_config = parse_custom_controller_config(self.config_path)
 
         try:
             module = importlib.import_module(controller_config.module)
@@ -52,7 +51,7 @@ class CustomControllerFactory(IControllerFactory):
 
         controller_args = controller_config.args or {}
 
-        env = environment_factory.create_environment()
+        env = self.env_factory.create_environment()
 
         controller_instance = controller_class(env=env, **controller_args)
 

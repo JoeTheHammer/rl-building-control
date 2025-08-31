@@ -63,20 +63,12 @@ class RecurrentPPOFactory(IRLControllerFactory):
         )
         # return PPOController(env, hyper_params)
 
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_factory: IEnvironmentFactory | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
 
-        if config_path is None:
+        if self.config_path is None or self.config_path == "":
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
-        config = load_rl_controller_config(config_path)
-
         return super().create_rl_controller_setup(
-            config=config,
-            environment_factory=environment_factory,
             is_continuous_action_space=True,
             on_policy=True,
         )

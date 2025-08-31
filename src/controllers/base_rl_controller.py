@@ -271,14 +271,15 @@ class IRLControllerFactory(IControllerFactory, ABC):
     def _setup_on_policy_controller(
         self,
         hp: Dict[str, Any],
-        training_config: Training,
-        environment_factory: IEnvironmentFactory,
         is_continuous_action_space: bool,
         is_discrete_action_space: bool,
         normalize_reward: bool,
     ) -> ControllerSetup:
         """Builds, trains, and sets up an on-policy controller."""
-        env = environment_factory.create_environment()
+        env = self.env_factory.create_environment()
+
+        # TODO: Will be replaced
+        training_conf = load_rl_controller_config(self.config_path).training
 
         if is_continuous_action_space:
             env = ContinuousActionWrapper(env)
@@ -295,12 +296,12 @@ class IRLControllerFactory(IControllerFactory, ABC):
             env,
             hp,
             normalize_reward=normalize_reward,
-            report_denormalized_state=training_config.report_denormalized_state,
+            report_denormalized_state=training_conf.report_denormalized_state,
         )
 
-        with reporting_context(adapter, training_config.report_training):
-            logger.info(f"Start training with {training_config.timesteps} timesteps.")
-            adapter.train(timesteps=training_config.timesteps)
+        with reporting_context(adapter, training_conf.report_training):
+            logger.info(f"Start training with {training_conf.timesteps} timesteps.")
+            adapter.train(timesteps=training_conf.timesteps)
 
         if isinstance(adapter, gym.Env) and isinstance(adapter, IController):
             return ControllerSetup(adapter, cast(gym.Env, adapter))
@@ -310,8 +311,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
     def _setup_off_policy_controller(
         self,
         hp: Dict[str, Any],
-        training_config: Training,
-        environment_factory: IEnvironmentFactory,
         normalize_state: bool,
         is_continuous_action_space: bool,
         is_discrete_action_space: bool,
@@ -319,7 +318,10 @@ class IRLControllerFactory(IControllerFactory, ABC):
     ) -> ControllerSetup:
         """Builds, trains, and sets up an off-policy controller."""
         # Setup environment for training
-        env = environment_factory.create_environment()
+        env = self.env_factory.create_environment()
+
+        # TODO: Will be replaced
+        training_conf = load_rl_controller_config(self.config_path).training
 
         # Determine if monitor wrapper should be added to get full functionality of tensorboard
         # used to monitor training.
@@ -334,24 +336,22 @@ class IRLControllerFactory(IControllerFactory, ABC):
             use_tensorboard,
         )
 
-        if training_config.report_training:
-            env = ReportingWrapper(env, denorm_state=training_config.report_denormalized_state)
+        if training_conf.report_training:
+            env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
 
         # Build and train the controller
         controller = self._build_controller(env, hp)
-        logger.info(f"Start training with {training_config.timesteps} timesteps.")
-        with reporting_context(env, training_config.report_training):
-            controller.train(timesteps=training_config.timesteps)
+        logger.info(f"Start training with {training_conf.timesteps} timesteps.")
+        with reporting_context(env, training_conf.report_training):
+            controller.train(timesteps=training_conf.timesteps)
 
         return ControllerSetup(controller, controller.env)
 
     def create_rl_controller_setup(
         self,
-        config: RLControllerConfig,
         normalize_state: bool = False,
         is_continuous_action_space: bool = False,
         is_discrete_action_space: bool = False,
-        environment_factory: IEnvironmentFactory | None = None,
         on_policy: bool = False,
         normalize_reward: bool = False,
     ) -> ControllerSetup:
@@ -364,16 +364,12 @@ class IRLControllerFactory(IControllerFactory, ABC):
         trained controller and its corresponding environment ready for evaluation.
 
         Args:
-            config: The configuration object parsed from the YAML file, containing
-                training, tuning, and hyperparameter settings.
             normalize_state: If True, applies observation normalization to the
                 environment. Defaults to False.
             is_continuous_action_space: If True, wraps the environment to ensure
                 a continuous action space. Defaults to False.
             is_discrete_action_space: If True, wraps the environment to ensure
                 a discrete action space. Defaults to False.
-            environment_factory: The factory class used to create environment
-                instances for tuning and training.
             on_policy: If True, the on-policy setup workflow is used. If False,
                 the off-policy workflow is used. Defaults to False.
             normalize_reward: If True, applies reward normalization to the
@@ -389,9 +385,10 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 by the controller.
         """
 
+        # TODO: Will be replaced
         final_hp = self._get_final_hyperparameters(
-            config=config,
-            environment_factory=environment_factory,
+            config=load_rl_controller_config(self.config_path),
+            environment_factory=self.env_factory,
             on_policy=on_policy,
             is_continuous_action_space=is_continuous_action_space,
             is_discrete_action_space=is_discrete_action_space,
@@ -410,8 +407,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         if on_policy:
             return self._setup_on_policy_controller(
                 hp=final_hp,
-                training_config=config.training,
-                environment_factory=environment_factory,
                 is_continuous_action_space=is_continuous_action_space,
                 is_discrete_action_space=is_discrete_action_space,
                 normalize_reward=normalize_reward,
@@ -419,8 +414,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
         else:
             return self._setup_off_policy_controller(
                 hp=final_hp,
-                training_config=config.training,
-                environment_factory=environment_factory,
                 normalize_state=normalize_state,
                 is_continuous_action_space=is_continuous_action_space,
                 is_discrete_action_space=is_discrete_action_space,

@@ -80,10 +80,11 @@ class ExperimentManager:
                 f"No controller factory registered for algorithm '{experiment_config.controller}'."
             )
             return None
-        return controller_factory.create_controller_setup(
-            experiment_config.controller_config,
-            env_factory,
-        )
+
+        controller_factory.set_env_factory(env_factory)
+        controller_factory.set_config_path(experiment_config.controller_config)
+
+        return controller_factory.create_controller_setup()
 
     def register_controller_factory(self, controller: str, factory: IControllerFactory) -> None:
         self._controller_factories[controller] = factory

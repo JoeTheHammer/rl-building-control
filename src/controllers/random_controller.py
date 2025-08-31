@@ -32,14 +32,9 @@ class RandomControllerFactory(IControllerFactory):
     Factory for creating instances of RandomController.
     """
 
-    def create_controller_setup(
-        self,
-        config_path: str | None = None,
-        environment_factory: IEnvironmentFactory | None = None,
-    ) -> ControllerSetup:
+    def create_controller_setup(self) -> ControllerSetup:
 
-        env = environment_factory.create_environment()
-
+        env = self.env_factory.create_environment()
         controller = RandomController(env)
 
         return ControllerSetup(controller, env)
