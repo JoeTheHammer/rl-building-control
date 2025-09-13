@@ -82,10 +82,10 @@ class IRLControllerFactory(IControllerFactory, ABC):
         pass
 
     def create_rl_controller_setup_new(
-            self,
-            hp: Dict[str, Any],
-            env_wrap_manager: EnvWrapperManager,
-            is_env_adapter: bool = False,
+        self,
+        hp: Dict[str, Any],
+        env_wrap_manager: EnvWrapperManager,
+        is_env_adapter: bool = False,
     ) -> ControllerSetup:
         """
         Builds, trains, and sets up a reinforcement learning controller.

@@ -40,10 +40,10 @@ class IController(ABC):
         pass
 
 
-
 class ControllerSetup(NamedTuple):
     controller: IController
     environment: gym.Env
+
 
 class IControllerFactory(ABC):
 
@@ -66,4 +66,3 @@ class IControllerFactory(ABC):
             IController: A controller instance.
         """
         pass
-

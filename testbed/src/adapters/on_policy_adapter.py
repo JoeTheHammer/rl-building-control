@@ -15,11 +15,11 @@ class OnPolicyAdapter(gym.Wrapper, IController):
     """
 
     def __init__(
-            self,
-            env: gym.Env,
-            model_class: Type[OnPolicyAlgorithm],
-            hyper_params: dict,
-            policy: str = "MlpPolicy",
+        self,
+        env: gym.Env,
+        model_class: Type[OnPolicyAlgorithm],
+        hyper_params: dict,
+        policy: str = "MlpPolicy",
     ):
         super().__init__(env)
 

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import gymnasium as gym
 
+
 class IEnvironmentFactory(ABC):
     """
     Abstract factory interface for creating experiment environments.
@@ -16,7 +17,6 @@ class IEnvironmentFactory(ABC):
 
     def set_config_path(self, config_path: str):
         self.config_path = config_path
-
 
     @abstractmethod
     def create_environment(self) -> gym.Env:

@@ -14,8 +14,11 @@ class EnvWrapperManager:
     environment.
     """
 
-    def __init__(self, wrapper_classes: Optional[List[Type[gym.Wrapper]]] = None,
-                 wrapper_config: EnvironmentWrapper = None):
+    def __init__(
+        self,
+        wrapper_classes: Optional[List[Type[gym.Wrapper]]] = None,
+        wrapper_config: EnvironmentWrapper = None,
+    ):
         """
         Initializes the EnvWrapperManager.
 
@@ -23,7 +26,9 @@ class EnvWrapperManager:
             wrapper_classes (Optional[List[Type[gym.Wrapper]]]): An optional
                                    initial list of wrapper classes.
         """
-        self._wrapper_classes: List[Type[gym.Wrapper]] = wrapper_classes if wrapper_classes is not None else []
+        self._wrapper_classes: List[Type[gym.Wrapper]] = (
+            wrapper_classes if wrapper_classes is not None else []
+        )
         if wrapper_config is not None:
             if wrapper_config.normalize_state:
                 self.add_wrapper(NormalizeObservation)
@@ -48,9 +53,7 @@ class EnvWrapperManager:
         Args:
             wrapper_class (Type[gym.Wrapper]): The class of the wrapper to remove.
         """
-        self._wrapper_classes = [
-            cls for cls in self._wrapper_classes if cls is not wrapper_class
-        ]
+        self._wrapper_classes = [cls for cls in self._wrapper_classes if cls is not wrapper_class]
 
     def apply_wrappers(self, env: gym.Env) -> gym.Env:
         """

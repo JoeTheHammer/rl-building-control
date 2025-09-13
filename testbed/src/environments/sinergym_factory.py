@@ -127,6 +127,7 @@ def _build_episode(config: SinergymEnvironmentConfig) -> dict:
                 "period must contain exactly 6 integers for [start_day, start_month, start_year, end_day, end_month, end_year]."
             )
         # Sinergym expects a tuple for the period
+
         episode_params["runperiod"] = tuple(config.episode.period)
 
     return episode_params

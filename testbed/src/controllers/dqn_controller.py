@@ -67,7 +67,8 @@ class DQNFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
-        env_wrap_manager = EnvWrapperManager([NormalizeObservation, DiscreteActionWrapper],
-                                             config.environment_wrapper)
+        env_wrap_manager = EnvWrapperManager(
+            [NormalizeObservation, DiscreteActionWrapper], config.environment_wrapper
+        )
 
         return super().create_rl_controller_setup_new(config.hyperparameters, env_wrap_manager)

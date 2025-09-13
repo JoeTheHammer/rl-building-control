@@ -7,7 +7,7 @@ from stable_baselines3 import A2C
 from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
-from controllers.base_rl_controller import (load_rl_controller_config)
+from controllers.base_rl_controller import load_rl_controller_config
 from controllers.utils import add_squash_output_to_hp
 from tuning.hp_tuning import tune_hp
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
@@ -55,7 +55,9 @@ class A2CFactory(IHPTunableControllerFactory):
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
         rl_config = load_rl_controller_config(self.config_path)
-        env_wrap_manager = EnvWrapperManager([ContinuousActionWrapper], rl_config.environment_wrapper)
+        env_wrap_manager = EnvWrapperManager(
+            [ContinuousActionWrapper], rl_config.environment_wrapper
+        )
         hp = rl_config.hyperparameters
         hp_tuning_config = rl_config.hyperparameter_tuning
 

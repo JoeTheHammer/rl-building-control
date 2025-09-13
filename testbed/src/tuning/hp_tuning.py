@@ -10,9 +10,11 @@ from experiment.experiment import Experiment
 from wrappers.manager import EnvWrapperManager
 
 
-def _suggest_hyperparameters(controller_factory: IHPTunableControllerFactory, trial: Optional[optuna.Trial] = None,
-                             fixed_params: Optional[Dict[str, Any]] = None
-                             ) -> Dict[str, Any]:
+def _suggest_hyperparameters(
+    controller_factory: IHPTunableControllerFactory,
+    trial: Optional[optuna.Trial] = None,
+    fixed_params: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     fixed_params = fixed_params or {}
 
     # First suggest everything using Optuna
@@ -23,11 +25,11 @@ def _suggest_hyperparameters(controller_factory: IHPTunableControllerFactory, tr
 
 
 def tune_hp(
-        controller_factory: IHPTunableControllerFactory,
-        hp_tuning_config: HyperparameterTuning,
-        env_wrapper_manager: EnvWrapperManager,
-        hp: Dict[str, Any],
-        is_env_adapter: bool = False,
+    controller_factory: IHPTunableControllerFactory,
+    hp_tuning_config: HyperparameterTuning,
+    env_wrapper_manager: EnvWrapperManager,
+    hp: Dict[str, Any],
+    is_env_adapter: bool = False,
 ) -> Dict[str, Any]:
     def objective(trial: optuna.Trial) -> float:
         trial_hp = _suggest_hyperparameters(controller_factory, trial, hp)
