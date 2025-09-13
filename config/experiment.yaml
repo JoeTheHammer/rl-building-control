@@ -1,9 +1,9 @@
 experiments:
   - name: "DQN experiment"
     engine: "sinergym"
-    environment_config: "../rl-building-control/config/discrete_environment.yaml"
-    controller: "dqn"
-    controller_config: "../rl-building-control/config/dqn_controller.yaml"
+    environment_config: "/home/johannes/workspace/rl-building-control/config/discrete_environment.yaml"
+    controller: "recurrent-ppo"
+    controller_config: "/home/johannes/workspace/rl-building-control/config/recurrent_ppo_controller.yaml"
     episodes: 1
     reporting:
       plots: True

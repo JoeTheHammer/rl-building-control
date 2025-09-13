@@ -35,7 +35,7 @@ action_space:
   actuators:
     setpoint_temp:
       type: "continuous"
-      range: [16.0, 28.0]
+      range: [ 16.0, 28.0 ]
       component: "Schedule:Constant"
       control_type: "Schedule Value"
       actuator_key: "PythonControlledSetpoint"
@@ -48,7 +48,7 @@ action_space:
 
 reward_function:
   type: "expression"
-  variables: ["air_temp_101", "air_temp_104"]
+  variables: [ "air_temp_101", "air_temp_104" ]
   expression: >
     -1.0 * (
       max(air_temp_101 - max_temp, 0.0)**2 +
@@ -60,9 +60,6 @@ reward_function:
     min_temp: 22.0
     max_temp: 24.0
 
-
-
-
 episode:
   timesteps_per_hour: 4
-  period: [1, 1, 2025, 31, 12, 2025]
+  period: [ 1, 1, 2025, 31, 12, 2025 ]
