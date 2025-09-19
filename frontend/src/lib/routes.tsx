@@ -3,7 +3,7 @@ import Experiments from '../components/experiments/experiments.tsx'
 import Analytics from '../components/analytics/analytics.tsx'
 import ControllerConfigurator from '../components/configurator/controller-configurator.tsx'
 import ExperimentConfigurator from '../components/configurator/experiment-configurator.tsx'
-import EnvironmentConfigurator from '../components/configurator/environment-configurator.tsx'
+import EnvironmentConfigurator from '../components/configurator/environment/environment-configurator.tsx'
 
 export interface Route {
   path: string
@@ -26,6 +26,12 @@ export const ROUTES: Route[] = [
     component: <Analytics />,
   },
   {
+    path: '/environment-configurator',
+    label: 'Environment',
+    description: 'Configurator for environments',
+    component: <EnvironmentConfigurator />,
+  },
+  {
     path: '/controller-configurator',
     label: 'Controller',
     description: 'Configurator for controllers',
@@ -36,11 +42,5 @@ export const ROUTES: Route[] = [
     label: 'Experiment',
     description: 'Configurator for experiments',
     component: <ExperimentConfigurator />,
-  },
-  {
-    path: '/environment-configurator',
-    label: 'Environment',
-    description: 'Configurator for environments',
-    component: <EnvironmentConfigurator />,
   },
 ]
