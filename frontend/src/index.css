@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+@theme {
+    /* General text/background */
+    --color-foreground: oklch(9.6% 0.01 265);
+    --color-background: oklch(98% 0.01 265);
+
+    --color-primary: oklch(28% 0.02 265);
+    --color-primary-foreground: oklch(98% 0.01 265);
+    --color-primary-background: oklch(28% 0.02 265);
+    --color-primary-hover: oklch(40% 0.02 265);
+
+    --color-secondary: oklch(90% 0.02 265);
+    --color-secondary-foreground: oklch(12% 0.02 265);
+    --color-secondary-background: oklch(90% 0.02 265);
+    --color-secondary-hover: oklch(95% 0.02 265);
+
+    --font-display: "Satoshi", "sans-serif";
+    --breakpoint-3xl: 1920px;
+    --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
+    --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+}

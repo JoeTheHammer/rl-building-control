@@ -15,34 +15,56 @@ const NavigationBar = () => {
   const location = useLocation()
   const isActive = (path: string) => location.pathname === path
 
-  const linkAndTriggerStyle =
-    'group inline-flex h-10 w-full items-center justify-center px-4 py-2 text-lg font-medium transition-colors hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-slate-200 data-[active]:text-slate-900 data-[state=open]:bg-slate-100'
+  const linkAndTriggerStyle = `
+    group inline-flex h-10 w-full items-center justify-center px-4 py-2 text-lg font-medium
+    transition-colors duration-200 ease-in-out
+    rounded-md
+    text-foreground
+    bg-transparent
+    hover:bg-primary-hover
+    hover:text-primary-foreground
+    disabled:pointer-events-none
+    disabled:opacity-50
+    data-[active=true]:bg-primary
+    data-[active=true]:text-primary-foreground
+  `
 
   return (
     <div className="flex justify-center p-2 shadow-md">
       <NavigationMenu className="w-full" viewport={false}>
-        <NavigationMenuList className="w-full space-x-1 p-2">
+        <NavigationMenuList className="flex w-full space-x-1 p-2">
+          {/* Experiments */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={linkAndTriggerStyle}>
-              <Link to="/" data-active={isActive('/') ? 'true' : undefined}>
-                Experiments
-              </Link>
+            <NavigationMenuLink
+              asChild
+              data-active={isActive('/') ? 'true' : undefined}
+              className={linkAndTriggerStyle}
+            >
+              <Link to="/">Experiments</Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
 
+          {/* Data Analytics */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={linkAndTriggerStyle}>
-              <Link
-                to="/data-analytics"
-                data-active={isActive('/data-analytics') ? 'true' : undefined}
-              >
-                Data Analytics
-              </Link>
+            <NavigationMenuLink
+              asChild
+              data-active={isActive('/data-analytics') ? 'true' : undefined}
+              className={linkAndTriggerStyle}
+            >
+              <Link to="/data-analytics">Data Analytics</Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
 
+          {/* Configurators Dropdown */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className={linkAndTriggerStyle}>
+            <NavigationMenuTrigger
+              data-active={
+                configuratorRoutes.some((r) => isActive(r.path))
+                  ? 'true'
+                  : undefined
+              }
+              className={linkAndTriggerStyle}
+            >
               Configurators
             </NavigationMenuTrigger>
             <NavigationMenuContent className="min-w-[180px] border border-slate-200 bg-white shadow-xl">
@@ -51,14 +73,10 @@ const NavigationBar = () => {
                   <li key={route.path}>
                     <NavigationMenuLink
                       asChild
-                      className="text-md block w-full rounded-lg px-4 py-2 font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 data-[active]:bg-slate-200"
+                      data-active={isActive(route.path) ? 'true' : undefined}
+                      className={linkAndTriggerStyle}
                     >
-                      <Link
-                        to={route.path}
-                        data-active={isActive(route.path) ? 'true' : undefined}
-                      >
-                        {route.label}
-                      </Link>
+                      <Link to={route.path}>{route.label}</Link>
                     </NavigationMenuLink>
                   </li>
                 ))}
