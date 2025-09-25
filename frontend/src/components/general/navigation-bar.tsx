@@ -5,9 +5,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from './ui/navigation-menu.tsx'
+} from '../ui/navigation-menu.tsx'
 import { useLocation, Link } from 'react-router-dom'
-import { ROUTES } from '../lib/routes.tsx'
+import { ROUTES } from '../../lib/routes.tsx'
 import { FlaskConical, ChartNoAxesCombined, Settings } from 'lucide-react'
 
 const configuratorRoutes = ROUTES.filter((r) => r.path.includes('configurator'))

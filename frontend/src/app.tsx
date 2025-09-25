@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ROUTES } from './lib/routes.tsx'
-import NavigationBar from './components/navigation-bar.tsx'
+import NavigationBar from './components/general/navigation-bar.tsx'
 
 function App() {
   return (
