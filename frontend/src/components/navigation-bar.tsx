@@ -8,6 +8,7 @@ import {
 } from './ui/navigation-menu.tsx'
 import { useLocation, Link } from 'react-router-dom'
 import { ROUTES } from '../lib/routes.tsx'
+import { FlaskConical, ChartNoAxesCombined, Settings } from 'lucide-react'
 
 const configuratorRoutes = ROUTES.filter((r) => r.path.includes('configurator'))
 
@@ -38,9 +39,12 @@ const NavigationBar = () => {
             <NavigationMenuLink
               asChild
               data-active={isActive('/') ? 'true' : undefined}
-              className={linkAndTriggerStyle}
+              className={`${linkAndTriggerStyle} flex items-center gap-2`}
             >
-              <Link to="/">Experiments</Link>
+              <Link to="/">
+                <FlaskConical className="size-4" />
+                <span>Experiments</span>
+              </Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
 
@@ -49,9 +53,12 @@ const NavigationBar = () => {
             <NavigationMenuLink
               asChild
               data-active={isActive('/data-analytics') ? 'true' : undefined}
-              className={linkAndTriggerStyle}
+              className={`${linkAndTriggerStyle} flex items-center gap-2`}
             >
-              <Link to="/data-analytics">Data Analytics</Link>
+              <Link to="/data-analytics">
+                <ChartNoAxesCombined className="size-4" />
+                <span>Data Analytics</span>
+              </Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
 
@@ -63,9 +70,10 @@ const NavigationBar = () => {
                   ? 'true'
                   : undefined
               }
-              className={linkAndTriggerStyle}
+              className={`${linkAndTriggerStyle} flex items-center gap-2`}
             >
-              Configurators
+              <Settings className="size-4" />
+              <span>Configurators</span>
             </NavigationMenuTrigger>
             <NavigationMenuContent className="min-w-[180px] border border-slate-200 bg-white shadow-xl">
               <ul className="flex flex-col gap-1 p-2">

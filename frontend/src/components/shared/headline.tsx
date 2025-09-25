@@ -13,7 +13,7 @@ const Headline: React.FC<HeadlineProps> = ({ text, className }) => {
       >
         {text}
       </span>
-      <hr className="border-t-primary w-full" />
+      <hr className="border-t-primary w-full pb-2" />
     </>
   )
 }
