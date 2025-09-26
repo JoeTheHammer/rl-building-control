@@ -8,13 +8,16 @@ import {
 } from '../../ui/select.tsx'
 import StringValueList from '@/components/shared/string-value-list'
 import CustomEditor from '@/components/shared/custom-editor.tsx'
+import NumericalKeyValueList, {
+  type NumericalKeyValue,
+} from '@/components/shared/numerical-key-value-list.tsx'
 
 export type EnvironmentRewardType = 'expression' | 'code based'
 
 export interface EnvironmentRewardSettings {
   type: EnvironmentRewardType
   variables: string[]
-  parameters: string[]
+  parameters: NumericalKeyValue[]
   expression: string
 }
 
@@ -43,7 +46,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
   )
 
   const handleParametersChange = useCallback(
-    (parameters: string[]) => {
+    (parameters: NumericalKeyValue[]) => {
       onSettingsChange({ parameters })
     },
     [onSettingsChange],
@@ -56,33 +59,35 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
     [onSettingsChange],
   )
 
-  const knownWords = [...settings.variables, ...settings.parameters]
+  // known words = variables + parameter keys
+  const knownWords = [
+    ...settings.variables,
+    ...settings.parameters.map((p) => p.key),
+  ]
 
   return (
     <div className="text-primary flex flex-col gap-8 pt-6">
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-        <div className={cardStyle}>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="reward-type" className="text-sm font-semibold">
-              Type
-            </label>
-            <Select
-              value={settings.type}
-              onValueChange={(value) =>
-                handleTypeChange(value as EnvironmentRewardType)
-              }
-            >
-              <SelectTrigger id="reward-type">
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                <SelectItem value="expression">expression</SelectItem>
-                <SelectItem value="code based" disabled>
-                  code based
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="reward-type" className="text-sm font-semibold">
+            Type
+          </label>
+          <Select
+            value={settings.type}
+            onValueChange={(value) =>
+              handleTypeChange(value as EnvironmentRewardType)
+            }
+          >
+            <SelectTrigger id="reward-type" className="w-full">
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="expression">expression</SelectItem>
+              <SelectItem value="code based" disabled>
+                code based
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className={cardStyle}>
@@ -96,10 +101,10 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
 
         <div className={cardStyle}>
           <h3 className={sectionTitleStyle}>Parameters</h3>
-          <StringValueList
+          <NumericalKeyValueList
             values={settings.parameters}
             onChange={handleParametersChange}
-            emptyValueLabel="Parameter"
+            emptyKeyLabel="Parameter"
           />
         </div>
       </section>

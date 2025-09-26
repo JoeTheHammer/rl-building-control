@@ -37,13 +37,7 @@ const StringValueList = ({
             onChange={(event) => handleChange(index, event.target.value)}
             placeholder={`${emptyValueLabel} ${index + 1}`}
           />
-          <Button
-            size="icon"
-            type="button"
-            variant="ghost"
-            onClick={() => handleRemove(index)}
-            className="text-muted-foreground hover:text-destructive"
-          >
+          <Button size="icon" type="button" onClick={() => handleRemove(index)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
