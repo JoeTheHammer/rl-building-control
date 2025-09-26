@@ -13,9 +13,6 @@
     "paths": {
       "@/*": [
         "src/*"
-      ],
-      "@monaco-editor/react": [
-        "src/lib/monaco-editor.tsx"
       ]
     }
   }

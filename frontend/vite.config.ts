@@ -9,10 +9,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      '@monaco-editor/react': path.resolve(
-        __dirname,
-        'src/lib/monaco-editor.tsx',
-      ),
     },
   },
 })

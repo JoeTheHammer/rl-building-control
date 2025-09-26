@@ -6,9 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui/select.tsx'
-import { Label } from '../../ui/label.tsx'
 import StringValueList from '@/components/shared/string-value-list'
-import Editor from '@monaco-editor/react'
+import CustomEditor from '@/components/shared/custom-editor.tsx'
 
 export type EnvironmentRewardType = 'expression' | 'code based'
 
@@ -62,9 +61,9 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
         <div className={cardStyle}>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="reward-type" className="text-sm font-semibold">
+            <label htmlFor="reward-type" className="text-sm font-semibold">
               Type
-            </Label>
+            </label>
             <Select
               value={settings.type}
               onValueChange={(value) =>
@@ -107,7 +106,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
         <section className="flex flex-col gap-4">
           <h3 className={sectionTitleStyle}>Expression</h3>
           <div className="border-input overflow-hidden rounded-lg border shadow-sm">
-            <Editor
+            <CustomEditor
               height="320px"
               defaultLanguage="python"
               theme="vs-light"
