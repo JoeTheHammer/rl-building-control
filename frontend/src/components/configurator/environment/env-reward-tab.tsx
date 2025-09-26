@@ -56,6 +56,8 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
     [onSettingsChange],
   )
 
+  const knownWords = [...settings.variables, ...settings.parameters]
+
   return (
     <div className="text-primary flex flex-col gap-8 pt-6">
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
@@ -117,6 +119,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
                 fontSize: 14,
                 automaticLayout: true,
               }}
+              knownWords={knownWords}
             />
           </div>
         </section>
