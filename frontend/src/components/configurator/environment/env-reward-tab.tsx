@@ -145,7 +145,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
               <CustomEditor
                 height="250px"
                 defaultLanguage="plaintext"
-                theme="vs-light"
+                theme="vs-dark"
                 value={settings.expression}
                 onChange={handleExpressionChange}
                 options={{

@@ -191,7 +191,7 @@ const EnvironmentConfigurator = () => {
             defaultLanguage="yaml"
             value={editorValue}
             onChange={(val) => setEditorValue(val ?? '')}
-            height="600px"
+            height="700px"
           />
         ) : (
           <Tabs defaultValue="general">
