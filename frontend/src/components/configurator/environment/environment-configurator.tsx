@@ -14,11 +14,12 @@ import EnvGeneralTab, {
   type EnvironmentGeneralSettings,
 } from './env-general-tab.tsx'
 import { Button } from '../../ui/button.tsx'
-import { Save } from 'lucide-react'
+import { Save, Code2 } from 'lucide-react'
 import {
   buildEnvironmentYaml,
   parseEnvironmentYaml,
 } from '@/services/yaml-service.ts'
+import CustomEditor from '../../shared/custom-editor.tsx'
 
 const tabTriggerStyle =
   'text-md text-primary hover:text-primary-foreground hover:bg-primary/90 hover:cursor-pointer active:bg-primary ' +
@@ -81,94 +82,98 @@ const EnvironmentConfigurator = () => {
       codeParameters: [],
     })
 
+  // Dev mode
+  const [devMode, setDevMode] = useState(false)
+  const [editorValue, setEditorValue] = useState('')
+
   const handleGeneralSettingsChange = (
     changes: Partial<EnvironmentGeneralSettings>,
-  ) => {
-    setGeneralSettings((prev) => ({ ...prev, ...changes }))
-  }
+  ) => setGeneralSettings((prev) => ({ ...prev, ...changes }))
 
   const handleStateSpaceSettingsChange = (
     changes: Partial<EnvironmentStateSpaceSettings>,
-  ) => {
-    setStateSpaceSettings((prev) => ({ ...prev, ...changes }))
-  }
+  ) => setStateSpaceSettings((prev) => ({ ...prev, ...changes }))
 
   const handleActionSpaceSettingsChange = (
     changes: Partial<EnvActionSpaceSettings>,
-  ) => {
-    setActionSpaceSettings((prev) => ({ ...prev, ...changes }))
-  }
+  ) => setActionSpaceSettings((prev) => ({ ...prev, ...changes }))
 
   const handleRewardSettingsChange = (
     changes: Partial<EnvironmentRewardSettings>,
-  ) => {
-    setRewardSettings((prev) => ({ ...prev, ...changes }))
-  }
+  ) => setRewardSettings((prev) => ({ ...prev, ...changes }))
 
   const handleSave = () => {
-    console.log('Saving environment configuration', {
-      generalSettings,
-      stateSpaceSettings,
-      actionSpaceSettings,
-      rewardSettings,
-    })
+    if (devMode) {
+      try {
+        const parsed = parseEnvironmentYaml(editorValue)
+        setGeneralSettings(parsed.generalSettings)
+        setStateSpaceSettings(parsed.stateSpaceSettings)
+        setActionSpaceSettings(parsed.actionSpaceSettings)
+        setRewardSettings(parsed.rewardSettings)
+        console.log('Saved from Dev Mode', parsed)
+      } catch (err) {
+        console.error('Invalid YAML. Could not save.', err)
+      }
+    } else {
+      console.log('Saving environment configuration', {
+        generalSettings,
+        stateSpaceSettings,
+        actionSpaceSettings,
+        rewardSettings,
+      })
 
-    const yamlString = buildEnvironmentYaml(
-      generalSettings,
-      stateSpaceSettings,
-      actionSpaceSettings,
-      rewardSettings,
-    )
+      const yamlString = buildEnvironmentYaml(
+        generalSettings,
+        stateSpaceSettings,
+        actionSpaceSettings,
+        rewardSettings,
+      )
 
-    console.log(yamlString)
+      console.log(yamlString)
+      console.log(parseEnvironmentYaml(yamlString))
+    }
+  }
 
-    console.log(parseEnvironmentYaml(yamlString))
+  const handleToggleDevMode = () => {
+    if (!devMode) {
+      // Switching into dev mode → dump state into YAML editor
+      const yamlString = buildEnvironmentYaml(
+        generalSettings,
+        stateSpaceSettings,
+        actionSpaceSettings,
+        rewardSettings,
+      )
+      setEditorValue(yamlString)
+      setDevMode(true)
+    } else {
+      // Switching out of dev mode → try parsing YAML back to state
+      try {
+        const parsed = parseEnvironmentYaml(editorValue)
+        setGeneralSettings(parsed.generalSettings)
+        setStateSpaceSettings(parsed.stateSpaceSettings)
+        setActionSpaceSettings(parsed.actionSpaceSettings)
+        setRewardSettings(parsed.rewardSettings)
+        console.log('Dev Mode exited, state updated from YAML')
+      } catch (err) {
+        console.error('Invalid YAML, keeping previous state', err)
+        // Keep previous state unchanged
+      }
+      setDevMode(false)
+    }
   }
 
   return (
     <CustomPage headline={'Environment Configurator'}>
       <div className="flex w-full flex-col gap-2 pt-2">
-        <Tabs defaultValue="general">
-          <TabsList className="w-full gap-4">
-            <TabsTrigger value="general" className={tabTriggerStyle}>
-              General
-            </TabsTrigger>
-            <TabsTrigger value="stateSpace" className={tabTriggerStyle}>
-              State Space
-            </TabsTrigger>
-            <TabsTrigger value="actionSpace" className={tabTriggerStyle}>
-              Action Space
-            </TabsTrigger>
-            <TabsTrigger value="reward" className={tabTriggerStyle}>
-              Reward
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="general">
-            <EnvGeneralTab
-              settings={generalSettings}
-              onSettingsChange={handleGeneralSettingsChange}
-            />
-          </TabsContent>
-          <TabsContent value="stateSpace">
-            <EnvStateSpaceTab
-              settings={stateSpaceSettings}
-              onSettingsChange={handleStateSpaceSettingsChange}
-            />
-          </TabsContent>
-          <TabsContent value="actionSpace">
-            <EnvActionSpaceTab
-              settings={actionSpaceSettings}
-              onSettingsChange={handleActionSpaceSettingsChange}
-            />
-          </TabsContent>
-          <TabsContent value="reward">
-            <EnvRewardTab
-              settings={rewardSettings}
-              onSettingsChange={handleRewardSettingsChange}
-            />
-          </TabsContent>
-        </Tabs>
-        <div className="mt-4 flex justify-end">
+        <div className="mb-2 flex items-center justify-between">
+          <Button
+            onClick={handleToggleDevMode}
+            type="button"
+            className="flex gap-2"
+          >
+            <Code2 className="h-4 w-4" />
+            {devMode ? 'Exit Dev Mode' : 'Enter Dev Mode'}
+          </Button>
           <Button
             onClick={handleSave}
             type="button"
@@ -180,6 +185,56 @@ const EnvironmentConfigurator = () => {
             </div>
           </Button>
         </div>
+
+        {devMode ? (
+          <CustomEditor
+            defaultLanguage="yaml"
+            value={editorValue}
+            onChange={(val) => setEditorValue(val ?? '')}
+            height="600px"
+          />
+        ) : (
+          <Tabs defaultValue="general">
+            <TabsList className="w-full gap-4">
+              <TabsTrigger value="general" className={tabTriggerStyle}>
+                General
+              </TabsTrigger>
+              <TabsTrigger value="stateSpace" className={tabTriggerStyle}>
+                State Space
+              </TabsTrigger>
+              <TabsTrigger value="actionSpace" className={tabTriggerStyle}>
+                Action Space
+              </TabsTrigger>
+              <TabsTrigger value="reward" className={tabTriggerStyle}>
+                Reward
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="general">
+              <EnvGeneralTab
+                settings={generalSettings}
+                onSettingsChange={handleGeneralSettingsChange}
+              />
+            </TabsContent>
+            <TabsContent value="stateSpace">
+              <EnvStateSpaceTab
+                settings={stateSpaceSettings}
+                onSettingsChange={handleStateSpaceSettingsChange}
+              />
+            </TabsContent>
+            <TabsContent value="actionSpace">
+              <EnvActionSpaceTab
+                settings={actionSpaceSettings}
+                onSettingsChange={handleActionSpaceSettingsChange}
+              />
+            </TabsContent>
+            <TabsContent value="reward">
+              <EnvRewardTab
+                settings={rewardSettings}
+                onSettingsChange={handleRewardSettingsChange}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </CustomPage>
   )
