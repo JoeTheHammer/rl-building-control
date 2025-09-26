@@ -39,15 +39,17 @@ export const buildEnvironmentYaml = (
       }
     }
   })
-
   const parseDate = (date: string) => {
     if (!date) return []
     const d = new Date(date)
+    if (isNaN(d.getTime())) return []
     return [d.getDate(), d.getMonth() + 1, d.getFullYear()]
   }
   const start = parseDate(general.startDate)
   const end = parseDate(general.endDate)
-  const period = [...start, ...end]
+  // only include if both are valid
+  const period =
+    start.length === 3 && end.length === 3 ? [...start, ...end] : []
 
   const doc = {
     building_model: normalizeFile(general.buildingModelFile),

@@ -163,35 +163,49 @@ const EnvironmentConfigurator = () => {
   }
 
   return (
-    <CustomPage headline={'Environment Configurator'}>
+    <CustomPage>
       <div className="flex w-full flex-col gap-2 pt-2">
-        <div className="mb-2 flex items-center justify-between">
-          <Button
-            onClick={handleToggleDevMode}
-            type="button"
-            className="flex gap-2"
-          >
-            <Code2 className="h-4 w-4" />
-            {devMode ? 'Exit Dev Mode' : 'Enter Dev Mode'}
-          </Button>
-          <Button
-            onClick={handleSave}
-            type="button"
-            className="text-md cursor-pointer"
-          >
-            <div className="flex gap-2">
-              <Save />
-              <span>Save Environment Configuration</span>
-            </div>
-          </Button>
+        {/* Grid for buttons */}
+        <div className="mb-2 grid grid-cols-4 items-center gap-2">
+          <div className="col-span-2 col-start-1">
+            <span className="text-primary text-md pt-2 font-bold md:text-xl">
+              Environment Configurator
+            </span>
+          </div>
+          <div className="col-start-3 w-full">
+            <Button
+              onClick={handleToggleDevMode}
+              type="button"
+              variant={devMode ? 'default' : 'ghost'}
+              className="text-md flex w-full gap-2 border"
+            >
+              <Code2 className="h-4 w-4" />
+              {devMode ? 'Dev Mode' : 'Dev Mode'}
+            </Button>
+          </div>
+
+          <div className="col-start-4 w-full">
+            <Button
+              onClick={handleSave}
+              type="button"
+              className="text-md p- w-full cursor-pointer"
+            >
+              <div className="flex gap-2">
+                <Save />
+                <span>Save Configuration</span>
+              </div>
+            </Button>
+          </div>
         </div>
+
+        <hr className="border-t-primary w-full pb-2" />
 
         {devMode ? (
           <CustomEditor
             defaultLanguage="yaml"
             value={editorValue}
             onChange={(val) => setEditorValue(val ?? '')}
-            height="700px"
+            height="600px"
           />
         ) : (
           <Tabs defaultValue="general">
