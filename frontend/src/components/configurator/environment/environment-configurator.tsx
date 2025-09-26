@@ -1,5 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs.tsx'
-import EnvStateSpaceTab from './env-state-space-tab.tsx'
+import EnvStateSpaceTab, {
+  type EnvironmentStateSpaceSettings,
+} from './env-state-space-tab.tsx'
 import EnvActionSpaceTab from './env-action-space-tab.tsx'
 import EnvRewardTab from './env-reward-tab.tsx'
 import CustomPage from '../../shared/page.tsx'
@@ -24,15 +26,34 @@ const EnvironmentConfigurator = () => {
       timestepsPerHour: undefined,
     })
 
+  const [stateSpaceSettings, setStateSpaceSettings] =
+    useState<EnvironmentStateSpaceSettings>({
+      addTimeInfo: false,
+      dayOfMonth: { included: false, cyclic: false },
+      dayOfWeek: { included: false, cyclic: false },
+      hour: { included: false, cyclic: false },
+      minute: { included: false, cyclic: false },
+      month: { included: false, cyclic: false },
+      variables: [],
+    })
+
   const handleGeneralSettingsChange = (
     changes: Partial<EnvironmentGeneralSettings>,
   ) => {
     setGeneralSettings((prev) => ({ ...prev, ...changes }))
   }
 
+  const handleStateSpaceSettingsChange = (
+    changes: Partial<EnvironmentStateSpaceSettings>,
+  ) => {
+    setStateSpaceSettings((prev) => ({ ...prev, ...changes }))
+  }
+
   const handleSave = () => {
-    // The save implementation will be added later.
-    console.log('Saving environment configuration', { generalSettings })
+    console.log('Saving environment configuration', {
+      generalSettings,
+      stateSpaceSettings,
+    })
   }
 
   return (
@@ -60,7 +81,10 @@ const EnvironmentConfigurator = () => {
             />
           </TabsContent>
           <TabsContent value="stateSpace">
-            <EnvStateSpaceTab />
+            <EnvStateSpaceTab
+              settings={stateSpaceSettings}
+              onSettingsChange={handleStateSpaceSettingsChange}
+            />
           </TabsContent>
           <TabsContent value="actionSpace">
             <EnvActionSpaceTab />

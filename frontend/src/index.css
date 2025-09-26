@@ -6,7 +6,7 @@
 @theme {
     /* General text/background */
     --color-foreground: oklch(9.6% 0.01 265);
-    --color-background: oklch(98% 0.01 265);
+    --color-background: oklch(1 0 0);
 
     --color-primary: oklch(28% 0.02 265);
     --color-primary-foreground: oklch(98% 0.01 265);
