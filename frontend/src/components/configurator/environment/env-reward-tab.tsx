@@ -144,7 +144,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
             <div className="border-input overflow-hidden rounded-lg border shadow-sm">
               <CustomEditor
                 height="250px"
-                defaultLanguage="python"
+                defaultLanguage="plaintext"
                 theme="vs-light"
                 value={settings.expression}
                 onChange={handleExpressionChange}

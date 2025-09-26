@@ -30,7 +30,7 @@ interface EditorProps
 
 const CustomEditor = ({
   className,
-  height = '290px',
+  height = '250px',
   defaultLanguage = 'python',
   theme = 'vs-dark',
   value = '',
