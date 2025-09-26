@@ -24,12 +24,22 @@ export type TimeFeatureKey =
   | 'minute'
   | 'month'
 
-export interface EnvironmentStateSpaceVariableSettings {
+export interface VariableSetting {
   name: string
-  variableType: 'variable' | 'meter'
+  variableType: 'variable'
   energyPlusType: string
   zone: string
 }
+
+export interface MeterSetting {
+  name: string
+  variableType: 'meter'
+  meterName: string
+}
+
+export type EnvironmentStateSpaceVariableSettings =
+  | VariableSetting
+  | MeterSetting
 
 export interface EnvironmentStateSpaceSettings {
   addTimeInfo: boolean
@@ -74,12 +84,10 @@ const EnvStateSpaceTab = ({
     } as Partial<EnvironmentStateSpaceSettings>)
   }
 
-  const handleVariableFieldChange = <
-    Field extends 'name' | 'variableType' | 'energyPlusType' | 'zone',
-  >(
+  const handleVariableFieldChange = (
     index: number,
-    field: Field,
-    value: EnvironmentStateSpaceSettings['variables'][number][Field],
+    field: keyof (VariableSetting & MeterSetting),
+    value: string,
   ) => {
     const updatedVariables = settings.variables.map(
       (variable, variableIndex) =>
@@ -166,93 +174,120 @@ const EnvStateSpaceTab = ({
               key={index}
               className="border-input flex flex-col gap-4 rounded-lg border p-4 shadow-md"
             >
-              <div className="grid items-end gap-4 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
-                <div className={fieldContainerStyles}>
-                  <label
-                    className={fieldLabelStyles}
-                    htmlFor={`variable-name-${index}`}
-                  >
-                    Variable Name
-                  </label>
-                  <Input
-                    id={`variable-name-${index}`}
-                    value={variable.name}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                      handleVariableFieldChange(
-                        index,
-                        'name',
-                        event.target.value,
-                      )
-                    }
-                    placeholder="Enter variable name"
-                  />
-                </div>
+              <div className="grid items-end gap-4 md:grid-cols-[1fr_auto]">
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div className={fieldContainerStyles}>
+                    <label
+                      className={fieldLabelStyles}
+                      htmlFor={`variable-name-${index}`}
+                    >
+                      Variable Name
+                    </label>
+                    <Input
+                      id={`variable-name-${index}`}
+                      value={variable.name}
+                      onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                        handleVariableFieldChange(
+                          index,
+                          'name',
+                          event.target.value,
+                        )
+                      }
+                      placeholder="Enter variable name"
+                    />
+                  </div>
 
-                <div className={cn(fieldContainerStyles, 'w-full')}>
-                  <label className={fieldLabelStyles}>Type</label>
-                  <Select
-                    value={variable.variableType}
-                    onValueChange={(value) =>
-                      handleVariableFieldChange(
-                        index,
-                        'variableType',
-                        value as 'variable' | 'meter',
-                      )
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder="Select type"
-                        className="w-full"
+                  {/* Type */}
+                  <div className={fieldContainerStyles}>
+                    <label className={fieldLabelStyles}>Type</label>
+                    <Select
+                      value={variable.variableType}
+                      onValueChange={(value) =>
+                        handleVariableFieldChange(
+                          index,
+                          'variableType',
+                          value as 'variable' | 'meter',
+                        )
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background">
+                        <SelectItem value="variable">Variable</SelectItem>
+                        <SelectItem value="meter">Meter</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {variable.variableType === 'variable' && (
+                    <>
+                      <div className={fieldContainerStyles}>
+                        <label
+                          className={fieldLabelStyles}
+                          htmlFor={`variable-energy-${index}`}
+                        >
+                          EnergyPlus Type
+                        </label>
+                        <Input
+                          id={`variable-energy-${index}`}
+                          value={variable.energyPlusType}
+                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                            handleVariableFieldChange(
+                              index,
+                              'energyPlusType',
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Enter EnergyPlus type"
+                        />
+                      </div>
+
+                      <div className={fieldContainerStyles}>
+                        <label
+                          className={fieldLabelStyles}
+                          htmlFor={`variable-zone-${index}`}
+                        >
+                          Zone
+                        </label>
+                        <Input
+                          id={`variable-zone-${index}`}
+                          value={variable.zone}
+                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                            handleVariableFieldChange(
+                              index,
+                              'zone',
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Enter zone"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {variable.variableType === 'meter' && (
+                    <div className={cn(fieldContainerStyles, 'md:col-span-1')}>
+                      <label
+                        className={fieldLabelStyles}
+                        htmlFor={`variable-meter-${index}`}
+                      >
+                        Meter Name
+                      </label>
+                      <Input
+                        id={`variable-meter-${index}`}
+                        value={variable.meterName}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                          handleVariableFieldChange(
+                            index,
+                            'meterName',
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Enter meter name"
                       />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background">
-                      <SelectItem value="variable">Variable</SelectItem>
-                      <SelectItem value="meter">Meter</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className={fieldContainerStyles}>
-                  <label
-                    className={fieldLabelStyles}
-                    htmlFor={`variable-energy-${index}`}
-                  >
-                    EnergyPlus Type
-                  </label>
-                  <Input
-                    id={`variable-energy-${index}`}
-                    value={variable.energyPlusType}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                      handleVariableFieldChange(
-                        index,
-                        'energyPlusType',
-                        event.target.value,
-                      )
-                    }
-                    placeholder="Enter EnergyPlus type"
-                  />
-                </div>
-
-                <div className={fieldContainerStyles}>
-                  <label
-                    className={fieldLabelStyles}
-                    htmlFor={`variable-zone-${index}`}
-                  >
-                    Zone
-                  </label>
-                  <Input
-                    id={`variable-zone-${index}`}
-                    value={variable.zone}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                      handleVariableFieldChange(
-                        index,
-                        'zone',
-                        event.target.value,
-                      )
-                    }
-                    placeholder="Enter zone"
-                  />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end">
@@ -267,6 +302,7 @@ const EnvStateSpaceTab = ({
               </div>
             </div>
           ))}
+
           <div>
             <Button type="button" onClick={handleAddVariable}>
               <Plus className="mr-2 h-4 w-4" />

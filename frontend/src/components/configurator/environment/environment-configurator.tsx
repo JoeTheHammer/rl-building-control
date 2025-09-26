@@ -38,7 +38,14 @@ const EnvironmentConfigurator = () => {
       hour: { included: false, cyclic: false },
       minute: { included: false, cyclic: false },
       month: { included: false, cyclic: false },
-      variables: [],
+      variables: [
+        {
+          name: '',
+          variableType: 'variable',
+          energyPlusType: '',
+          zone: '',
+        },
+      ],
     })
 
   const [actionSpaceSettings, setActionSpaceSettings] =
