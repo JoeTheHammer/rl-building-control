@@ -65,6 +65,9 @@ const EnvironmentConfigurator = () => {
       variables: [],
       parameters: [],
       expression: '',
+      moduleName: '',
+      className: '',
+      codeParameters: [],
     })
 
   const handleGeneralSettingsChange = (
@@ -143,7 +146,7 @@ const EnvironmentConfigurator = () => {
             />
           </TabsContent>
         </Tabs>
-        <div className="mt-8 flex justify-end">
+        <div className="mt-4 flex justify-end">
           <Button
             onClick={handleSave}
             type="button"
@@ -151,7 +154,7 @@ const EnvironmentConfigurator = () => {
           >
             <div className="flex gap-2">
               <Save />
-              <span>Save</span>
+              <span>Save Environment Configuration</span>
             </div>
           </Button>
         </div>
