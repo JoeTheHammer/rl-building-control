@@ -67,29 +67,30 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
 
   return (
     <div className="text-primary flex flex-col gap-8 pt-6">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="reward-type" className="text-sm font-semibold">
-            Type
-          </label>
-          <Select
-            value={settings.type}
-            onValueChange={(value) =>
-              handleTypeChange(value as EnvironmentRewardType)
-            }
-          >
-            <SelectTrigger id="reward-type" className="w-full">
-              <SelectValue placeholder="Select an option" />
-            </SelectTrigger>
-            <SelectContent className="bg-background">
-              <SelectItem value="expression">expression</SelectItem>
-              <SelectItem value="code based" disabled>
-                code based
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Reward type select */}
+      <div className="flex flex-col gap-2">
+        <label htmlFor="reward-type" className="text-sm font-semibold">
+          Type
+        </label>
+        <Select
+          value={settings.type}
+          onValueChange={(value) =>
+            handleTypeChange(value as EnvironmentRewardType)
+          }
+        >
+          <SelectTrigger id="reward-type" className="w-[310px]">
+            <SelectValue placeholder="Select an option" />
+          </SelectTrigger>
+          <SelectContent className="bg-background">
+            <SelectItem value="expression">expression</SelectItem>
+            <SelectItem value="code based" disabled>
+              code based
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className={cardStyle}>
           <h3 className={sectionTitleStyle}>Variables</h3>
           <StringValueList
@@ -107,7 +108,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
             emptyKeyLabel="Parameter"
           />
         </div>
-      </section>
+      </div>
 
       {settings.type === 'expression' && (
         <section className="flex flex-col gap-4">
