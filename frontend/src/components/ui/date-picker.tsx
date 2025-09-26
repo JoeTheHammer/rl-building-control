@@ -159,7 +159,7 @@ const DatePicker = ({
   }
 
   return (
-    <div className={cn('relative', className)} ref={containerRef}>
+    <div className={cn('bg-background relative', className)} ref={containerRef}>
       <Button
         id={id}
         variant="outline"
@@ -176,7 +176,7 @@ const DatePicker = ({
         {date ? valueFormatter.format(date) : <span>{placeholder}</span>}
       </Button>
       {open && (
-        <div className="bg-card absolute top-full left-0 z-50 mt-2 w-72 rounded-md border p-3 shadow-lg">
+        <div className="bg-background absolute top-full left-0 z-50 mt-2 w-72 rounded-md border p-3 shadow-lg">
           <div className="text-primary flex items-center justify-between gap-2">
             <Button
               variant="ghost"

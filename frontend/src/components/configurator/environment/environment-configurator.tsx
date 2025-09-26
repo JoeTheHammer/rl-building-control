@@ -15,6 +15,7 @@ import EnvGeneralTab, {
 } from './env-general-tab.tsx'
 import { Button } from '../../ui/button.tsx'
 import { Save } from 'lucide-react'
+import { buildEnvironmentYaml } from '@/services/yaml-service.ts'
 
 const tabTriggerStyle =
   'text-md text-primary hover:text-primary-foreground hover:bg-primary/90 hover:cursor-pointer active:bg-primary ' +
@@ -108,6 +109,15 @@ const EnvironmentConfigurator = () => {
       actionSpaceSettings,
       rewardSettings,
     })
+
+    console.log(
+      buildEnvironmentYaml(
+        generalSettings,
+        stateSpaceSettings,
+        actionSpaceSettings,
+        rewardSettings,
+      ).toString(),
+    )
   }
 
   return (
