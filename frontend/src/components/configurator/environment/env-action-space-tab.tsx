@@ -33,7 +33,7 @@ export interface EnvActionSpaceTabProps {
   onSettingsChange: (changes: Partial<EnvActionSpaceSettings>) => void
 }
 
-const fieldLabelStyles = 'text-xs font-medium text-muted-foreground'
+const fieldLabelStyles = 'text-sm font-semibold text-primary'
 const fieldContainerStyles = 'flex flex-col gap-1'
 
 const EnvActionSpaceTab = ({
