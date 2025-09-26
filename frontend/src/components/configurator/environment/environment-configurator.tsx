@@ -5,7 +5,9 @@ import EnvStateSpaceTab, {
 import EnvActionSpaceTab, {
   type EnvActionSpaceSettings,
 } from './env-action-space-tab.tsx'
-import EnvRewardTab from './env-reward-tab.tsx'
+import EnvRewardTab, {
+  type EnvironmentRewardSettings,
+} from './env-reward-tab.tsx'
 import CustomPage from '../../shared/page.tsx'
 import { useState } from 'react'
 import EnvGeneralTab, {
@@ -57,6 +59,14 @@ const EnvironmentConfigurator = () => {
       ],
     })
 
+  const [rewardSettings, setRewardSettings] =
+    useState<EnvironmentRewardSettings>({
+      type: 'expression',
+      variables: [],
+      parameters: [],
+      expression: '',
+    })
+
   const handleGeneralSettingsChange = (
     changes: Partial<EnvironmentGeneralSettings>,
   ) => {
@@ -75,11 +85,18 @@ const EnvironmentConfigurator = () => {
     setActionSpaceSettings((prev) => ({ ...prev, ...changes }))
   }
 
+  const handleRewardSettingsChange = (
+    changes: Partial<EnvironmentRewardSettings>,
+  ) => {
+    setRewardSettings((prev) => ({ ...prev, ...changes }))
+  }
+
   const handleSave = () => {
     console.log('Saving environment configuration', {
       generalSettings,
       stateSpaceSettings,
       actionSpaceSettings,
+      rewardSettings,
     })
   }
 
@@ -120,7 +137,10 @@ const EnvironmentConfigurator = () => {
             />
           </TabsContent>
           <TabsContent value="reward">
-            <EnvRewardTab />
+            <EnvRewardTab
+              settings={rewardSettings}
+              onSettingsChange={handleRewardSettingsChange}
+            />
           </TabsContent>
         </Tabs>
         <div className="mt-8 flex justify-end">
