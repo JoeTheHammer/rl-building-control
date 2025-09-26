@@ -4,8 +4,8 @@ import { DatePicker } from '../../ui/date-picker.tsx'
 import { Input } from '../../ui/input.tsx'
 
 export interface EnvironmentGeneralSettings {
-  buildingModelFile: File | null
-  weatherDataFile: File | null
+  buildingModelFile: File | string | null
+  weatherDataFile: File | string | null
   startDate: string
   endDate: string
   timestepsPerHour: number | undefined
@@ -95,7 +95,9 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
           />
           {settings.buildingModelFile && (
             <span className="text-primary/70 truncate text-xs">
-              {settings.buildingModelFile.name}
+              {typeof settings.buildingModelFile === 'string'
+                ? settings.buildingModelFile
+                : settings.buildingModelFile.name}
             </span>
           )}
         </div>
@@ -111,7 +113,9 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
           />
           {settings.weatherDataFile && (
             <span className="text-primary/70 truncate text-xs">
-              {settings.weatherDataFile.name}
+              {typeof settings.weatherDataFile === 'string'
+                ? settings.weatherDataFile
+                : settings.weatherDataFile.name}
             </span>
           )}
         </div>
