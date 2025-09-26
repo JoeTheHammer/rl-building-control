@@ -2,7 +2,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs.tsx'
 import EnvStateSpaceTab, {
   type EnvironmentStateSpaceSettings,
 } from './env-state-space-tab.tsx'
-import EnvActionSpaceTab from './env-action-space-tab.tsx'
+import EnvActionSpaceTab, {
+  type EnvActionSpaceSettings,
+} from './env-action-space-tab.tsx'
 import EnvRewardTab from './env-reward-tab.tsx'
 import CustomPage from '../../shared/page.tsx'
 import { useState } from 'react'
@@ -37,6 +39,24 @@ const EnvironmentConfigurator = () => {
       variables: [],
     })
 
+  const [actionSpaceSettings, setActionSpaceSettings] =
+    useState<EnvActionSpaceSettings>({
+      actuators: [
+        {
+          actuatorName: '',
+          component: '',
+          controlType: '',
+          actuatorKey: '',
+          type: 'continuous',
+          mode: undefined,
+          valueList: [],
+          min: undefined,
+          max: undefined,
+          stepSize: undefined,
+        },
+      ],
+    })
+
   const handleGeneralSettingsChange = (
     changes: Partial<EnvironmentGeneralSettings>,
   ) => {
@@ -49,10 +69,17 @@ const EnvironmentConfigurator = () => {
     setStateSpaceSettings((prev) => ({ ...prev, ...changes }))
   }
 
+  const handleActionSpaceSettingsChange = (
+    changes: Partial<EnvActionSpaceSettings>,
+  ) => {
+    setActionSpaceSettings((prev) => ({ ...prev, ...changes }))
+  }
+
   const handleSave = () => {
     console.log('Saving environment configuration', {
       generalSettings,
       stateSpaceSettings,
+      actionSpaceSettings,
     })
   }
 
@@ -87,7 +114,10 @@ const EnvironmentConfigurator = () => {
             />
           </TabsContent>
           <TabsContent value="actionSpace">
-            <EnvActionSpaceTab />
+            <EnvActionSpaceTab
+              settings={actionSpaceSettings}
+              onSettingsChange={handleActionSpaceSettingsChange}
+            />
           </TabsContent>
           <TabsContent value="reward">
             <EnvRewardTab />

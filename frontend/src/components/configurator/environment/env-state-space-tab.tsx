@@ -10,7 +10,7 @@ import {
 import { Button } from '../../ui/button.tsx'
 import { Input } from '../../ui/input.tsx'
 import { Checkbox } from '../../ui/checkbox.tsx'
-import { cn } from '../../../lib/utils.ts'
+import { cn } from '@/lib/utils.ts'
 
 export interface TimeFeatureSetting {
   included: boolean
@@ -24,6 +24,13 @@ export type TimeFeatureKey =
   | 'minute'
   | 'month'
 
+export interface EnvironmentStateSpaceVariableSettings {
+  name: string
+  variableType: 'variable' | 'meter'
+  energyPlusType: string
+  zone: string
+}
+
 export interface EnvironmentStateSpaceSettings {
   addTimeInfo: boolean
   dayOfMonth: TimeFeatureSetting
@@ -31,12 +38,7 @@ export interface EnvironmentStateSpaceSettings {
   hour: TimeFeatureSetting
   minute: TimeFeatureSetting
   month: TimeFeatureSetting
-  variables: {
-    name: string
-    variableType: 'variable' | 'meter'
-    energyPlusType: string
-    zone: string
-  }[]
+  variables: EnvironmentStateSpaceVariableSettings[]
 }
 
 export interface EnvStateSpaceTabProps {
@@ -99,9 +101,9 @@ const EnvStateSpaceTab = ({
       { name: '', variableType: 'variable', energyPlusType: '', zone: '' },
     ]
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    onSettingsChange({ variables: updatedVariables })
+    onSettingsChange({
+      variables: updatedVariables as EnvironmentStateSpaceVariableSettings[],
+    })
   }
 
   return (
@@ -161,7 +163,7 @@ const EnvStateSpaceTab = ({
         <div className="flex flex-col gap-4">
           {settings.variables.map((variable, index) => (
             <div
-              key={`${variable.name}-${index}`}
+              key={index}
               className="border-input flex flex-col gap-4 rounded-lg border p-4 shadow-md"
             >
               <div className="grid items-end gap-4 md:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
