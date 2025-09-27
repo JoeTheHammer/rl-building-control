@@ -1,73 +1,21 @@
 import { useState } from 'react'
-import CustomPage from '../../shared/page.tsx'
-import { Button } from '../../ui/button.tsx'
-import { Input } from '../../ui/input.tsx'
-import { Checkbox } from '../../ui/checkbox.tsx'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../ui/select.tsx'
-import { Save, Code2 } from 'lucide-react'
-import KeyValueList, { type KeyValue } from '../../shared/key-value-list.tsx'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select.tsx'
+import type { KeyValue } from '../../shared/key-value-list.tsx'
 import CustomEditor from '../../shared/custom-editor.tsx'
-import {
-  buildControllerYaml,
-  parseControllerYaml,
-} from '@/services/yaml-service.ts'
-import {
-  CONTROLLER_HYPERPARAMETER_SUGGESTIONS,
-  getDefaultControllerHyperparameters,
-} from './controller-defaults.ts'
+import { buildControllerYaml, parseControllerYaml } from '@/services/yaml-service.ts'
+import { getDefaultControllerHyperparameters } from './controller-defaults.ts'
+import ControllerToolbar from './controller-toolbar.tsx'
+import ReinforcementLearningSection from './controller-reinforcement-learning-section.tsx'
+import RuleBasedSection from './controller-rule-based-section.tsx'
+import type { ControllerRule, ControllerSettings, ControllerType } from './controller-types.ts'
 
-type ControllerType = 'reinforcement learning' | 'rule based' | 'custom'
+const controllerTypes: ControllerType[] = ['reinforcement learning', 'rule based', 'custom']
 
-export type ControllerAlgorithm =
-  | 'SAC'
-  | 'PPO'
-  | 'DDPG'
-  | 'DQN'
-  | 'TD3'
-  | 'Recurrent PPO'
-  | 'A2C'
-
-export interface ControllerSettings {
-  name: string
-  type: ControllerType
-  algorithm: ControllerAlgorithm | ''
-  trainingTimesteps?: number
-  reportTraining: boolean
-  denormalize: boolean
-  tensorboardLogs: boolean
-  hpTuning: boolean
-  numEpisodes?: number
-  numTrials?: number
-  hyperparameters: KeyValue[]
-}
-
-const controllerTypes: ControllerType[] = [
-  'reinforcement learning',
-  'rule based',
-  'custom',
-]
-
-const controllerAlgorithms: ControllerAlgorithm[] = [
-  'SAC',
-  'PPO',
-  'DDPG',
-  'DQN',
-  'TD3',
-  'Recurrent PPO',
-  'A2C',
-]
+const createEmptyRule = (): ControllerRule => ({ condition: '', action: '' })
 
 const ControllerConfigurator = () => {
   const [settings, setSettings] = useState<ControllerSettings>({
-    name: '',
     type: 'reinforcement learning',
-    algorithm: '',
     trainingTimesteps: undefined,
     reportTraining: false,
     denormalize: false,
@@ -76,27 +24,22 @@ const ControllerConfigurator = () => {
     numEpisodes: undefined,
     numTrials: undefined,
     hyperparameters: getDefaultControllerHyperparameters(),
+    customVariables: [],
+    stateSpace: [],
+    rules: [createEmptyRule()],
   })
 
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
 
-  const handleSettingChange = <Field extends keyof ControllerSettings>(
+  const updateSettings = <Field extends keyof ControllerSettings>(
     field: Field,
     value: ControllerSettings[Field],
   ) => {
-    setSettings((prev) => ({
-      ...prev,
+    setSettings((previous) => ({
+      ...previous,
       [field]: value,
     }))
-  }
-
-  const handleHyperparametersChange = (values: KeyValue[]) => {
-    handleSettingChange('hyperparameters', values)
-  }
-
-  const handleResetHyperparameters = () => {
-    handleSettingChange('hyperparameters', getDefaultControllerHyperparameters())
   }
 
   const handleNumberChange = (
@@ -105,7 +48,64 @@ const ControllerConfigurator = () => {
   ) => {
     const trimmed = value.trim()
     const parsedValue = trimmed === '' ? undefined : Number(trimmed)
-    handleSettingChange(field, Number.isNaN(parsedValue) ? undefined : parsedValue)
+    updateSettings(field, Number.isNaN(parsedValue) ? undefined : parsedValue)
+  }
+
+  const handleBooleanChange = (
+    field: 'reportTraining' | 'denormalize' | 'tensorboardLogs' | 'hpTuning',
+    value: boolean,
+  ) => {
+    updateSettings(field, value)
+  }
+
+  const handleHyperparametersChange = (values: KeyValue[]) => {
+    updateSettings('hyperparameters', values)
+  }
+
+  const handleResetHyperparameters = () => {
+    updateSettings('hyperparameters', getDefaultControllerHyperparameters())
+  }
+
+  const handleTypeChange = (value: ControllerType) => {
+    setSettings((previous) => ({
+      ...previous,
+      type: value,
+      rules:
+        value === 'rule based' && previous.rules.length === 0
+          ? [createEmptyRule()]
+          : previous.rules,
+    }))
+  }
+
+  const handleCustomVariablesChange = (values: KeyValue[]) => {
+    updateSettings('customVariables', values)
+  }
+
+  const handleStateSpaceChange = (values: string[]) => {
+    updateSettings('stateSpace', values)
+  }
+
+  const handleRuleChange = (index: number, field: keyof ControllerRule, value: string) => {
+    setSettings((previous) => ({
+      ...previous,
+      rules: previous.rules.map((rule, ruleIndex) =>
+        ruleIndex === index ? { ...rule, [field]: value } : rule,
+      ),
+    }))
+  }
+
+  const handleAddRule = () => {
+    setSettings((previous) => ({
+      ...previous,
+      rules: [...previous.rules, createEmptyRule()],
+    }))
+  }
+
+  const handleRemoveRule = (index: number) => {
+    setSettings((previous) => ({
+      ...previous,
+      rules: previous.rules.filter((_, ruleIndex) => ruleIndex !== index),
+    }))
   }
 
   const handleSave = () => {
@@ -142,250 +142,57 @@ const ControllerConfigurator = () => {
   }
 
   return (
-    <CustomPage>
-      <div className="flex w-full flex-col gap-4 pt-2">
-        <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-4">
-          <div className="md:col-span-2">
-            <span className="text-primary text-md font-bold md:text-xl">
-              Controller Configurator
-            </span>
-          </div>
-          <div className="md:col-start-3">
-            <Button
-              onClick={handleToggleDevMode}
-              type="button"
-              variant={devMode ? 'default' : 'ghost'}
-              className="text-md flex w-full gap-2 border"
-            >
-              <Code2 className="h-4 w-4" />
-              Dev Mode
-            </Button>
-          </div>
-          <div className="md:col-start-4">
-            <Button onClick={handleSave} type="button" className="text-md w-full">
-              <div className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                <span>Save Configuration</span>
-              </div>
-            </Button>
-          </div>
-        </div>
-
-        <hr className="border-t-primary w-full" />
-
-        {devMode ? (
-          <CustomEditor
-            defaultLanguage="yaml"
-            value={editorValue}
-            onChange={(value) => setEditorValue(value ?? '')}
-            height="600px"
-          />
-        ) : (
-          <div className="flex flex-col gap-8">
-            <section className="grid gap-6 lg:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-primary" htmlFor="controller-name">
-                  Name
-                </label>
-                <Input
-                  id="controller-name"
-                  value={settings.name}
-                  onChange={(event) => handleSettingChange('name', event.target.value)}
-                  placeholder="Enter name"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-primary">Type</label>
-                <Select
-                  value={settings.type}
-                  onValueChange={(value: ControllerType) =>
-                    handleSettingChange('type', value)
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {controllerTypes.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item.charAt(0).toUpperCase() + item.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-primary">Algorithm</label>
-                <Select
-                  value={settings.algorithm}
-                  onValueChange={(value: ControllerAlgorithm) =>
-                    handleSettingChange('algorithm', value)
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {controllerAlgorithms.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-primary" htmlFor="training-timesteps">
-                  Training Timesteps
-                </label>
-                <Input
-                  id="training-timesteps"
-                  type="number"
-                  value={settings.trainingTimesteps ?? ''}
-                  onChange={(event) =>
-                    handleNumberChange('trainingTimesteps', event.target.value)
-                  }
-                  placeholder="Enter number"
-                />
-              </div>
-            </section>
-
-            <section className="grid gap-4 lg:grid-cols-2">
-              <div className="flex flex-col gap-3">
-                <span className="text-primary text-sm font-semibold">
-                  Training Options
-                </span>
-                <label className="flex items-center gap-3 text-sm">
-                  <Checkbox
-                    checked={settings.reportTraining}
-                    onCheckedChange={(checked) =>
-                      handleSettingChange('reportTraining', !!checked)
-                    }
-                  />
-                  <span>Report training</span>
-                </label>
-                <label className="flex items-center gap-3 text-sm">
-                  <Checkbox
-                    checked={settings.denormalize}
-                    onCheckedChange={(checked) =>
-                      handleSettingChange('denormalize', !!checked)
-                    }
-                  />
-                  <span>Denormalize</span>
-                </label>
-                <label className="flex items-center gap-3 text-sm">
-                  <Checkbox
-                    checked={settings.tensorboardLogs}
-                    onCheckedChange={(checked) =>
-                      handleSettingChange('tensorboardLogs', !!checked)
-                    }
-                  />
-                  <span>Tensorboard logs</span>
-                </label>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <label className="flex items-center gap-3 text-sm">
-                  <Checkbox
-                    checked={settings.hpTuning}
-                    onCheckedChange={(checked) =>
-                      handleSettingChange('hpTuning', !!checked)
-                    }
-                  />
-                  <span className="text-primary text-sm font-semibold">
-                    HP tuning
-                  </span>
-                </label>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <label
-                      className="text-sm font-semibold text-primary"
-                      htmlFor="num-episodes"
-                    >
-                      Num episodes
-                    </label>
-                    <Input
-                      id="num-episodes"
-                      type="number"
-                      value={settings.numEpisodes ?? ''}
-                      onChange={(event) =>
-                        handleNumberChange('numEpisodes', event.target.value)
-                      }
-                      placeholder="Enter number"
-                      disabled={!settings.hpTuning}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label
-                      className="text-sm font-semibold text-primary"
-                      htmlFor="num-trials"
-                    >
-                      Num trials
-                    </label>
-                    <Input
-                      id="num-trials"
-                      type="number"
-                      value={settings.numTrials ?? ''}
-                      onChange={(event) =>
-                        handleNumberChange('numTrials', event.target.value)
-                      }
-                      placeholder="Enter number"
-                      disabled={!settings.hpTuning}
-                    />
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-primary text-lg font-semibold">
-                  Hyperparameters
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Prefilled with the most common settings across sample controller
-                  configurations. Adjust or remove any values as needed.
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  {CONTROLLER_HYPERPARAMETER_SUGGESTIONS.map((suggestion) => (
-                    <span
-                      key={suggestion.key}
-                      className="rounded-full border border-dashed px-3 py-1"
-                    >
-                      <span className="font-semibold text-primary">
-                        {suggestion.key}
-                      </span>
-                      : {suggestion.value}
-                    </span>
+    <ControllerToolbar devMode={devMode} onToggleDevMode={handleToggleDevMode} onSave={handleSave}>
+      {devMode ? (
+        <CustomEditor
+          defaultLanguage="yaml"
+          value={editorValue}
+          onChange={(value) => setEditorValue(value ?? '')}
+          height="600px"
+        />
+      ) : (
+        <div className="flex flex-col gap-8">
+          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-primary">Type</label>
+              <Select value={settings.type} onValueChange={handleTypeChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  {controllerTypes.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item.charAt(0).toUpperCase() + item.slice(1)}
+                    </SelectItem>
                   ))}
-                </div>
-              </div>
-              <div className="flex flex-col gap-3">
-                <KeyValueList
-                  values={settings.hyperparameters}
-                  onChange={handleHyperparametersChange}
-                  emptyKeyLabel="Hyperparameter"
-                  emptyValueLabel="Value"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-fit"
-                  onClick={handleResetHyperparameters}
-                >
-                  Reset to suggestions
-                </Button>
-              </div>
-            </section>
-          </div>
-        )}
-      </div>
-    </CustomPage>
+                </SelectContent>
+              </Select>
+            </div>
+          </section>
+
+          {settings.type === 'rule based' ? (
+            <RuleBasedSection
+              customVariables={settings.customVariables}
+              onCustomVariablesChange={handleCustomVariablesChange}
+              stateSpace={settings.stateSpace}
+              onStateSpaceChange={handleStateSpaceChange}
+              rules={settings.rules}
+              onRuleChange={handleRuleChange}
+              onAddRule={handleAddRule}
+              onRemoveRule={handleRemoveRule}
+            />
+          ) : (
+            <ReinforcementLearningSection
+              settings={settings}
+              onNumberChange={handleNumberChange}
+              onBooleanChange={handleBooleanChange}
+              onHyperparametersChange={handleHyperparametersChange}
+              onResetHyperparameters={handleResetHyperparameters}
+            />
+          )}
+        </div>
+      )}
+    </ControllerToolbar>
   )
 }
 
