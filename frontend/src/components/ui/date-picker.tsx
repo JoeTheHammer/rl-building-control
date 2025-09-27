@@ -247,12 +247,12 @@ const DatePicker = ({
                     type="button"
                     onClick={() => handleDaySelect(day)}
                     className={cn(
-                      'h-9 w-full rounded-md border border-transparent transition-colors',
+                      'hover:bg-primary hover:text-primary-foreground h-9 w-full cursor-pointer rounded-md border border-transparent transition-colors',
                       selected
                         ? 'bg-primary text-primary-foreground shadow'
                         : isCurrentMonth
-                          ? 'hover:bg-accent hover:text-accent-foreground'
-                          : 'text-muted-foreground',
+                          ? ''
+                          : '',
                     )}
                   >
                     {dayFormatter.format(day)}

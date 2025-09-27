@@ -181,12 +181,12 @@ const EnvironmentConfigurator = () => {
             >
               {devMode ? (
                 <>
-                  <Monitor className="h-4 w-4" />
+                  <Monitor />
                   Switch to GUI Mode
                 </>
               ) : (
                 <>
-                  <Code2 className="h-4 w-4" />
+                  <Code2 />
                   Switch to Dev Mode
                 </>
               )}

@@ -33,12 +33,12 @@ const ControllerToolbar = ({
           >
             {devMode ? (
               <>
-                <Monitor className="h-4 w-4" />
+                <Monitor />
                 Switch to GUI Mode
               </>
             ) : (
               <>
-                <Code2 className="h-4 w-4" />
+                <Code2 />
                 Switch to Dev Mode
               </>
             )}
@@ -47,7 +47,7 @@ const ControllerToolbar = ({
         <div className="md:col-start-4">
           <Button onClick={onSave} type="button" className="text-md w-full">
             <div className="flex items-center gap-2">
-              <Save className="h-4 w-4" />
+              <Save />
               <span>Save Configuration</span>
             </div>
           </Button>
