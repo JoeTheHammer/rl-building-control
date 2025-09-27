@@ -3,6 +3,13 @@ import type { EnvironmentRewardSettings } from '@/components/configurator/enviro
 import type { EnvActionSpaceSettings } from '@/components/configurator/environment/env-action-space-tab.tsx'
 import type { EnvironmentStateSpaceSettings } from '@/components/configurator/environment/env-state-space-tab.tsx'
 import type { EnvironmentGeneralSettings } from '@/components/configurator/environment/env-general-tab.tsx'
+import type {
+  ControllerRule,
+  ControllerSettings,
+  ControllerType,
+} from '@/components/configurator/controller/controller-types.ts'
+import type { KeyValue } from '@/components/shared/key-value-list.tsx'
+import { getDefaultControllerHyperparameters } from '@/components/configurator/controller/controller-defaults.ts'
 
 export interface EnvironmentConfig {
   generalSettings: EnvironmentGeneralSettings
@@ -10,6 +17,8 @@ export interface EnvironmentConfig {
   actionSpaceSettings: EnvActionSpaceSettings
   rewardSettings: EnvironmentRewardSettings
 }
+
+const CONTROLLER_TYPES: ControllerType[] = ['reinforcement learning', 'rule based', 'custom']
 
 const normalizeFile = (
   file: File | string | null | undefined,
@@ -313,5 +322,351 @@ export const parseEnvironmentYaml = (yamlStr: string): EnvironmentConfig => {
     stateSpaceSettings,
     actionSpaceSettings,
     rewardSettings,
+  }
+}
+
+const toYamlPrimitive = (value: string): string | number | boolean => {
+  const trimmed = value.trim()
+  if (trimmed === '') return ''
+
+  const lower = trimmed.toLowerCase()
+  if (lower === 'true') return true
+  if (lower === 'false') return false
+
+  const numericPattern = /^-?\d+(?:_\d+)*(?:\.\d+)?$/
+  if (numericPattern.test(trimmed)) {
+    const normalized = trimmed.replaceAll('_', '')
+    const numeric = Number(normalized)
+    if (!Number.isNaN(numeric)) {
+      return numeric
+    }
+  }
+
+  return trimmed
+}
+
+const splitArgumentEntry = (entry: string): [string, string] | null => {
+  const trimmed = entry.trim()
+  if (trimmed.length === 0) {
+    return null
+  }
+
+  for (const separator of [':', '='] as const) {
+    const index = trimmed.indexOf(separator)
+    if (index !== -1) {
+      const key = trimmed.slice(0, index).trim()
+      const value = trimmed.slice(index + 1).trim()
+      if (key.length === 0) {
+        return null
+      }
+      return [key, value]
+    }
+  }
+
+  return [trimmed, '']
+}
+
+const stringListToRecord = (values: string[]): Record<string, unknown> => {
+  return values.reduce<Record<string, unknown>>((accumulator, entry) => {
+    const parts = splitArgumentEntry(entry)
+    if (!parts) {
+      return accumulator
+    }
+
+    const [key, value] = parts
+    if (key.length === 0) {
+      return accumulator
+    }
+
+    accumulator[key] = toYamlPrimitive(value)
+    return accumulator
+  }, {})
+}
+
+const yamlValueToString = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return ''
+  }
+
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value)
+    } catch (error) {
+      return String(value)
+    }
+  }
+
+  return String(value)
+}
+
+const recordToStringList = (value: unknown): string[] => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return []
+  }
+
+  return Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => {
+    const formattedValue = yamlValueToString(entryValue)
+    return formattedValue.length > 0 ? `${key}: ${formattedValue}` : `${key}:`
+  })
+}
+
+const keyValueArrayToRecord = (values: KeyValue[]): Record<string, unknown> => {
+  return values
+    .map(({ key, value }) => ({ key: key.trim(), value }))
+    .filter(({ key }) => key.length > 0)
+    .reduce<Record<string, unknown>>((acc, current) => {
+      acc[current.key] = toYamlPrimitive(current.value)
+      return acc
+    }, {})
+}
+
+interface ControllerYamlDoc {
+  type?: unknown
+  training?: {
+    timesteps?: unknown
+    report_training?: unknown
+    report_denormalized_state?: unknown
+    tensorboard_logs?: unknown
+  }
+  hyperparameter_tuning?: {
+    num_trials?: unknown
+    num_episodes?: unknown
+  } | null
+  hyperparameters?: Record<string, unknown>
+  state_space?: unknown
+  custom_variables?: Record<string, unknown>
+  rules?: { condition?: unknown; action?: unknown }[]
+  module?: unknown
+  class_name?: unknown
+  args?: unknown
+}
+
+const recordToKeyValueArray = (
+  record?: Record<string, unknown>,
+): KeyValue[] => {
+  if (!record) {
+    return []
+  }
+
+  return Object.entries(record).map(([key, value]) => ({
+    key,
+    value:
+      value === null || value === undefined
+        ? ''
+        : typeof value === 'object'
+          ? JSON.stringify(value)
+          : String(value),
+  }))
+}
+
+const sanitizeRules = (rules: ControllerRule[]): ControllerRule[] =>
+  rules
+    .map((rule) => ({
+      condition: rule.condition.trim(),
+      action: rule.action.trim(),
+    }))
+    .filter((rule) => rule.condition.length > 0 || rule.action.length > 0)
+
+const createDefaultRule = (): ControllerRule => ({ condition: '', action: '' })
+
+export const buildControllerYaml = (settings: ControllerSettings): string => {
+  if (settings.type === 'custom') {
+    const doc: Record<string, unknown> = {}
+
+    const className = settings.customClassName.trim()
+    if (className.length > 0) {
+      doc.class_name = className
+    }
+
+    const modulePath = settings.customModule.trim()
+    if (modulePath.length > 0) {
+      doc.module = modulePath
+    }
+
+    const argsRecord = stringListToRecord(settings.initArguments)
+    if (Object.keys(argsRecord).length > 0) {
+      doc.args = argsRecord
+    }
+
+    if (Object.keys(doc).length === 0) {
+      doc.type = settings.type
+    }
+
+    return yaml.dump(doc, { noRefs: true })
+  }
+
+  if (settings.type === 'rule based') {
+    const stateSpaceValues = settings.stateSpace.map((value) => value.trim()).filter(Boolean)
+    const customVariablesRecord = keyValueArrayToRecord(settings.customVariables)
+    const rules = sanitizeRules(settings.rules).map((rule) => ({
+      condition: rule.condition,
+      action: rule.action,
+    }))
+
+    const doc: Record<string, unknown> = {
+      type: settings.type,
+    }
+
+    if (stateSpaceValues.length > 0) {
+      doc.state_space = stateSpaceValues
+    }
+
+    if (Object.keys(customVariablesRecord).length > 0) {
+      doc.custom_variables = customVariablesRecord
+    }
+
+    if (rules.length > 0) {
+      doc.rules = rules
+    }
+
+    return yaml.dump(doc, { noRefs: true })
+  }
+
+  const hyperparametersRecord = keyValueArrayToRecord(settings.hyperparameters)
+
+  const training: Record<string, unknown> = {
+    report_training: settings.reportTraining,
+    report_denormalized_state: settings.denormalize,
+    tensorboard_logs: settings.tensorboardLogs,
+  }
+
+  if (typeof settings.trainingTimesteps === 'number') {
+    training.timesteps = settings.trainingTimesteps
+  }
+
+  const doc: Record<string, unknown> = {
+    type: settings.type,
+    training,
+  }
+
+  if (settings.hpTuning) {
+    const hpTuning: Record<string, unknown> = {}
+    if (typeof settings.numTrials === 'number') {
+      hpTuning.num_trials = settings.numTrials
+    }
+    if (typeof settings.numEpisodes === 'number') {
+      hpTuning.num_episodes = settings.numEpisodes
+    }
+    doc.hyperparameter_tuning = hpTuning
+  }
+
+  if (Object.keys(hyperparametersRecord).length > 0) {
+    doc.hyperparameters = hyperparametersRecord
+  }
+
+  return yaml.dump(doc, { noRefs: true })
+}
+
+export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
+  const doc = (yaml.load(yamlStr) as ControllerYamlDoc) ?? {}
+
+  const explicitType =
+    typeof doc.type === 'string' && CONTROLLER_TYPES.includes(doc.type as ControllerType)
+      ? (doc.type as ControllerType)
+      : undefined
+
+  const hasRuleBasedShape =
+    Array.isArray(doc.rules) || Array.isArray(doc.state_space) || !!doc.custom_variables
+
+  const hasCustomShape =
+    typeof doc.module === 'string' ||
+    typeof doc.class_name === 'string' ||
+    (doc.args && typeof doc.args === 'object' && !Array.isArray(doc.args))
+
+  const resolvedType: ControllerType =
+    explicitType ?? (hasRuleBasedShape ? 'rule based' : hasCustomShape ? 'custom' : 'reinforcement learning')
+
+  if (resolvedType === 'rule based') {
+    const rules = Array.isArray(doc.rules)
+      ? doc.rules.map((rule) => ({
+          condition: typeof rule?.condition === 'string' ? rule.condition : '',
+          action: typeof rule?.action === 'string' ? rule.action : '',
+        }))
+      : []
+
+    const stateSpaceArray = Array.isArray(doc.state_space)
+      ? (doc.state_space.filter((value) => typeof value === 'string') as string[])
+      : []
+
+    return {
+      type: 'rule based',
+      trainingTimesteps: undefined,
+      reportTraining: false,
+      denormalize: false,
+      tensorboardLogs: false,
+      hpTuning: false,
+      numEpisodes: undefined,
+      numTrials: undefined,
+      hyperparameters: getDefaultControllerHyperparameters(),
+      customVariables: recordToKeyValueArray(doc.custom_variables),
+      stateSpace: stateSpaceArray,
+      rules: rules.length > 0 ? rules : [createDefaultRule()],
+      customModule: '',
+      customClassName: '',
+      initArguments: [],
+    }
+  }
+
+  if (resolvedType === 'custom') {
+    const argsList = recordToStringList(doc.args)
+
+    return {
+      type: 'custom',
+      trainingTimesteps: undefined,
+      reportTraining: false,
+      denormalize: false,
+      tensorboardLogs: false,
+      hpTuning: false,
+      numEpisodes: undefined,
+      numTrials: undefined,
+      hyperparameters: [],
+      customVariables: [],
+      stateSpace: [],
+      rules: [createDefaultRule()],
+      customModule: typeof doc.module === 'string' ? doc.module : '',
+      customClassName: typeof doc.class_name === 'string' ? doc.class_name : '',
+      initArguments: argsList,
+    }
+  }
+
+  const training = doc.training ?? {}
+  const hyperparameterTuning = doc.hyperparameter_tuning ?? null
+
+  const hyperparametersEntries = Object.entries(doc.hyperparameters ?? {})
+  const hyperparameters = hyperparametersEntries.length
+    ? hyperparametersEntries.map(([key, value]) => ({
+        key,
+        value:
+          value === null || value === undefined
+            ? ''
+            : typeof value === 'object'
+              ? JSON.stringify(value)
+              : String(value),
+      }))
+    : getDefaultControllerHyperparameters()
+
+  return {
+    type: resolvedType,
+    trainingTimesteps:
+      typeof training.timesteps === 'number' ? training.timesteps : undefined,
+    reportTraining: training.report_training === true,
+    denormalize: training.report_denormalized_state === true,
+    tensorboardLogs: training.tensorboard_logs === true,
+    hpTuning: !!hyperparameterTuning,
+    numTrials:
+      typeof hyperparameterTuning?.num_trials === 'number'
+        ? hyperparameterTuning.num_trials
+        : undefined,
+    numEpisodes:
+      typeof hyperparameterTuning?.num_episodes === 'number'
+        ? hyperparameterTuning.num_episodes
+        : undefined,
+    hyperparameters,
+    customVariables: [],
+    stateSpace: [],
+    rules: [createDefaultRule()],
+    customModule: '',
+    customClassName: '',
+    initArguments: [],
   }
 }
