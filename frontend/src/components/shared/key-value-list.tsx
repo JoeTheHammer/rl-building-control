@@ -47,7 +47,7 @@ const KeyValueList = ({
           <Input
             value={item.key}
             onChange={(e) => handleChange(index, 'key', e.target.value)}
-            placeholder={`${emptyKeyLabel} ${index + 1}`}
+            placeholder={emptyKeyLabel}
             className="flex-1"
           />
 
@@ -55,7 +55,7 @@ const KeyValueList = ({
           <Input
             value={item.value}
             onChange={(e) => handleChange(index, 'value', e.target.value)}
-            placeholder={`${emptyValueLabel} ${index + 1}`}
+            placeholder={emptyValueLabel}
             className="flex-1"
           />
 
