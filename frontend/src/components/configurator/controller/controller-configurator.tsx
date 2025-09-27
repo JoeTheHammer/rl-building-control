@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import CustomPage from '../../shared/page.tsx'
 import { Button } from '../../ui/button.tsx'
 import { Input } from '../../ui/input.tsx'
@@ -11,13 +11,16 @@ import {
   SelectValue,
 } from '../../ui/select.tsx'
 import { Save, Code2 } from 'lucide-react'
-import StringValueList from '../../shared/string-value-list.tsx'
+import KeyValueList, { type KeyValue } from '../../shared/key-value-list.tsx'
 import CustomEditor from '../../shared/custom-editor.tsx'
 import {
   buildControllerYaml,
   parseControllerYaml,
 } from '@/services/yaml-service.ts'
-import type { KeyValue } from '../../shared/key-value-list.tsx'
+import {
+  CONTROLLER_HYPERPARAMETER_SUGGESTIONS,
+  getDefaultControllerHyperparameters,
+} from './controller-defaults.ts'
 
 type ControllerType = 'reinforcement learning' | 'rule based' | 'custom'
 
@@ -72,7 +75,7 @@ const ControllerConfigurator = () => {
     hpTuning: false,
     numEpisodes: undefined,
     numTrials: undefined,
-    hyperparameters: [{ key: '', value: '' }],
+    hyperparameters: getDefaultControllerHyperparameters(),
   })
 
   const [devMode, setDevMode] = useState(false)
@@ -88,39 +91,12 @@ const ControllerConfigurator = () => {
     }))
   }
 
-  const hyperparameterStrings = useMemo(() => {
-    if (!settings.hyperparameters.length) return ['']
+  const handleHyperparametersChange = (values: KeyValue[]) => {
+    handleSettingChange('hyperparameters', values)
+  }
 
-    return settings.hyperparameters.map((item) => {
-      if (!item.key && !item.value) return ''
-
-      const separator = item.value !== '' ? '=' : ''
-      return `${item.key ?? ''}${separator}${item.value ?? ''}`
-    })
-  }, [settings.hyperparameters])
-
-  const handleHyperparametersChange = (values: string[]) => {
-    if (!values.length) {
-      handleSettingChange('hyperparameters', [{ key: '', value: '' }])
-      return
-    }
-
-    const parsed: KeyValue[] = values.map((entry) => {
-      const trimmed = entry.trim()
-
-      if (!trimmed.includes('=') && !trimmed.includes(':')) {
-        return { key: trimmed, value: '' }
-      }
-
-      const separator = trimmed.includes('=') ? '=' : ':'
-      const [rawKey, ...rawValue] = trimmed.split(separator)
-      return {
-        key: rawKey?.trim() ?? '',
-        value: rawValue.join(separator).trim(),
-      }
-    })
-
-    handleSettingChange('hyperparameters', parsed)
+  const handleResetHyperparameters = () => {
+    handleSettingChange('hyperparameters', getDefaultControllerHyperparameters())
   }
 
   const handleNumberChange = (
@@ -372,14 +348,39 @@ const ControllerConfigurator = () => {
                   Hyperparameters
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Enter parameters as <code>name=value</code> pairs.
+                  Prefilled with the most common settings across sample controller
+                  configurations. Adjust or remove any values as needed.
                 </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {CONTROLLER_HYPERPARAMETER_SUGGESTIONS.map((suggestion) => (
+                    <span
+                      key={suggestion.key}
+                      className="rounded-full border border-dashed px-3 py-1"
+                    >
+                      <span className="font-semibold text-primary">
+                        {suggestion.key}
+                      </span>
+                      : {suggestion.value}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <StringValueList
-                values={hyperparameterStrings}
-                onChange={handleHyperparametersChange}
-                emptyValueLabel="Parameter"
-              />
+              <div className="flex flex-col gap-3">
+                <KeyValueList
+                  values={settings.hyperparameters}
+                  onChange={handleHyperparametersChange}
+                  emptyKeyLabel="Hyperparameter"
+                  emptyValueLabel="Value"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-fit"
+                  onClick={handleResetHyperparameters}
+                >
+                  Reset to suggestions
+                </Button>
+              </div>
             </section>
           </div>
         )}

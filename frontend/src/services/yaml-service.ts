@@ -8,6 +8,7 @@ import type {
   ControllerSettings,
 } from '@/components/configurator/controller/controller-configurator.tsx'
 import type { KeyValue } from '@/components/shared/key-value-list.tsx'
+import { getDefaultControllerHyperparameters } from '@/components/configurator/controller/controller-defaults.ts'
 
 export interface EnvironmentConfig {
   generalSettings: EnvironmentGeneralSettings
@@ -463,7 +464,7 @@ export const parseControllerYaml = (
               ? JSON.stringify(value)
               : String(value),
       }))
-    : [{ key: '', value: '' }]
+    : getDefaultControllerHyperparameters()
 
   return {
     name: typeof doc.name === 'string' ? doc.name : '',
