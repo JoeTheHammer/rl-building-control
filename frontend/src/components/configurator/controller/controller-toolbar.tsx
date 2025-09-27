@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from 'react'
-import { Save, Code2, Monitor, Upload } from 'lucide-react'
+import { Save, Code2, Monitor, FolderOpen } from 'lucide-react'
 import CustomPage from '../../shared/page.tsx'
 import { Button } from '../../ui/button.tsx'
 
@@ -55,8 +55,8 @@ const ControllerToolbar = ({
         <div className="md:col-start-4">
           <Button onClick={onUpload} type="button" className="text-md w-full">
             <div className="flex items-center gap-2">
-              <Upload />
-              <span>Upload Configuration</span>
+              <FolderOpen />
+              <span>Open Configuration</span>
             </div>
           </Button>
           <input

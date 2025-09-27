@@ -14,7 +14,7 @@ import EnvGeneralTab, {
   type EnvironmentGeneralSettings,
 } from './env-general-tab.tsx'
 import { Button } from '../../ui/button.tsx'
-import { Save, Code2, Monitor, Upload } from 'lucide-react'
+import { Save, Code2, Monitor, FolderOpen } from 'lucide-react'
 import {
   buildEnvironmentYaml,
   parseEnvironmentYaml,
@@ -224,8 +224,8 @@ const EnvironmentConfigurator = () => {
               className="text-md w-full"
             >
               <div className="flex items-center gap-2">
-                <Upload />
-                <span>Upload Configuration</span>
+                <FolderOpen />
+                <span>Open Configuration</span>
               </div>
             </Button>
             <input
