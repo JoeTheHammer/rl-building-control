@@ -3,6 +3,11 @@ import type { EnvironmentRewardSettings } from '@/components/configurator/enviro
 import type { EnvActionSpaceSettings } from '@/components/configurator/environment/env-action-space-tab.tsx'
 import type { EnvironmentStateSpaceSettings } from '@/components/configurator/environment/env-state-space-tab.tsx'
 import type { EnvironmentGeneralSettings } from '@/components/configurator/environment/env-general-tab.tsx'
+import type {
+  ControllerAlgorithm,
+  ControllerSettings,
+} from '@/components/configurator/controller/controller-configurator.tsx'
+import type { KeyValue } from '@/components/shared/key-value-list.tsx'
 
 export interface EnvironmentConfig {
   generalSettings: EnvironmentGeneralSettings
@@ -10,6 +15,22 @@ export interface EnvironmentConfig {
   actionSpaceSettings: EnvActionSpaceSettings
   rewardSettings: EnvironmentRewardSettings
 }
+
+const CONTROLLER_TYPES: ControllerSettings['type'][] = [
+  'reinforcement learning',
+  'rule based',
+  'custom',
+]
+
+const CONTROLLER_ALGORITHMS: ControllerAlgorithm[] = [
+  'SAC',
+  'PPO',
+  'DDPG',
+  'DQN',
+  'TD3',
+  'Recurrent PPO',
+  'A2C',
+]
 
 const normalizeFile = (
   file: File | string | null | undefined,
@@ -313,5 +334,157 @@ export const parseEnvironmentYaml = (yamlStr: string): EnvironmentConfig => {
     stateSpaceSettings,
     actionSpaceSettings,
     rewardSettings,
+  }
+}
+
+const toYamlPrimitive = (value: string): string | number | boolean => {
+  const trimmed = value.trim()
+  if (trimmed === '') return ''
+
+  const lower = trimmed.toLowerCase()
+  if (lower === 'true') return true
+  if (lower === 'false') return false
+
+  const numericPattern = /^-?\d+(?:_\d+)*(?:\.\d+)?$/
+  if (numericPattern.test(trimmed)) {
+    const normalized = trimmed.replaceAll('_', '')
+    const numeric = Number(normalized)
+    if (!Number.isNaN(numeric)) {
+      return numeric
+    }
+  }
+
+  return trimmed
+}
+
+const keyValueArrayToRecord = (values: KeyValue[]): Record<string, unknown> => {
+  return values
+    .map(({ key, value }) => ({ key: key.trim(), value }))
+    .filter(({ key }) => key.length > 0)
+    .reduce<Record<string, unknown>>((acc, current) => {
+      acc[current.key] = toYamlPrimitive(current.value)
+      return acc
+    }, {})
+}
+
+interface ControllerYamlDoc {
+  name?: unknown
+  type?: unknown
+  algorithm?: unknown
+  training?: {
+    timesteps?: unknown
+    report_training?: unknown
+    report_denormalized_state?: unknown
+    tensorboard_logs?: unknown
+  }
+  hyperparameter_tuning?: {
+    num_trials?: unknown
+    num_episodes?: unknown
+  } | null
+  hyperparameters?: Record<string, unknown>
+}
+
+export const buildControllerYaml = (
+  settings: ControllerSettings,
+): string => {
+  const hyperparametersRecord = keyValueArrayToRecord(
+    settings.hyperparameters,
+  )
+
+  const training: Record<string, unknown> = {
+    report_training: settings.reportTraining,
+    report_denormalized_state: settings.denormalize,
+    tensorboard_logs: settings.tensorboardLogs,
+  }
+
+  if (typeof settings.trainingTimesteps === 'number') {
+    training.timesteps = settings.trainingTimesteps
+  }
+
+  const doc: Record<string, unknown> = {
+    type: settings.type,
+    training,
+  }
+
+  if (settings.name.trim().length > 0) {
+    doc.name = settings.name.trim()
+  }
+
+  if (settings.algorithm) {
+    doc.algorithm = settings.algorithm
+  }
+
+  if (settings.hpTuning) {
+    const hpTuning: Record<string, unknown> = {}
+    if (typeof settings.numTrials === 'number') {
+      hpTuning.num_trials = settings.numTrials
+    }
+    if (typeof settings.numEpisodes === 'number') {
+      hpTuning.num_episodes = settings.numEpisodes
+    }
+    doc.hyperparameter_tuning = hpTuning
+  }
+
+  if (Object.keys(hyperparametersRecord).length > 0) {
+    doc.hyperparameters = hyperparametersRecord
+  }
+
+  return yaml.dump(doc, { noRefs: true })
+}
+
+export const parseControllerYaml = (
+  yamlStr: string,
+): ControllerSettings => {
+  const doc = (yaml.load(yamlStr) as ControllerYamlDoc) ?? {}
+
+  const typeValue =
+    typeof doc.type === 'string' &&
+    CONTROLLER_TYPES.includes(doc.type as ControllerSettings['type'])
+      ? (doc.type as ControllerSettings['type'])
+      : 'reinforcement learning'
+
+  const algorithmValue =
+    typeof doc.algorithm === 'string' &&
+    CONTROLLER_ALGORITHMS.includes(doc.algorithm as ControllerAlgorithm)
+      ? (doc.algorithm as ControllerAlgorithm)
+      : ''
+
+  const training = doc.training ?? {}
+  const hyperparameterTuning = doc.hyperparameter_tuning ?? null
+
+  const hyperparametersEntries = Object.entries(doc.hyperparameters ?? {})
+  const hyperparameters = hyperparametersEntries.length
+    ? hyperparametersEntries.map(([key, value]) => ({
+        key,
+        value:
+          value === null || value === undefined
+            ? ''
+            : typeof value === 'object'
+              ? JSON.stringify(value)
+              : String(value),
+      }))
+    : [{ key: '', value: '' }]
+
+  return {
+    name: typeof doc.name === 'string' ? doc.name : '',
+    type: typeValue,
+    algorithm: algorithmValue,
+    trainingTimesteps:
+      typeof training.timesteps === 'number'
+        ? training.timesteps
+        : undefined,
+    reportTraining: training.report_training === true,
+    denormalize: training.report_denormalized_state === true,
+    tensorboardLogs: training.tensorboard_logs === true,
+    hpTuning: !!hyperparameterTuning,
+    numTrials:
+      typeof hyperparameterTuning?.num_trials === 'number'
+        ? hyperparameterTuning.num_trials
+        : undefined,
+    numEpisodes:
+      typeof hyperparameterTuning?.num_episodes === 'number'
+        ? hyperparameterTuning.num_episodes
+        : undefined,
+    hyperparameters,
   }
 }
