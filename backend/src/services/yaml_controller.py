@@ -7,7 +7,7 @@ from models.controller import SaveControllerRequest
 
 yaml = YAML()
 yaml.default_flow_style = False
-yaml.indent(mapping=2, sequence=4, offset=2)  # sequence=4 ensures nested indent
+yaml.indent(mapping=2, sequence=4, offset=2)
 yaml.preserve_quotes = True
 
 
@@ -15,7 +15,6 @@ def save_controller(req: SaveControllerRequest) -> str:
     s = req.settings
 
     if s.type == "custom":
-        # Type 3: custom controller
         doc = {
             "class_name": s.customClassName,
             "module": s.customModule,
@@ -23,7 +22,6 @@ def save_controller(req: SaveControllerRequest) -> str:
         }
 
     elif s.type == "rule based":
-        # --- FIX: use CommentedSeq to force proper indentation ---
         rules_seq = CommentedSeq()
         for r in s.rules:
             cm = CommentedMap()
@@ -46,7 +44,7 @@ def save_controller(req: SaveControllerRequest) -> str:
             "rules": rules_seq,
         }
 
-    else:  # reinforcement learning (Type 1)
+    else:
         training = {
             "timesteps": s.trainingTimesteps,
             "report_training": s.reportTraining,
@@ -66,7 +64,6 @@ def save_controller(req: SaveControllerRequest) -> str:
             "hyperparameters": {kv.key: kv.value for kv in s.hyperparameters},
         }
 
-    # Save file
     Path(req.directory).mkdir(parents=True, exist_ok=True)
     path = Path(req.directory) / req.filename
     with path.open("w", encoding="utf-8") as f:

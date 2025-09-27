@@ -14,13 +14,11 @@ yaml.preserve_quotes = True
 
 
 def build_environment_yaml(cfg: EnvironmentConfig) -> str:
-    # General settings
     doc: dict[str, Any] = {
         "building_model": str(Path(cfg.generalSettings.buildingModelFile)),
         "weather_data": str(Path(cfg.generalSettings.weatherDataFile)),
     }
 
-    # State space
     variables: dict[str, Any] = {}
     meters: dict[str, Any] = {}
     state_space: dict[str, Any] = {}
@@ -49,7 +47,6 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
 
     doc["state_space"] = state_space
 
-    # Action space
     actuators: dict[str, Any] = {}
     for a in cfg.actionSpaceSettings.actuators:
         if a.type == "continuous":
@@ -80,7 +77,6 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
 
     doc["action_space"] = {"actuators": actuators}
 
-    # Reward function
     reward_params: dict[str, Any] = {p.key: p.value for p in cfg.rewardSettings.parameters}
 
     doc["reward_function"] = {
@@ -90,7 +86,7 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
         "params": reward_params,
     }
 
-    # Episode
+
     episode: dict[str, Any] = {"timesteps_per_hour": cfg.generalSettings.timestepsPerHour}
 
     if cfg.generalSettings.startDate and cfg.generalSettings.endDate:
@@ -99,12 +95,11 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
         seq = CommentedSeq(
             [int(s[2]), int(s[1]), int(s[0]), int(e[2]), int(e[1]), int(e[0])]
         )
-        seq.fa.set_flow_style()  # force inline list [ ... ]
+        seq.fa.set_flow_style()
         episode["period"] = seq
 
     doc["episode"] = episode
 
-    # Dump to string
     stream = StringIO()
     yaml.dump(doc, stream)
     return stream.getvalue()
