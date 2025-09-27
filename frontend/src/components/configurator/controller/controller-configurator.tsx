@@ -83,10 +83,6 @@ const ControllerConfigurator = () => {
     updateSettings('hyperparameters', values)
   }
 
-  const handleResetHyperparameters = () => {
-    updateSettings('hyperparameters', getDefaultControllerHyperparameters())
-  }
-
   const handleTypeChange = (value: ControllerType) => {
     setSettings((previous) => ({
       ...previous,
@@ -237,7 +233,6 @@ const ControllerConfigurator = () => {
               onNumberChange={handleNumberChange}
               onBooleanChange={handleBooleanChange}
               onHyperparametersChange={handleHyperparametersChange}
-              onResetHyperparameters={handleResetHyperparameters}
             />
           )}
         </div>

@@ -1,4 +1,3 @@
-import { Button } from '../../ui/button.tsx'
 import { Checkbox } from '../../ui/checkbox.tsx'
 import { Input } from '../../ui/input.tsx'
 import KeyValueList, { type KeyValue } from '../../shared/key-value-list.tsx'
@@ -15,7 +14,6 @@ interface ReinforcementLearningSectionProps {
     value: boolean,
   ) => void
   onHyperparametersChange: (values: KeyValue[]) => void
-  onResetHyperparameters: () => void
 }
 
 const ReinforcementLearningSection = ({
@@ -23,7 +21,6 @@ const ReinforcementLearningSection = ({
   onNumberChange,
   onBooleanChange,
   onHyperparametersChange,
-  onResetHyperparameters,
 }: ReinforcementLearningSectionProps) => {
   return (
     <div className="flex flex-col gap-8">
@@ -145,14 +142,6 @@ const ReinforcementLearningSection = ({
             emptyKeyLabel="Hyperparameter"
             emptyValueLabel="Value"
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="w-fit"
-            onClick={onResetHyperparameters}
-          >
-            Reset to suggestions
-          </Button>
         </div>
       </section>
     </div>
