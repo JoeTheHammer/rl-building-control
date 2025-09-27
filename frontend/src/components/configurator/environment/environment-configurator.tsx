@@ -14,7 +14,7 @@ import EnvGeneralTab, {
   type EnvironmentGeneralSettings,
 } from './env-general-tab.tsx'
 import { Button } from '../../ui/button.tsx'
-import { Save, Code2 } from 'lucide-react'
+import { Save, Code2, Monitor } from 'lucide-react'
 import {
   buildEnvironmentYaml,
   parseEnvironmentYaml,
@@ -179,8 +179,17 @@ const EnvironmentConfigurator = () => {
               variant={devMode ? 'default' : 'ghost'}
               className="text-md flex w-full gap-2 border"
             >
-              <Code2 className="h-4 w-4" />
-              {devMode ? 'Dev Mode' : 'Dev Mode'}
+              {devMode ? (
+                <>
+                  <Monitor className="h-4 w-4" />
+                  Switch to GUI Mode
+                </>
+              ) : (
+                <>
+                  <Code2 className="h-4 w-4" />
+                  Switch to Dev Mode
+                </>
+              )}
             </Button>
           </div>
 
