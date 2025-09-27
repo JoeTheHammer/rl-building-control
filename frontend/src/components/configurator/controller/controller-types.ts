@@ -22,5 +22,5 @@ export interface ControllerSettings {
   rules: ControllerRule[]
   customModule: string
   customClassName: string
-  initArguments: string[]
+  initArguments: KeyValue[]
 }

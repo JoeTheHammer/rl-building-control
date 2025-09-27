@@ -18,7 +18,11 @@ export interface EnvironmentConfig {
   rewardSettings: EnvironmentRewardSettings
 }
 
-const CONTROLLER_TYPES: ControllerType[] = ['reinforcement learning', 'rule based', 'custom']
+const CONTROLLER_TYPES: ControllerType[] = [
+  'reinforcement learning',
+  'rule based',
+  'custom',
+]
 
 const normalizeFile = (
   file: File | string | null | undefined,
@@ -345,71 +349,6 @@ const toYamlPrimitive = (value: string): string | number | boolean => {
   return trimmed
 }
 
-const splitArgumentEntry = (entry: string): [string, string] | null => {
-  const trimmed = entry.trim()
-  if (trimmed.length === 0) {
-    return null
-  }
-
-  for (const separator of [':', '='] as const) {
-    const index = trimmed.indexOf(separator)
-    if (index !== -1) {
-      const key = trimmed.slice(0, index).trim()
-      const value = trimmed.slice(index + 1).trim()
-      if (key.length === 0) {
-        return null
-      }
-      return [key, value]
-    }
-  }
-
-  return [trimmed, '']
-}
-
-const stringListToRecord = (values: string[]): Record<string, unknown> => {
-  return values.reduce<Record<string, unknown>>((accumulator, entry) => {
-    const parts = splitArgumentEntry(entry)
-    if (!parts) {
-      return accumulator
-    }
-
-    const [key, value] = parts
-    if (key.length === 0) {
-      return accumulator
-    }
-
-    accumulator[key] = toYamlPrimitive(value)
-    return accumulator
-  }, {})
-}
-
-const yamlValueToString = (value: unknown): string => {
-  if (value === null || value === undefined) {
-    return ''
-  }
-
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value)
-    } catch (error) {
-      return String(value)
-    }
-  }
-
-  return String(value)
-}
-
-const recordToStringList = (value: unknown): string[] => {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return []
-  }
-
-  return Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => {
-    const formattedValue = yamlValueToString(entryValue)
-    return formattedValue.length > 0 ? `${key}: ${formattedValue}` : `${key}:`
-  })
-}
-
 const keyValueArrayToRecord = (values: KeyValue[]): Record<string, unknown> => {
   return values
     .map(({ key, value }) => ({ key: key.trim(), value }))
@@ -438,7 +377,7 @@ interface ControllerYamlDoc {
   rules?: { condition?: unknown; action?: unknown }[]
   module?: unknown
   class_name?: unknown
-  args?: unknown
+  args?: Record<string, unknown>
 }
 
 const recordToKeyValueArray = (
@@ -483,7 +422,7 @@ export const buildControllerYaml = (settings: ControllerSettings): string => {
       doc.module = modulePath
     }
 
-    const argsRecord = stringListToRecord(settings.initArguments)
+    const argsRecord = keyValueArrayToRecord(settings.initArguments)
     if (Object.keys(argsRecord).length > 0) {
       doc.args = argsRecord
     }
@@ -496,16 +435,18 @@ export const buildControllerYaml = (settings: ControllerSettings): string => {
   }
 
   if (settings.type === 'rule based') {
-    const stateSpaceValues = settings.stateSpace.map((value) => value.trim()).filter(Boolean)
-    const customVariablesRecord = keyValueArrayToRecord(settings.customVariables)
+    const stateSpaceValues = settings.stateSpace
+      .map((value) => value.trim())
+      .filter(Boolean)
+    const customVariablesRecord = keyValueArrayToRecord(
+      settings.customVariables,
+    )
     const rules = sanitizeRules(settings.rules).map((rule) => ({
       condition: rule.condition,
       action: rule.action,
     }))
 
-    const doc: Record<string, unknown> = {
-      type: settings.type,
-    }
+    const doc: Record<string, unknown> = {}
 
     if (stateSpaceValues.length > 0) {
       doc.state_space = stateSpaceValues
@@ -535,7 +476,6 @@ export const buildControllerYaml = (settings: ControllerSettings): string => {
   }
 
   const doc: Record<string, unknown> = {
-    type: settings.type,
     training,
   }
 
@@ -561,20 +501,28 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
   const doc = (yaml.load(yamlStr) as ControllerYamlDoc) ?? {}
 
   const explicitType =
-    typeof doc.type === 'string' && CONTROLLER_TYPES.includes(doc.type as ControllerType)
+    typeof doc.type === 'string' &&
+    CONTROLLER_TYPES.includes(doc.type as ControllerType)
       ? (doc.type as ControllerType)
       : undefined
 
   const hasRuleBasedShape =
-    Array.isArray(doc.rules) || Array.isArray(doc.state_space) || !!doc.custom_variables
+    Array.isArray(doc.rules) ||
+    Array.isArray(doc.state_space) ||
+    !!doc.custom_variables
 
   const hasCustomShape =
     typeof doc.module === 'string' ||
     typeof doc.class_name === 'string' ||
-    (doc.args && typeof doc.args === 'object' && !Array.isArray(doc.args))
+    (doc.args && typeof doc.args === 'object')
 
   const resolvedType: ControllerType =
-    explicitType ?? (hasRuleBasedShape ? 'rule based' : hasCustomShape ? 'custom' : 'reinforcement learning')
+    explicitType ??
+    (hasRuleBasedShape
+      ? 'rule based'
+      : hasCustomShape
+        ? 'custom'
+        : 'reinforcement learning')
 
   if (resolvedType === 'rule based') {
     const rules = Array.isArray(doc.rules)
@@ -585,7 +533,9 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
       : []
 
     const stateSpaceArray = Array.isArray(doc.state_space)
-      ? (doc.state_space.filter((value) => typeof value === 'string') as string[])
+      ? (doc.state_space.filter(
+          (value) => typeof value === 'string',
+        ) as string[])
       : []
 
     return {
@@ -608,7 +558,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
   }
 
   if (resolvedType === 'custom') {
-    const argsList = recordToStringList(doc.args)
+    const argsList = recordToKeyValueArray(doc.args)
 
     return {
       type: 'custom',

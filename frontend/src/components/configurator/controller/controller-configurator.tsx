@@ -1,16 +1,33 @@
 import { useState } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select.tsx'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select.tsx'
 import type { KeyValue } from '../../shared/key-value-list.tsx'
 import CustomEditor from '../../shared/custom-editor.tsx'
-import { buildControllerYaml, parseControllerYaml } from '@/services/yaml-service.ts'
+import {
+  buildControllerYaml,
+  parseControllerYaml,
+} from '@/services/yaml-service.ts'
 import { getDefaultControllerHyperparameters } from './controller-defaults.ts'
 import ControllerToolbar from './controller-toolbar.tsx'
 import ReinforcementLearningSection from './controller-reinforcement-learning-section.tsx'
 import RuleBasedSection from './controller-rule-based-section.tsx'
 import CustomSection from './controller-custom-section.tsx'
-import type { ControllerRule, ControllerSettings, ControllerType } from './controller-types.ts'
+import type {
+  ControllerRule,
+  ControllerSettings,
+  ControllerType,
+} from './controller-types.ts'
 
-const controllerTypes: ControllerType[] = ['reinforcement learning', 'rule based', 'custom']
+const controllerTypes: ControllerType[] = [
+  'reinforcement learning',
+  'rule based',
+  'custom',
+]
 
 const createEmptyRule = (): ControllerRule => ({ condition: '', action: '' })
 
@@ -97,11 +114,15 @@ const ControllerConfigurator = () => {
     updateSettings('customClassName', value)
   }
 
-  const handleInitArgumentsChange = (values: string[]) => {
+  const handleInitArgumentsChange = (values: KeyValue[]) => {
     updateSettings('initArguments', values)
   }
 
-  const handleRuleChange = (index: number, field: keyof ControllerRule, value: string) => {
+  const handleRuleChange = (
+    index: number,
+    field: keyof ControllerRule,
+    value: string,
+  ) => {
     setSettings((previous) => ({
       ...previous,
       rules: previous.rules.map((rule, ruleIndex) =>
@@ -158,7 +179,11 @@ const ControllerConfigurator = () => {
   }
 
   return (
-    <ControllerToolbar devMode={devMode} onToggleDevMode={handleToggleDevMode} onSave={handleSave}>
+    <ControllerToolbar
+      devMode={devMode}
+      onToggleDevMode={handleToggleDevMode}
+      onSave={handleSave}
+    >
       {devMode ? (
         <CustomEditor
           defaultLanguage="yaml"
@@ -170,7 +195,7 @@ const ControllerConfigurator = () => {
         <div className="flex flex-col gap-8">
           <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-primary">Type</label>
+              <label className="text-primary text-sm font-semibold">Type</label>
               <Select value={settings.type} onValueChange={handleTypeChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select an option" />
