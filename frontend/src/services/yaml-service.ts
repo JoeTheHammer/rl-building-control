@@ -18,7 +18,11 @@ export interface EnvironmentConfig {
   rewardSettings: EnvironmentRewardSettings
 }
 
-const CONTROLLER_TYPES: ControllerType[] = ['reinforcement learning', 'rule based', 'custom']
+const CONTROLLER_TYPES: ControllerType[] = [
+  'reinforcement learning',
+  'rule based',
+  'custom',
+]
 
 const normalizeFile = (
   file: File | string | null | undefined,
@@ -403,16 +407,18 @@ const createDefaultRule = (): ControllerRule => ({ condition: '', action: '' })
 
 export const buildControllerYaml = (settings: ControllerSettings): string => {
   if (settings.type === 'rule based') {
-    const stateSpaceValues = settings.stateSpace.map((value) => value.trim()).filter(Boolean)
-    const customVariablesRecord = keyValueArrayToRecord(settings.customVariables)
+    const stateSpaceValues = settings.stateSpace
+      .map((value) => value.trim())
+      .filter(Boolean)
+    const customVariablesRecord = keyValueArrayToRecord(
+      settings.customVariables,
+    )
     const rules = sanitizeRules(settings.rules).map((rule) => ({
       condition: rule.condition,
       action: rule.action,
     }))
 
-    const doc: Record<string, unknown> = {
-      type: settings.type,
-    }
+    const doc: Record<string, unknown> = {}
 
     if (stateSpaceValues.length > 0) {
       doc.state_space = stateSpaceValues
@@ -442,7 +448,6 @@ export const buildControllerYaml = (settings: ControllerSettings): string => {
   }
 
   const doc: Record<string, unknown> = {
-    type: settings.type,
     training,
   }
 
@@ -468,15 +473,19 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
   const doc = (yaml.load(yamlStr) as ControllerYamlDoc) ?? {}
 
   const explicitType =
-    typeof doc.type === 'string' && CONTROLLER_TYPES.includes(doc.type as ControllerType)
+    typeof doc.type === 'string' &&
+    CONTROLLER_TYPES.includes(doc.type as ControllerType)
       ? (doc.type as ControllerType)
       : undefined
 
   const hasRuleBasedShape =
-    Array.isArray(doc.rules) || Array.isArray(doc.state_space) || !!doc.custom_variables
+    Array.isArray(doc.rules) ||
+    Array.isArray(doc.state_space) ||
+    !!doc.custom_variables
 
   const resolvedType: ControllerType =
-    explicitType ?? (hasRuleBasedShape ? 'rule based' : 'reinforcement learning')
+    explicitType ??
+    (hasRuleBasedShape ? 'rule based' : 'reinforcement learning')
 
   if (resolvedType === 'rule based') {
     const rules = Array.isArray(doc.rules)
@@ -487,7 +496,9 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
       : []
 
     const stateSpaceArray = Array.isArray(doc.state_space)
-      ? (doc.state_space.filter((value) => typeof value === 'string') as string[])
+      ? (doc.state_space.filter(
+          (value) => typeof value === 'string',
+        ) as string[])
       : []
 
     return {
