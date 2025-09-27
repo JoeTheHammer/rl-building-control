@@ -23,9 +23,11 @@ const ReinforcementLearningSection = ({
   onHyperparametersChange,
 }: ReinforcementLearningSectionProps) => {
   return (
-    <div className="flex flex-col gap-8">
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-6">
+      {/* Row 1: Timesteps + HP tuning section */}
+      <section className="grid items-end gap-6 lg:grid-cols-2">
+        {/* Training timesteps (left side) */}
+        <div className="flex flex-col gap-1">
           <label
             className="text-primary text-sm font-semibold"
             htmlFor="training-timesteps"
@@ -42,44 +44,10 @@ const ReinforcementLearningSection = ({
             placeholder="Enter number"
           />
         </div>
-      </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-3">
-          <span className="text-primary text-sm font-semibold">
-            Training Options
-          </span>
-          <label className="flex items-center gap-3 text-sm">
-            <Checkbox
-              checked={settings.reportTraining}
-              onCheckedChange={(checked) =>
-                onBooleanChange('reportTraining', !!checked)
-              }
-            />
-            <span>Report training</span>
-          </label>
-          <label className="flex items-center gap-3 text-sm">
-            <Checkbox
-              checked={settings.denormalize}
-              onCheckedChange={(checked) =>
-                onBooleanChange('denormalize', !!checked)
-              }
-            />
-            <span>Denormalize</span>
-          </label>
-          <label className="flex items-center gap-3 text-sm">
-            <Checkbox
-              checked={settings.tensorboardLogs}
-              onCheckedChange={(checked) =>
-                onBooleanChange('tensorboardLogs', !!checked)
-              }
-            />
-            <span>Tensorboard logs</span>
-          </label>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-3 text-sm">
+        {/* HP tuning + episodes/trials (right side) */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
             <Checkbox
               checked={settings.hpTuning}
               onCheckedChange={(checked) =>
@@ -87,12 +55,12 @@ const ReinforcementLearningSection = ({
               }
             />
             <span className="text-primary text-sm font-semibold">
-              HP tuning
+              Activate Hyperparameter tuning
             </span>
-          </label>
+          </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="flex flex-col gap-1">
               <label
                 className="text-primary text-sm font-semibold"
                 htmlFor="num-episodes"
@@ -106,12 +74,12 @@ const ReinforcementLearningSection = ({
                 onChange={(event) =>
                   onNumberChange('numEpisodes', event.target.value)
                 }
-                placeholder="Enter number"
+                placeholder="Enter"
                 disabled={!settings.hpTuning}
               />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <label
                 className="text-primary text-sm font-semibold"
                 htmlFor="num-trials"
@@ -125,7 +93,7 @@ const ReinforcementLearningSection = ({
                 onChange={(event) =>
                   onNumberChange('numTrials', event.target.value)
                 }
-                placeholder="Enter number"
+                placeholder="Enter"
                 disabled={!settings.hpTuning}
               />
             </div>
@@ -133,16 +101,53 @@ const ReinforcementLearningSection = ({
         </div>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-primary text-lg font-semibold">Hyperparameters</h2>
-        <div className="flex flex-col gap-3">
-          <KeyValueList
-            values={settings.hyperparameters}
-            onChange={onHyperparametersChange}
-            emptyKeyLabel="Hyperparameter"
-            emptyValueLabel="Value"
-          />
+      {/* Row 2: Training options inline */}
+      <section className="flex flex-col gap-2">
+        <span className="text-primary text-sm font-semibold">
+          Training Options
+        </span>
+        <div className="flex flex-wrap gap-6 text-sm">
+          <label className="flex items-center gap-2">
+            <Checkbox
+              checked={settings.reportTraining}
+              onCheckedChange={(checked) =>
+                onBooleanChange('reportTraining', !!checked)
+              }
+            />
+            Report training
+          </label>
+          <label className="flex items-center gap-2">
+            <Checkbox
+              checked={settings.denormalize}
+              onCheckedChange={(checked) =>
+                onBooleanChange('denormalize', !!checked)
+              }
+            />
+            Denormalize
+          </label>
+          <label className="flex items-center gap-2">
+            <Checkbox
+              checked={settings.tensorboardLogs}
+              onCheckedChange={(checked) =>
+                onBooleanChange('tensorboardLogs', !!checked)
+              }
+            />
+            Tensorboard logs
+          </label>
         </div>
+      </section>
+
+      {/* Row 3: Hyperparameters */}
+      <section className="flex flex-col gap-2">
+        <h2 className="text-primary text-base font-semibold">
+          Hyperparameters
+        </h2>
+        <KeyValueList
+          values={settings.hyperparameters}
+          onChange={onHyperparametersChange}
+          emptyKeyLabel="Hyperparameter"
+          emptyValueLabel="Value"
+        />
       </section>
     </div>
   )
