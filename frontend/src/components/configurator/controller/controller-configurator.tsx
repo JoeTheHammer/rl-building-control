@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
   Select,
   SelectContent,
@@ -52,6 +52,7 @@ const ControllerConfigurator = () => {
 
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const updateSettings = <Field extends keyof ControllerSettings>(
     field: Field,
@@ -174,11 +175,33 @@ const ControllerConfigurator = () => {
     }
   }
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const parsed = parseControllerYaml(text)
+      setSettings(parsed)
+      console.log('Uploaded and parsed controller YAML', parsed)
+    } catch (error) {
+      console.error('Failed to parse uploaded YAML file', error)
+    } finally {
+      e.target.value = ''
+    }
+  }
+
   return (
     <ControllerToolbar
       devMode={devMode}
       onToggleDevMode={handleToggleDevMode}
       onSave={handleSave}
+      onUpload={handleUploadClick}
+      fileInputRef={fileInputRef}
+      onFileChange={handleFileChange}
     >
       {devMode ? (
         <CustomEditor

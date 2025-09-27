@@ -9,12 +9,12 @@ import EnvRewardTab, {
   type EnvironmentRewardSettings,
 } from './env-reward-tab.tsx'
 import CustomPage from '../../shared/page.tsx'
-import { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import EnvGeneralTab, {
   type EnvironmentGeneralSettings,
 } from './env-general-tab.tsx'
 import { Button } from '../../ui/button.tsx'
-import { Save, Code2, Monitor } from 'lucide-react'
+import { Save, Code2, Monitor, Upload } from 'lucide-react'
 import {
   buildEnvironmentYaml,
   parseEnvironmentYaml,
@@ -101,6 +101,30 @@ const EnvironmentConfigurator = () => {
   const handleRewardSettingsChange = (
     changes: Partial<EnvironmentRewardSettings>,
   ) => setRewardSettings((prev) => ({ ...prev, ...changes }))
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const parsed = parseEnvironmentYaml(text)
+      setGeneralSettings(parsed.generalSettings)
+      setStateSpaceSettings(parsed.stateSpaceSettings)
+      setActionSpaceSettings(parsed.actionSpaceSettings)
+      setRewardSettings(parsed.rewardSettings)
+      console.log('Uploaded and parsed controller YAML', parsed)
+    } catch (error) {
+      console.error('Failed to parse uploaded YAML file', error)
+    } finally {
+      e.target.value = ''
+    }
+  }
 
   const handleSave = () => {
     if (devMode) {
@@ -193,7 +217,27 @@ const EnvironmentConfigurator = () => {
             </Button>
           </div>
 
-          <div className="col-start-4 w-full">
+          <div className="md:col-start-4">
+            <Button
+              onClick={handleUploadClick}
+              type="button"
+              className="text-md w-full"
+            >
+              <div className="flex items-center gap-2">
+                <Upload />
+                <span>Upload Configuration</span>
+              </div>
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".yaml,.yml"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+
+          <div className="col-start-5 w-full">
             <Button
               onClick={handleSave}
               type="button"
