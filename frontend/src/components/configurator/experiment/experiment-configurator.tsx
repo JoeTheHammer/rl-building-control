@@ -1,5 +1,9 @@
-import { useState } from 'react'
-import CustomPage from '../../shared/page.tsx'
+import { useMemo, useRef, useState } from 'react'
+import type { ChangeEvent } from 'react'
+import { Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+
+import CustomEditor from '../../shared/custom-editor.tsx'
 import { Button } from '../../ui/button.tsx'
 import { Input } from '../../ui/input.tsx'
 import { Checkbox } from '../../ui/checkbox.tsx'
@@ -10,212 +14,530 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui/select.tsx'
-import { Save, Code2, Monitor } from 'lucide-react'
-import CustomEditor from '../../shared/custom-editor.tsx'
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card.tsx'
+import { Badge } from '@/components/ui/badge'
+
+import ExperimentToolbar from './experiment-toolbar.tsx'
+import ExperimentSaveDialog from './experiment-save-dialog.tsx'
+import ExperimentConfigDialog from './experiment-config-dialog.tsx'
+import EnvironmentConfigDialog from '../environment/environment-config-dialog.tsx'
+import ControllerConfigDialog from '../controller/controller-config-dialog.tsx'
+import {
+  buildExperimentYaml,
+  parseExperimentYaml,
+  type ExperimentFormState,
+} from '@/services/yaml-service.ts'
+import { fetchExperimentConfig } from '@/services/experiment-service.ts'
+
+const controllerOptions = [
+  'rule',
+  'custom',
+  'ddpg',
+  'dqn',
+  'ppo',
+  'recurrent-ppo',
+  'sac',
+  'td3',
+  'a2c',
+]
+
+const createDefaultExperiment = (): ExperimentFormState => ({
+  name: '',
+  engine: 'sinergym',
+  environmentConfig: '',
+  controller: 'dqn',
+  controllerConfig: '',
+  episodes: 1,
+  reporting: {
+    plots: false,
+    denormalizeState: false,
+    export: false,
+  },
+  reportingEnabled: false,
+})
 
 const ExperimentConfigurator = () => {
-  const [controllerType, setControllerType] = useState('')
-  const [numEpisodes, setNumEpisodes] = useState<number | undefined>(undefined)
-  const [reporting, setReporting] = useState(false)
-  const [reportingOptions, setReportingOptions] = useState({
-    plots: false,
-    denormalize: false,
-    export: false,
-  })
-
+  const [experiments, setExperiments] = useState<ExperimentFormState[]>([
+    createDefaultExperiment(),
+  ])
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [configDialogOpen, setConfigDialogOpen] = useState(false)
+  const [environmentDialogIndex, setEnvironmentDialogIndex] = useState<
+    number | null
+  >(null)
+  const [controllerDialogIndex, setControllerDialogIndex] = useState<
+    number | null
+  >(null)
+  const [openedFile, setOpenedFile] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const handleSave = () => {
-    if (devMode) {
-      console.log('Saving from Dev Mode', editorValue)
-    } else {
-      console.log('Saving experiment configuration', {
-        controllerType,
-        numEpisodes,
-        reporting,
-        reportingOptions,
-      })
-    }
+  const resolvedYaml = useMemo(
+    () => (devMode ? editorValue : buildExperimentYaml(experiments)),
+    [devMode, editorValue, experiments],
+  )
+
+  const updateExperiment = <Field extends keyof ExperimentFormState>(
+    index: number,
+    field: Field,
+    value: ExperimentFormState[Field],
+  ) => {
+    setExperiments((previous) =>
+      previous.map((experiment, experimentIndex) =>
+        experimentIndex === index
+          ? {
+              ...experiment,
+              [field]: value,
+            }
+          : experiment,
+      ),
+    )
+  }
+
+  const handleNameChange = (index: number, value: string) => {
+    updateExperiment(index, 'name', value)
+  }
+
+  const handleEngineChange = (index: number, value: string) => {
+    updateExperiment(index, 'engine', value)
+  }
+
+  const handleControllerChange = (index: number, value: string) => {
+    updateExperiment(index, 'controller', value)
+  }
+
+  const handleEpisodesChange = (index: number, value: string) => {
+    const trimmed = value.trim()
+    const parsed = trimmed === '' ? undefined : Number(trimmed)
+    updateExperiment(
+      index,
+      'episodes',
+      Number.isNaN(parsed) ? undefined : parsed,
+    )
+  }
+
+  const handleReportingToggle = (index: number, enabled: boolean) => {
+    setExperiments((previous) =>
+      previous.map((experiment, experimentIndex) =>
+        experimentIndex === index
+          ? {
+              ...experiment,
+              reportingEnabled: enabled,
+              reporting: enabled
+                ? experiment.reporting
+                : {
+                    plots: false,
+                    denormalizeState: false,
+                    export: false,
+                  },
+            }
+          : experiment,
+      ),
+    )
+  }
+
+  const handleReportingOptionChange = (
+    index: number,
+    option: keyof ExperimentFormState['reporting'],
+    value: boolean,
+  ) => {
+    setExperiments((previous) =>
+      previous.map((experiment, experimentIndex) =>
+        experimentIndex === index
+          ? {
+              ...experiment,
+              reporting: {
+                ...experiment.reporting,
+                [option]: value,
+              },
+            }
+          : experiment,
+      ),
+    )
+  }
+
+  const handleAddExperiment = () => {
+    setExperiments((previous) => [...previous, createDefaultExperiment()])
+  }
+
+  const handleRemoveExperiment = (index: number) => {
+    setExperiments((previous) =>
+      previous.length <= 1
+        ? previous
+        : previous.filter((_, experimentIndex) => experimentIndex !== index),
+    )
   }
 
   const handleToggleDevMode = () => {
-    setDevMode((prev) => !prev)
+    if (!devMode) {
+      setEditorValue(buildExperimentYaml(experiments))
+      setDevMode(true)
+      return
+    }
+
+    try {
+      const parsed = parseExperimentYaml(editorValue)
+      if (parsed.length === 0) {
+        setExperiments([createDefaultExperiment()])
+      } else {
+        setExperiments(parsed)
+      }
+      setDevMode(false)
+    } catch (error) {
+      console.error('Invalid YAML, keeping previous state', error)
+      toast.error('Invalid YAML. Please fix the syntax before leaving Dev Mode.')
+    }
+  }
+
+  const handleSave = () => {
+    if (devMode) {
+      try {
+        const parsed = parseExperimentYaml(editorValue)
+        setExperiments(parsed.length > 0 ? parsed : [createDefaultExperiment()])
+      } catch (error) {
+        console.error('Invalid YAML. Could not save experiment configuration', error)
+        toast.error('Invalid YAML. Could not save experiment configuration.')
+        return
+      }
+    }
+
+    setSaveDialogOpen(true)
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const parsed = parseExperimentYaml(text)
+      const normalized =
+        parsed.length > 0 ? parsed : [createDefaultExperiment()]
+      setExperiments(normalized)
+      setOpenedFile(file.name)
+      if (devMode) {
+        setEditorValue(buildExperimentYaml(normalized))
+      }
+      toast.success(`Imported experiment configuration from ${file.name}`)
+    } catch (error) {
+      console.error('Failed to parse uploaded experiment YAML file', error)
+      toast.error('Failed to parse uploaded experiment configuration.')
+    } finally {
+      event.target.value = ''
+    }
+  }
+
+  const handleOpenConfig = () => {
+    setConfigDialogOpen(true)
+  }
+
+  const handleSelectConfig = async (name: string) => {
+    try {
+      const { content } = await fetchExperimentConfig(name)
+      const yamlStr = JSON.stringify(content, null, 2)
+      const parsed = parseExperimentYaml(yamlStr)
+      const normalized =
+        parsed.length > 0 ? parsed : [createDefaultExperiment()]
+      setExperiments(normalized)
+      if (devMode) {
+        setEditorValue(buildExperimentYaml(normalized))
+      }
+      setOpenedFile(name)
+      toast.success(`Loaded experiment configuration ${name}`)
+    } catch (error) {
+      console.error('Failed to load experiment config', error)
+      toast.error('Failed to load experiment configuration')
+    }
+  }
+
+  const handleEnvironmentSelect = (name: string) => {
+    if (environmentDialogIndex === null) return
+
+    const resolvedPath = `config/environments/${name}`
+    updateExperiment(environmentDialogIndex, 'environmentConfig', resolvedPath)
+    setEnvironmentDialogIndex(null)
+  }
+
+  const handleControllerSelect = (name: string) => {
+    if (controllerDialogIndex === null) return
+
+    const resolvedPath = `config/controllers/${name}`
+    updateExperiment(controllerDialogIndex, 'controllerConfig', resolvedPath)
+    setControllerDialogIndex(null)
   }
 
   return (
-    <CustomPage>
-      <div className="flex w-full flex-col gap-2 pt-2">
-        {/* Top bar */}
-        <div className="mb-2 grid grid-cols-4 items-center gap-2">
-          <div className="col-span-2 col-start-1">
-            <span className="text-primary text-md pt-2 font-bold md:text-xl">
-              Experiment Configurator
-            </span>
-          </div>
-          <div className="col-start-3 w-full">
-            <Button
-              onClick={handleToggleDevMode}
-              type="button"
-              variant={devMode ? 'default' : 'ghost'}
-              className="text-md flex w-full gap-2 border"
-            >
-              {devMode ? (
-                <>
-                  <Monitor />
-                  Switch to GUI Mode
-                </>
-              ) : (
-                <>
-                  <Code2 />
-                  Switch to Dev Mode
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="col-start-4 w-full">
-            <Button
-              onClick={handleSave}
-              type="button"
-              className="text-md w-full cursor-pointer"
-            >
-              <div className="flex gap-2">
-                <Save />
-                <span>Save Configuration</span>
-              </div>
-            </Button>
-          </div>
-        </div>
-
-        <hr className="border-t-primary w-full pb-2" />
-
+    <>
+      <ExperimentToolbar
+        devMode={devMode}
+        onToggleDevMode={handleToggleDevMode}
+        onSave={handleSave}
+        onUpload={handleUploadClick}
+        onOpenConfig={handleOpenConfig}
+        fileInputRef={fileInputRef}
+        onFileChange={handleFileChange}
+      >
+        {openedFile && (
+          <Badge variant="default" className="w-fit">
+            {openedFile}
+          </Badge>
+        )}
         {devMode ? (
           <CustomEditor
             defaultLanguage="yaml"
-            value={editorValue}
-            onChange={(val) => setEditorValue(val ?? '')}
+            value={resolvedYaml}
+            onChange={(value) => setEditorValue(value ?? '')}
             height="600px"
           />
         ) : (
-          <div className="flex flex-col gap-6 pt-4">
-            {/* Grid section */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* Environment */}
-              <div className="flex flex-col gap-1">
-                <label className="text-primary text-sm font-semibold">
-                  Environment
-                </label>
-                <Button variant="outline">Choose environment</Button>
-              </div>
+          <div className="flex flex-col gap-6">
+            {experiments.map((experiment, index) => (
+              <Card key={`experiment-${index}`}>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">
+                    Experiment {index + 1}
+                  </CardTitle>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveExperiment(index)}
+                    disabled={experiments.length <= 1}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-primary text-sm font-semibold">
+                        Name
+                      </label>
+                      <Input
+                        value={experiment.name}
+                        onChange={(event) =>
+                          handleNameChange(index, event.target.value)
+                        }
+                        placeholder="My Experiment"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-primary text-sm font-semibold">
+                        Engine
+                      </label>
+                      <Input
+                        value={experiment.engine}
+                        onChange={(event) =>
+                          handleEngineChange(index, event.target.value)
+                        }
+                        placeholder="sinergym"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-primary text-sm font-semibold">
+                        Environment Config
+                      </label>
+                      <div className="flex flex-col gap-2 md:flex-row">
+                        <Input
+                          value={experiment.environmentConfig}
+                          onChange={(event) =>
+                            updateExperiment(
+                              index,
+                              'environmentConfig',
+                              event.target.value,
+                            )
+                          }
+                          placeholder="config/environments/example.yaml"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setEnvironmentDialogIndex(index)}
+                          className="md:w-auto"
+                        >
+                          Choose Environment Config
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-primary text-sm font-semibold">
+                        Controller
+                      </label>
+                      <Select
+                        value={experiment.controller}
+                        onValueChange={(value) =>
+                          handleControllerChange(index, value)
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select controller" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {controllerOptions.map((option) => {
+                            const label = option
+                              .split('-')
+                              .map(
+                                (segment) =>
+                                  segment.charAt(0).toUpperCase() +
+                                  segment.slice(1),
+                              )
+                              .join(' ')
+                            return (
+                              <SelectItem key={option} value={option}>
+                                {label}
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-primary text-sm font-semibold">
+                        Controller Config
+                      </label>
+                      <div className="flex flex-col gap-2 md:flex-row">
+                        <Input
+                          value={experiment.controllerConfig}
+                          onChange={(event) =>
+                            updateExperiment(
+                              index,
+                              'controllerConfig',
+                              event.target.value,
+                            )
+                          }
+                          placeholder="config/controllers/example.yaml"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setControllerDialogIndex(index)}
+                          className="md:w-auto"
+                        >
+                          Choose Controller Config
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label
+                        className="text-primary text-sm font-semibold"
+                        htmlFor={`episodes-${index}`}
+                      >
+                        Episodes
+                      </label>
+                      <Input
+                        id={`episodes-${index}`}
+                        type="number"
+                        min={1}
+                        value={experiment.episodes ?? ''}
+                        onChange={(event) =>
+                          handleEpisodesChange(index, event.target.value)
+                        }
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
 
-              {/* Controller type */}
-              <div className="flex flex-col gap-1">
-                <label className="text-primary text-sm font-semibold">
-                  Controller type
-                </label>
-                <Select
-                  value={controllerType}
-                  onValueChange={setControllerType}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="rule">Rule Based</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
-                    <SelectItem value="ddpg">DDPG</SelectItem>
-                    <SelectItem value="dqn">DQN</SelectItem>
-                    <SelectItem value="ppo">PPO</SelectItem>
-                    <SelectItem value="recurrent-ppo">Recurrent PPO</SelectItem>
-                    <SelectItem value="sac">SAC</SelectItem>
-                    <SelectItem value="td3">TD3</SelectItem>
-                    <SelectItem value="a2c">A2C</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-primary flex items-center gap-2 text-sm font-semibold">
+                      <Checkbox
+                        checked={experiment.reportingEnabled}
+                        onCheckedChange={(checked) =>
+                          handleReportingToggle(index, !!checked)
+                        }
+                      />
+                      Reporting
+                    </label>
 
-              {/* Controller */}
-              <div className="flex flex-col gap-1">
-                <label className="text-primary text-sm font-semibold">
-                  Controller
-                </label>
-                <Button variant="outline">Choose controller</Button>
-              </div>
+                    {experiment.reportingEnabled && (
+                      <div className="ml-6 flex flex-col gap-2 text-sm">
+                        <label className="flex items-center gap-2">
+                          <Checkbox
+                            checked={experiment.reporting.plots}
+                            onCheckedChange={(checked) =>
+                              handleReportingOptionChange(
+                                index,
+                                'plots',
+                                !!checked,
+                              )
+                            }
+                          />
+                          Plots
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <Checkbox
+                            checked={experiment.reporting.denormalizeState}
+                            onCheckedChange={(checked) =>
+                              handleReportingOptionChange(
+                                index,
+                                'denormalizeState',
+                                !!checked,
+                              )
+                            }
+                          />
+                          Denormalize state
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <Checkbox
+                            checked={experiment.reporting.export}
+                            onCheckedChange={(checked) =>
+                              handleReportingOptionChange(
+                                index,
+                                'export',
+                                !!checked,
+                              )
+                            }
+                          />
+                          Export
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
 
-              {/* Num episodes */}
-              <div className="flex flex-col gap-1">
-                <label
-                  className="text-primary text-sm font-semibold"
-                  htmlFor="num-episodes"
-                >
-                  Num episodes
-                </label>
-                <Input
-                  id="num-episodes"
-                  type="number"
-                  value={numEpisodes ?? ''}
-                  onChange={(e) => setNumEpisodes(Number(e.target.value))}
-                  placeholder="Enter number"
-                />
-              </div>
-            </div>
-
-            {/* Reporting */}
-            <div className="flex flex-col gap-2">
-              <label className="text-primary flex items-center gap-2 text-sm font-semibold">
-                <Checkbox
-                  checked={reporting}
-                  onCheckedChange={(checked) => setReporting(!!checked)}
-                />
-                Reporting
-              </label>
-
-              {reporting && (
-                <div className="ml-6 flex flex-col gap-2 text-sm">
-                  <label className="flex items-center gap-2">
-                    <Checkbox
-                      checked={reportingOptions.plots}
-                      onCheckedChange={(checked) =>
-                        setReportingOptions((prev) => ({
-                          ...prev,
-                          plots: !!checked,
-                        }))
-                      }
-                    />
-                    Plots
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <Checkbox
-                      checked={reportingOptions.denormalize}
-                      onCheckedChange={(checked) =>
-                        setReportingOptions((prev) => ({
-                          ...prev,
-                          denormalize: !!checked,
-                        }))
-                      }
-                    />
-                    Denormalize state
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <Checkbox
-                      checked={reportingOptions.export}
-                      onCheckedChange={(checked) =>
-                        setReportingOptions((prev) => ({
-                          ...prev,
-                          export: !!checked,
-                        }))
-                      }
-                    />
-                    Export
-                  </label>
-                </div>
-              )}
+            <div>
+              <Button type="button" variant="outline" onClick={handleAddExperiment}>
+                <Plus className="mr-2 h-4 w-4" /> Add Experiment
+              </Button>
             </div>
           </div>
         )}
-      </div>
-    </CustomPage>
+      </ExperimentToolbar>
+
+      <ExperimentSaveDialog
+        open={saveDialogOpen}
+        onClose={() => setSaveDialogOpen(false)}
+        experiments={experiments}
+        onSaved={(filename) => {
+          setOpenedFile(filename)
+        }}
+        initialFilename={openedFile}
+      />
+
+      <ExperimentConfigDialog
+        open={configDialogOpen}
+        onClose={() => setConfigDialogOpen(false)}
+        onSelect={handleSelectConfig}
+      />
+
+      <EnvironmentConfigDialog
+        open={environmentDialogIndex !== null}
+        onClose={() => setEnvironmentDialogIndex(null)}
+        onSelect={handleEnvironmentSelect}
+      />
+
+      <ControllerConfigDialog
+        open={controllerDialogIndex !== null}
+        onClose={() => setControllerDialogIndex(null)}
+        onSelect={handleControllerSelect}
+      />
+    </>
   )
 }
 
