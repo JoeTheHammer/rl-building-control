@@ -22,6 +22,7 @@ import {
 import CustomEditor from '../../shared/custom-editor.tsx'
 import EnvironmentConfigDialog from '@/components/configurator/environment/environment-config-dialog.tsx'
 import { fetchEnvironmentConfig } from '@/services/environment-service.ts'
+import { Badge } from '@/components/ui/badge.tsx'
 
 const tabTriggerStyle =
   'text-md text-primary hover:text-primary-foreground hover:bg-primary/90 hover:cursor-pointer active:bg-primary ' +
@@ -87,6 +88,7 @@ const EnvironmentConfigurator = () => {
   // Dev mode
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
+  const [openedFile, setOpenedFile] = useState<string | null>(null)
 
   // Dialog state
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
@@ -128,6 +130,7 @@ const EnvironmentConfigurator = () => {
       console.error('Failed to parse uploaded YAML file', error)
     } finally {
       e.target.value = ''
+      setOpenedFile(null)
     }
   }
 
@@ -188,7 +191,7 @@ const EnvironmentConfigurator = () => {
     }
   }
 
-  const handleOpenConfig = async (name: string) => {
+  const handleOpenConfiguration = async (name: string) => {
     try {
       const { content } = await fetchEnvironmentConfig(name)
       const yamlStr = JSON.stringify(content, null, 2)
@@ -198,6 +201,8 @@ const EnvironmentConfigurator = () => {
       setStateSpaceSettings(parsed.stateSpaceSettings)
       setActionSpaceSettings(parsed.actionSpaceSettings)
       setRewardSettings(parsed.rewardSettings)
+
+      setOpenedFile(name)
 
       if (devMode) {
         setEditorValue(
@@ -261,7 +266,7 @@ const EnvironmentConfigurator = () => {
             <EnvironmentConfigDialog
               open={configDialogOpen}
               onClose={() => setConfigDialogOpen(false)}
-              onSelect={handleOpenConfig}
+              onSelect={handleOpenConfiguration}
             />
           </div>
 
@@ -300,6 +305,12 @@ const EnvironmentConfigurator = () => {
         </div>
 
         <hr className="border-t-primary w-full pb-2" />
+
+        {openedFile !== null && openedFile !== '' && (
+          <Badge variant="default">
+            <span>{openedFile}</span>
+          </Badge>
+        )}
 
         {devMode ? (
           <CustomEditor

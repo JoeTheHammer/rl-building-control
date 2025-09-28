@@ -24,6 +24,7 @@ import type {
 } from './controller-types.ts'
 import ControllerConfigDialog from './controller-config-dialog.tsx'
 import { fetchControllerConfig } from '@/services/controller-service.ts'
+import { Badge } from '@/components/ui/badge'
 
 const controllerTypes: ControllerType[] = [
   'reinforcement learning',
@@ -56,6 +57,7 @@ const ControllerConfigurator = () => {
   const [editorValue, setEditorValue] = useState('')
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [openedFile, setOpenedFile] = useState<string | null>(null)
 
   const updateSettings = <Field extends keyof ControllerSettings>(
     field: Field,
@@ -194,6 +196,7 @@ const ControllerConfigurator = () => {
       console.error('Failed to parse uploaded YAML file', error)
     } finally {
       e.target.value = ''
+      setOpenedFile('')
     }
   }
 
@@ -213,6 +216,8 @@ const ControllerConfigurator = () => {
         setEditorValue(buildControllerYaml(parsed))
       }
 
+      setOpenedFile(name)
+
       console.log('Loaded controller config:', name, content)
     } catch (err) {
       console.error('Failed to load controller config', err)
@@ -230,6 +235,11 @@ const ControllerConfigurator = () => {
         fileInputRef={fileInputRef}
         onFileChange={handleFileChange}
       >
+        {openedFile !== null && openedFile !== '' && (
+          <Badge variant="default">
+            <span>{openedFile}</span>
+          </Badge>
+        )}
         {devMode ? (
           <CustomEditor
             defaultLanguage="yaml"
