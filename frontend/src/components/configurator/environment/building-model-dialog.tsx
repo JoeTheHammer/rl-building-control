@@ -40,7 +40,10 @@ const BuildingModelDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="h-2/3 max-w-lg" aria-describedby={undefined}>
+      <DialogContent
+        className="max-h-[80vh] max-w-lg overflow-y-auto"
+        aria-describedby={undefined}
+      >
         <DialogHeader>
           <DialogTitle>Select Building Model</DialogTitle>
         </DialogHeader>
