@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
   Select,
   SelectContent,
@@ -25,6 +25,8 @@ import type {
 import ControllerConfigDialog from './controller-config-dialog.tsx'
 import { fetchControllerConfig } from '@/services/controller-service.ts'
 import { Badge } from '@/components/ui/badge'
+import ControllerSaveDialog from './controller-save-dialog.tsx'
+import { toast } from 'sonner'
 
 const controllerTypes: ControllerType[] = [
   'reinforcement learning',
@@ -56,6 +58,7 @@ const ControllerConfigurator = () => {
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [openedFile, setOpenedFile] = useState<string | null>(null)
 
@@ -155,13 +158,12 @@ const ControllerConfigurator = () => {
         console.log('Saved from Dev Mode', parsed)
       } catch (error) {
         console.error('Invalid YAML. Could not save.', error)
+        toast.error('Invalid YAML. Could not save controller configuration.')
+        return
       }
-    } else {
-      const yamlString = buildControllerYaml(settings)
-      console.log('Saving controller configuration', settings)
-      console.log(yamlString)
-      console.log(parseControllerYaml(yamlString))
     }
+
+    setSaveDialogOpen(true)
   }
 
   const handleToggleDevMode = () => {
@@ -300,6 +302,16 @@ const ControllerConfigurator = () => {
           </div>
         )}
       </ControllerToolbar>
+
+      <ControllerSaveDialog
+        open={saveDialogOpen}
+        onClose={() => setSaveDialogOpen(false)}
+        initialFilename={openedFile}
+        settings={settings}
+        onSaved={(filename) => {
+          setOpenedFile(filename)
+        }}
+      />
 
       <ControllerConfigDialog
         open={configDialogOpen}

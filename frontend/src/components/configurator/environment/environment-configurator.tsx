@@ -9,7 +9,7 @@ import EnvRewardTab, {
   type EnvironmentRewardSettings,
 } from './env-reward-tab.tsx'
 import CustomPage from '../../shared/page.tsx'
-import React, { useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import EnvGeneralTab, {
   type EnvironmentGeneralSettings,
 } from './env-general-tab.tsx'
@@ -21,8 +21,10 @@ import {
 } from '@/services/yaml-service.ts'
 import CustomEditor from '../../shared/custom-editor.tsx'
 import EnvironmentConfigDialog from '@/components/configurator/environment/environment-config-dialog.tsx'
+import EnvironmentSaveDialog from '@/components/configurator/environment/environment-save-dialog.tsx'
 import { fetchEnvironmentConfig } from '@/services/environment-service.ts'
 import { Badge } from '@/components/ui/badge.tsx'
+import { toast } from 'sonner'
 
 const tabTriggerStyle =
   'text-md text-primary hover:text-primary-foreground hover:bg-primary/90 hover:cursor-pointer active:bg-primary ' +
@@ -92,6 +94,7 @@ const EnvironmentConfigurator = () => {
 
   // Dialog state
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
 
   const handleGeneralSettingsChange = (
     changes: Partial<EnvironmentGeneralSettings>,
@@ -145,25 +148,12 @@ const EnvironmentConfigurator = () => {
         console.log('Saved from Dev Mode', parsed)
       } catch (err) {
         console.error('Invalid YAML. Could not save.', err)
+        toast.error('Invalid YAML. Could not save environment configuration.')
+        return
       }
-    } else {
-      console.log('Saving environment configuration', {
-        generalSettings,
-        stateSpaceSettings,
-        actionSpaceSettings,
-        rewardSettings,
-      })
-
-      const yamlString = buildEnvironmentYaml(
-        generalSettings,
-        stateSpaceSettings,
-        actionSpaceSettings,
-        rewardSettings,
-      )
-
-      console.log(yamlString)
-      console.log(parseEnvironmentYaml(yamlString))
     }
+
+    setSaveDialogOpen(true)
   }
 
   const handleToggleDevMode = () => {
@@ -220,6 +210,21 @@ const EnvironmentConfigurator = () => {
       console.error('Failed to load environment config', err)
     }
   }
+
+  const currentConfig = useMemo(
+    () => ({
+      generalSettings,
+      stateSpaceSettings,
+      actionSpaceSettings,
+      rewardSettings,
+    }),
+    [
+      generalSettings,
+      stateSpaceSettings,
+      actionSpaceSettings,
+      rewardSettings,
+    ],
+  )
 
   return (
     <CustomPage>
@@ -301,6 +306,15 @@ const EnvironmentConfigurator = () => {
                 <span>Save Configuration</span>
               </div>
             </Button>
+            <EnvironmentSaveDialog
+              open={saveDialogOpen}
+              onClose={() => setSaveDialogOpen(false)}
+              initialFilename={openedFile}
+              config={currentConfig}
+              onSaved={(filename) => {
+                setOpenedFile(filename)
+              }}
+            />
           </div>
         </div>
 
