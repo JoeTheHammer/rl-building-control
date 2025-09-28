@@ -37,7 +37,7 @@ const EnvironmentConfigurator = () => {
       weatherDataFile: null,
       startDate: '',
       endDate: '',
-      timestepsPerHour: undefined,
+      timestepsPerHour: 4,
     })
 
   const [stateSpaceSettings, setStateSpaceSettings] =
@@ -218,12 +218,7 @@ const EnvironmentConfigurator = () => {
       actionSpaceSettings,
       rewardSettings,
     }),
-    [
-      generalSettings,
-      stateSpaceSettings,
-      actionSpaceSettings,
-      rewardSettings,
-    ],
+    [generalSettings, stateSpaceSettings, actionSpaceSettings, rewardSettings],
   )
 
   return (
