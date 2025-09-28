@@ -14,12 +14,14 @@ import EnvGeneralTab, {
   type EnvironmentGeneralSettings,
 } from './env-general-tab.tsx'
 import { Button } from '../../ui/button.tsx'
-import { Save, Code2, Monitor, Import } from 'lucide-react'
+import { Save, Code2, Monitor, Import, FolderOpen } from 'lucide-react'
 import {
   buildEnvironmentYaml,
   parseEnvironmentYaml,
 } from '@/services/yaml-service.ts'
 import CustomEditor from '../../shared/custom-editor.tsx'
+import EnvironmentConfigDialog from '@/components/configurator/environment/environment-config-dialog.tsx'
+import { fetchEnvironmentConfig } from '@/services/environment-service.ts'
 
 const tabTriggerStyle =
   'text-md text-primary hover:text-primary-foreground hover:bg-primary/90 hover:cursor-pointer active:bg-primary ' +
@@ -86,6 +88,9 @@ const EnvironmentConfigurator = () => {
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
 
+  // Dialog state
+  const [configDialogOpen, setConfigDialogOpen] = useState(false)
+
   const handleGeneralSettingsChange = (
     changes: Partial<EnvironmentGeneralSettings>,
   ) => setGeneralSettings((prev) => ({ ...prev, ...changes }))
@@ -118,7 +123,7 @@ const EnvironmentConfigurator = () => {
       setStateSpaceSettings(parsed.stateSpaceSettings)
       setActionSpaceSettings(parsed.actionSpaceSettings)
       setRewardSettings(parsed.rewardSettings)
-      console.log('Uploaded and parsed controller YAML', parsed)
+      console.log('Uploaded and parsed environment YAML', parsed)
     } catch (error) {
       console.error('Failed to parse uploaded YAML file', error)
     } finally {
@@ -160,7 +165,6 @@ const EnvironmentConfigurator = () => {
 
   const handleToggleDevMode = () => {
     if (!devMode) {
-      // Switching into dev mode → dump state into YAML editor
       const yamlString = buildEnvironmentYaml(
         generalSettings,
         stateSpaceSettings,
@@ -170,7 +174,6 @@ const EnvironmentConfigurator = () => {
       setEditorValue(yamlString)
       setDevMode(true)
     } else {
-      // Switching out of dev mode → try parsing YAML back to state
       try {
         const parsed = parseEnvironmentYaml(editorValue)
         setGeneralSettings(parsed.generalSettings)
@@ -180,9 +183,36 @@ const EnvironmentConfigurator = () => {
         console.log('Dev Mode exited, state updated from YAML')
       } catch (err) {
         console.error('Invalid YAML, keeping previous state', err)
-        // Keep previous state unchanged
       }
       setDevMode(false)
+    }
+  }
+
+  const handleOpenConfig = async (name: string) => {
+    try {
+      const { content } = await fetchEnvironmentConfig(name)
+      const yamlStr = JSON.stringify(content, null, 2)
+      const parsed = parseEnvironmentYaml(yamlStr)
+
+      setGeneralSettings(parsed.generalSettings)
+      setStateSpaceSettings(parsed.stateSpaceSettings)
+      setActionSpaceSettings(parsed.actionSpaceSettings)
+      setRewardSettings(parsed.rewardSettings)
+
+      if (devMode) {
+        setEditorValue(
+          buildEnvironmentYaml(
+            parsed.generalSettings,
+            parsed.stateSpaceSettings,
+            parsed.actionSpaceSettings,
+            parsed.rewardSettings,
+          ),
+        )
+      }
+
+      console.log('Loaded environment config:', name, parsed)
+    } catch (err) {
+      console.error('Failed to load environment config', err)
     }
   }
 
@@ -190,7 +220,7 @@ const EnvironmentConfigurator = () => {
     <CustomPage>
       <div className="flex w-full flex-col gap-2 pt-2">
         {/* Grid for buttons */}
-        <div className="mb-2 grid grid-cols-4 items-center gap-2">
+        <div className="mb-2 grid grid-cols-5 items-center gap-2">
           <div className="col-span-2 col-start-1">
             <span className="text-primary text-md pt-2 font-bold md:text-xl">
               Environment Configurator
@@ -217,7 +247,25 @@ const EnvironmentConfigurator = () => {
             </Button>
           </div>
 
-          <div className="md:col-start-4">
+          <div className="col-start-4 w-full">
+            <Button
+              onClick={() => setConfigDialogOpen(true)}
+              type="button"
+              className="text-md w-full"
+            >
+              <div className="flex gap-2">
+                <FolderOpen />
+                <span>Open Configuration</span>
+              </div>
+            </Button>
+            <EnvironmentConfigDialog
+              open={configDialogOpen}
+              onClose={() => setConfigDialogOpen(false)}
+              onSelect={handleOpenConfig}
+            />
+          </div>
+
+          <div className="md:col-start-5">
             <Button
               onClick={handleUploadClick}
               type="button"
@@ -237,7 +285,7 @@ const EnvironmentConfigurator = () => {
             />
           </div>
 
-          <div className="col-start-5 w-full">
+          <div className="col-start-6 w-full">
             <Button
               onClick={handleSave}
               type="button"
