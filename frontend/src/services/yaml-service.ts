@@ -620,3 +620,158 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
     initArguments: [],
   }
 }
+
+export interface ExperimentReportingOptions {
+  plots: boolean
+  denormalizeState: boolean
+  export: boolean
+}
+
+export interface ExperimentFormState {
+  name: string
+  engine: string
+  environmentConfig: string
+  controller: string
+  controllerConfig: string
+  episodes: number | undefined
+  reporting: ExperimentReportingOptions
+  reportingEnabled: boolean
+}
+
+export interface ExperimentDefinition {
+  name: string
+  engine: string
+  environmentConfig: string
+  controller: string
+  controllerConfig: string
+  episodes: number
+  reporting: ExperimentReportingOptions
+}
+
+interface ExperimentYamlEntry {
+  name?: unknown
+  engine?: unknown
+  environment_config?: unknown
+  controller?: unknown
+  controller_config?: unknown
+  episodes?: unknown
+  reporting?: {
+    plots?: unknown
+    denormalize_state?: unknown
+    export?: unknown
+  }
+}
+
+interface ExperimentsYamlDoc {
+  experiments?: ExperimentYamlEntry[]
+}
+
+const resolveExperimentString = (value: unknown): string =>
+  typeof value === 'string' ? value : ''
+
+const resolveExperimentNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    return Number.isNaN(parsed) ? undefined : parsed
+  }
+
+  return undefined
+}
+
+const resolveExperimentBoolean = (value: unknown): boolean => value === true
+
+const resolveReporting = (
+  experiment: ExperimentFormState,
+): ExperimentReportingOptions => ({
+  plots: experiment.reportingEnabled ? experiment.reporting.plots : false,
+  denormalizeState: experiment.reportingEnabled
+    ? experiment.reporting.denormalizeState
+    : false,
+  export: experiment.reportingEnabled ? experiment.reporting.export : false,
+})
+
+export const buildExperimentYaml = (
+  experiments: ExperimentFormState[],
+): string => {
+  const doc = {
+    experiments: experiments.map((experiment) => ({
+      name: experiment.name,
+      engine: experiment.engine,
+      environment_config: experiment.environmentConfig,
+      controller: experiment.controller,
+      controller_config: experiment.controllerConfig,
+      episodes:
+        typeof experiment.episodes === 'number' ? experiment.episodes : 0,
+      reporting: {
+        plots: experiment.reportingEnabled ? experiment.reporting.plots : false,
+        denormalize_state: experiment.reportingEnabled
+          ? experiment.reporting.denormalizeState
+          : false,
+        export: experiment.reportingEnabled
+          ? experiment.reporting.export
+          : false,
+      },
+    })),
+  }
+
+  return yaml.dump(doc, { noRefs: true })
+}
+
+export const parseExperimentYaml = (
+  yamlStr: string,
+): ExperimentFormState[] => {
+  const parsed = yaml.load(yamlStr) as ExperimentsYamlDoc | ExperimentYamlEntry[] | null
+
+  const experimentsArray: ExperimentYamlEntry[] = Array.isArray(parsed)
+    ? parsed
+    : parsed?.experiments ?? []
+
+  return experimentsArray.map((experiment) => {
+    const reporting = experiment.reporting ?? {}
+    const reportingOptions: ExperimentReportingOptions = {
+      plots: resolveExperimentBoolean(reporting.plots),
+      denormalizeState: resolveExperimentBoolean(
+        reporting.denormalize_state,
+      ),
+      export: resolveExperimentBoolean(reporting.export),
+    }
+
+    const reportingEnabled =
+      reportingOptions.plots ||
+      reportingOptions.denormalizeState ||
+      reportingOptions.export
+
+    return {
+      name: resolveExperimentString(experiment.name),
+      engine: resolveExperimentString(experiment.engine),
+      environmentConfig: resolveExperimentString(
+        experiment.environment_config,
+      ),
+      controller: resolveExperimentString(experiment.controller),
+      controllerConfig: resolveExperimentString(
+        experiment.controller_config,
+      ),
+      episodes: resolveExperimentNumber(experiment.episodes),
+      reporting: reportingOptions,
+      reportingEnabled,
+    }
+  })
+}
+
+export const toExperimentDefinitions = (
+  experiments: ExperimentFormState[],
+): ExperimentDefinition[] =>
+  experiments.map((experiment) => ({
+    name: experiment.name,
+    engine: experiment.engine,
+    environmentConfig: experiment.environmentConfig,
+    controller: experiment.controller,
+    controllerConfig: experiment.controllerConfig,
+    episodes:
+      typeof experiment.episodes === 'number' ? experiment.episodes : 0,
+    reporting: resolveReporting(experiment),
+  }))
