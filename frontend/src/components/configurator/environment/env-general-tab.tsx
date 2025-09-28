@@ -4,6 +4,7 @@ import { DatePicker } from '../../ui/date-picker.tsx'
 import { Input } from '../../ui/input.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import BuildingModelDialog from '@/components/configurator/environment/building-model-dialog.tsx'
+import { File } from 'lucide-react'
 
 export interface EnvironmentGeneralSettings {
   buildingModelFile: File | string | null
@@ -87,11 +88,14 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
             Building Model
           </label>
           <Button type="button" onClick={() => setBuildingDialogOpen(true)}>
-            {settings.buildingModelFile
-              ? typeof settings.buildingModelFile === 'string'
-                ? settings.buildingModelFile
-                : settings.buildingModelFile.name
-              : 'Select Building Model'}
+            <div className="justinfy-center flex items-center gap-2">
+              <File className="h-5 w-5" />
+              {settings.buildingModelFile
+                ? typeof settings.buildingModelFile === 'string'
+                  ? settings.buildingModelFile
+                  : settings.buildingModelFile.name
+                : 'Select Building Model'}
+            </div>
           </Button>
           <BuildingModelDialog
             open={buildingDialogOpen}
