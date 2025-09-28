@@ -22,6 +22,8 @@ import type {
   ControllerSettings,
   ControllerType,
 } from './controller-types.ts'
+import ControllerConfigDialog from './controller-config-dialog.tsx'
+import { fetchControllerConfig } from '@/services/controller-service.ts'
 
 const controllerTypes: ControllerType[] = [
   'reinforcement learning',
@@ -52,6 +54,7 @@ const ControllerConfigurator = () => {
 
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
+  const [configDialogOpen, setConfigDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const updateSettings = <Field extends keyof ControllerSettings>(
@@ -194,73 +197,106 @@ const ControllerConfigurator = () => {
     }
   }
 
-  return (
-    <ControllerToolbar
-      devMode={devMode}
-      onToggleDevMode={handleToggleDevMode}
-      onSave={handleSave}
-      onUpload={handleUploadClick}
-      fileInputRef={fileInputRef}
-      onFileChange={handleFileChange}
-    >
-      {devMode ? (
-        <CustomEditor
-          defaultLanguage="yaml"
-          value={editorValue}
-          onChange={(value) => setEditorValue(value ?? '')}
-          height="600px"
-        />
-      ) : (
-        <div className="flex flex-col gap-8">
-          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="flex flex-col gap-2">
-              <label className="text-primary text-sm font-semibold">Type</label>
-              <Select value={settings.type} onValueChange={handleTypeChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an option" />
-                </SelectTrigger>
-                <SelectContent>
-                  {controllerTypes.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item.charAt(0).toUpperCase() + item.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </section>
+  const handleOpenConfig = () => {
+    setConfigDialogOpen(true)
+  }
 
-          {settings.type === 'rule based' ? (
-            <RuleBasedSection
-              customVariables={settings.customVariables}
-              onCustomVariablesChange={handleCustomVariablesChange}
-              stateSpace={settings.stateSpace}
-              onStateSpaceChange={handleStateSpaceChange}
-              rules={settings.rules}
-              onRuleChange={handleRuleChange}
-              onAddRule={handleAddRule}
-              onRemoveRule={handleRemoveRule}
-            />
-          ) : settings.type === 'custom' ? (
-            <CustomSection
-              modulePath={settings.customModule}
-              className={settings.customClassName}
-              initArguments={settings.initArguments}
-              onModuleChange={handleCustomModuleChange}
-              onClassNameChange={handleCustomClassNameChange}
-              onInitArgumentsChange={handleInitArgumentsChange}
-            />
-          ) : (
-            <ReinforcementLearningSection
-              settings={settings}
-              onNumberChange={handleNumberChange}
-              onBooleanChange={handleBooleanChange}
-              onHyperparametersChange={handleHyperparametersChange}
-            />
-          )}
-        </div>
-      )}
-    </ControllerToolbar>
+  const handleSelectConfig = async (name: string) => {
+    try {
+      const { content } = await fetchControllerConfig(name)
+      const yamlStr = JSON.stringify(content, null, 2)
+      const parsed = parseControllerYaml(yamlStr)
+
+      setSettings(parsed)
+
+      if (devMode) {
+        setEditorValue(buildControllerYaml(parsed))
+      }
+
+      console.log('Loaded controller config:', name, content)
+    } catch (err) {
+      console.error('Failed to load controller config', err)
+    }
+  }
+
+  return (
+    <>
+      <ControllerToolbar
+        devMode={devMode}
+        onToggleDevMode={handleToggleDevMode}
+        onSave={handleSave}
+        onUpload={handleUploadClick}
+        onOpenConfig={handleOpenConfig}
+        fileInputRef={fileInputRef}
+        onFileChange={handleFileChange}
+      >
+        {devMode ? (
+          <CustomEditor
+            defaultLanguage="yaml"
+            value={editorValue}
+            onChange={(value) => setEditorValue(value ?? '')}
+            height="600px"
+          />
+        ) : (
+          <div className="flex flex-col gap-8">
+            <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="flex flex-col gap-2">
+                <label className="text-primary text-sm font-semibold">
+                  Type
+                </label>
+                <Select value={settings.type} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select an option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {controllerTypes.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item.charAt(0).toUpperCase() + item.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </section>
+
+            {settings.type === 'rule based' ? (
+              <RuleBasedSection
+                customVariables={settings.customVariables}
+                onCustomVariablesChange={handleCustomVariablesChange}
+                stateSpace={settings.stateSpace}
+                onStateSpaceChange={handleStateSpaceChange}
+                rules={settings.rules}
+                onRuleChange={handleRuleChange}
+                onAddRule={handleAddRule}
+                onRemoveRule={handleRemoveRule}
+              />
+            ) : settings.type === 'custom' ? (
+              <CustomSection
+                modulePath={settings.customModule}
+                className={settings.customClassName}
+                initArguments={settings.initArguments}
+                onModuleChange={handleCustomModuleChange}
+                onClassNameChange={handleCustomClassNameChange}
+                onInitArgumentsChange={handleInitArgumentsChange}
+              />
+            ) : (
+              <ReinforcementLearningSection
+                settings={settings}
+                onNumberChange={handleNumberChange}
+                onBooleanChange={handleBooleanChange}
+                onHyperparametersChange={handleHyperparametersChange}
+              />
+            )}
+          </div>
+        )}
+      </ControllerToolbar>
+
+      <ControllerConfigDialog
+        open={configDialogOpen}
+        onClose={() => setConfigDialogOpen(false)}
+        onSelect={handleSelectConfig}
+      />
+    </>
   )
 }
 

@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from 'react'
-import { Save, Code2, Monitor, Import } from 'lucide-react'
+import { Save, Code2, Monitor, Import, FolderOpen } from 'lucide-react'
 import CustomPage from '../../shared/page.tsx'
 import { Button } from '../../ui/button.tsx'
 
@@ -8,6 +8,7 @@ interface ControllerToolbarProps {
   onToggleDevMode: () => void
   onSave: () => void
   onUpload: () => void
+  onOpenConfig: () => void
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   fileInputRef: RefObject<HTMLInputElement | null>
   children: ReactNode
@@ -18,13 +19,14 @@ const ControllerToolbar = ({
   onToggleDevMode,
   onSave,
   onUpload,
+  onOpenConfig,
   onFileChange,
   fileInputRef,
   children,
 }: ControllerToolbarProps) => (
   <CustomPage>
     <div className="flex w-full flex-col gap-4 pt-2">
-      <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-5">
+      <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-6">
         <div className="md:col-span-2">
           <span className="text-primary text-md font-bold md:text-xl">
             Controller Configurator
@@ -53,6 +55,19 @@ const ControllerToolbar = ({
         </div>
 
         <div className="md:col-start-4">
+          <Button
+            onClick={onOpenConfig}
+            type="button"
+            className="text-md w-full"
+          >
+            <div className="flex items-center gap-2">
+              <FolderOpen />
+              <span>Open Configuration</span>
+            </div>
+          </Button>
+        </div>
+
+        <div className="md:col-start-5">
           <Button onClick={onUpload} type="button" className="text-md w-full">
             <div className="flex items-center gap-2">
               <Import />
@@ -68,7 +83,7 @@ const ControllerToolbar = ({
           />
         </div>
 
-        <div className="md:col-start-5">
+        <div className="md:col-start-6">
           <Button onClick={onSave} type="button" className="text-md w-full">
             <div className="flex items-center gap-2">
               <Save />
