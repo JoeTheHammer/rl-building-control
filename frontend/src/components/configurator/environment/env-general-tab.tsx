@@ -1,7 +1,9 @@
-import type { ChangeEvent } from 'react'
+import { type ChangeEvent, useState } from 'react'
 
 import { DatePicker } from '../../ui/date-picker.tsx'
 import { Input } from '../../ui/input.tsx'
+import { Button } from '@/components/ui/button.tsx'
+import BuildingModelDialog from '@/components/configurator/environment/building-model-dialog.tsx'
 
 export interface EnvironmentGeneralSettings {
   buildingModelFile: File | string | null
@@ -44,10 +46,7 @@ const fieldLabelStyles = 'text-sm font-semibold text-primary'
 const fieldContainerStyles = 'flex flex-col gap-2'
 
 const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
-  const handleBuildingModelChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null
-    onSettingsChange({ buildingModelFile: file })
-  }
+  const [buildingDialogOpen, setBuildingDialogOpen] = useState(false)
 
   const handleWeatherDataChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
@@ -87,11 +86,17 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
           <label className={fieldLabelStyles} htmlFor="building-model-input">
             Building Model
           </label>
-          <Input
-            id="building-model-input"
-            type="file"
-            onChange={handleBuildingModelChange}
-            className="cursor-pointer"
+          <Button type="button" onClick={() => setBuildingDialogOpen(true)}>
+            {settings.buildingModelFile
+              ? typeof settings.buildingModelFile === 'string'
+                ? settings.buildingModelFile
+                : settings.buildingModelFile.name
+              : 'Select Building Model'}
+          </Button>
+          <BuildingModelDialog
+            open={buildingDialogOpen}
+            onClose={() => setBuildingDialogOpen(false)}
+            onSelect={(file) => onSettingsChange({ buildingModelFile: file })}
           />
           {settings.buildingModelFile && (
             <span className="text-primary/70 truncate text-xs">
