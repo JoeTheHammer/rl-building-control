@@ -4,7 +4,8 @@ import { DatePicker } from '../../ui/date-picker.tsx'
 import { Input } from '../../ui/input.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import BuildingModelDialog from '@/components/configurator/environment/building-model-dialog.tsx'
-import { File } from 'lucide-react'
+import { File, Folder } from 'lucide-react'
+import WeatherFolderDialog from '@/components/configurator/environment/weather-data-dialog.tsx'
 
 export interface EnvironmentGeneralSettings {
   buildingModelFile: File | string | null
@@ -48,11 +49,7 @@ const fieldContainerStyles = 'flex flex-col gap-2'
 
 const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
   const [buildingDialogOpen, setBuildingDialogOpen] = useState(false)
-
-  const handleWeatherDataChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null
-    onSettingsChange({ weatherDataFile: file })
-  }
+  const [weatherDialogOpen, setWeatherDialogOpen] = useState(false)
 
   const handleStartDateSelect = (date?: Date) => {
     onSettingsChange({ startDate: date ? formatDateForStorage(date) : '' })
@@ -114,11 +111,20 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
           <label className={fieldLabelStyles} htmlFor="weather-data-input">
             Weather Data
           </label>
-          <Input
-            id="weather-data-input"
-            type="file"
-            onChange={handleWeatherDataChange}
-            className="cursor-pointer"
+          <Button type="button" onClick={() => setWeatherDialogOpen(true)}>
+            <div className="justinfy-center flex items-center gap-2">
+              <Folder className="h-5 w-5" />
+              {settings.weatherDataFile
+                ? typeof settings.weatherDataFile === 'string'
+                  ? settings.weatherDataFile
+                  : settings.weatherDataFile.name
+                : 'Select Weather Folder'}
+            </div>
+          </Button>
+          <WeatherFolderDialog
+            open={weatherDialogOpen}
+            onClose={() => setWeatherDialogOpen(false)}
+            onSelect={(folder) => onSettingsChange({ weatherDataFile: folder })}
           />
           {settings.weatherDataFile && (
             <span className="text-primary/70 truncate text-xs">
