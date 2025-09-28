@@ -14,8 +14,11 @@ CONTROLLERS_DIR = BASE_DIR / "config" / "controllers"
 def save_ctrl(req: SaveControllerRequest):
     try:
         filepath = Path(req.directory) / req.filename
+
+        # Store controllers always to same dir at the moment.
+        req.directory = str(CONTROLLERS_DIR)
         save_controller(req)
-        return {"saved": True, "path": str(filepath.resolve())}
+        return {"saved": True, "path": CONTROLLERS_DIR / filepath.name}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -13,9 +13,10 @@ ENVIRONMENTS_DIR = BASE_DIR / "config" / "environments"
 @router.post("/save")
 def save_env(req: SaveEnvironmentRequest):
     try:
-        filepath = Path(req.directory) / req.filename
+        # Store environment always to same path at the moment.
+        filepath = ENVIRONMENTS_DIR / req.filename
         save_environment_yaml(req.config, filepath)
-        return {"saved": True, "path": str(filepath.resolve())}
+        return {"saved": True, "path": ENVIRONMENTS_DIR / filepath.name}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
