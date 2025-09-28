@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ROUTES } from './lib/routes.tsx'
 import NavigationBar from './components/general/navigation-bar.tsx'
+import { Toaster } from 'sonner'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           ))}
         </Routes>
       </BrowserRouter>
+      <Toaster richColors position="top-right" />
     </>
   )
 }
