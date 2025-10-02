@@ -27,6 +27,8 @@ export interface ExperimentSuiteApiResponse {
   name: string
   status: ExperimentSuiteStatus
   pid?: number | null
+  path?: string
+  config_filename?: string
 }
 
 export interface RunExperimentSuitePayload {
@@ -69,8 +71,12 @@ export const saveExperimentConfig = async ({
   })
 }
 
-export const fetchExperimentSuites = async (): Promise<ExperimentSuiteApiResponse[]> => {
-  const response = await axios.get<ExperimentSuiteApiResponse[]>(`${API_BASE}/suites`)
+export const fetchExperimentSuites = async (): Promise<
+  ExperimentSuiteApiResponse[]
+> => {
+  const response = await axios.get<ExperimentSuiteApiResponse[]>(
+    `${API_BASE}/suites`,
+  )
   return response.data
 }
 

@@ -4,6 +4,7 @@ import os
 import signal
 import sqlite3
 import subprocess
+import re
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock, Thread
@@ -12,7 +13,6 @@ from typing import Dict, Iterable, Optional
 from fastapi import HTTPException
 
 from models.experiment import ExperimentSuiteResponse, ExperimentSuiteStatus
-import re
 
 PROJECT_DIR = Path(__file__).resolve().parents[3]
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -27,12 +27,12 @@ def _sanitize_name(name: str) -> str:
     return safe
 
 
-
 class ExperimentSuiteRepository:
     def __init__(self) -> None:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         self._lock = Lock()
         with self.connect() as connection:
+            # Ensure base table exists
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS experiment_suites (
@@ -40,10 +40,13 @@ class ExperimentSuiteRepository:
                     name TEXT NOT NULL,
                     status TEXT NOT NULL,
                     pid INTEGER,
-                    path TEXT
+                    path TEXT,
+                    config_filename TEXT
                 )
                 """
             )
+
+
             connection.commit()
 
     @contextmanager
@@ -55,11 +58,18 @@ class ExperimentSuiteRepository:
         finally:
             connection.close()
 
-    def create(self, name: str, status: ExperimentSuiteStatus, pid: Optional[int], path: Optional[str]) -> int:
+    def create(
+        self,
+        name: str,
+        status: ExperimentSuiteStatus,
+        pid: Optional[int],
+        path: Optional[str],
+        config_filename: Optional[str],
+    ) -> int:
         with self._lock, self.connect() as connection:
             cursor = connection.execute(
-                "INSERT INTO experiment_suites (name, status, pid, path) VALUES (?, ?, ?, ?)",
-                (name, status.value, pid, path),
+                "INSERT INTO experiment_suites (name, status, pid, path, config_filename) VALUES (?, ?, ?, ?, ?)",
+                (name, status.value, pid, path, config_filename),
             )
             connection.commit()
             return int(cursor.lastrowid)
@@ -72,10 +82,18 @@ class ExperimentSuiteRepository:
             )
             connection.commit()
 
+    def update_path_and_filename(self, suite_id: int, path: str, config_filename: str) -> None:
+        with self._lock, self.connect() as connection:
+            connection.execute(
+                "UPDATE experiment_suites SET path = ?, config_filename = ? WHERE id = ?",
+                (path, config_filename, suite_id),
+            )
+            connection.commit()
+
     def get(self, suite_id: int) -> Optional[ExperimentSuiteResponse]:
         with self.connect() as connection:
             row = connection.execute(
-                "SELECT id, name, status, pid, path FROM experiment_suites WHERE id = ?",
+                "SELECT id, name, status, pid, path, config_filename FROM experiment_suites WHERE id = ?",
                 (suite_id,),
             ).fetchone()
 
@@ -88,12 +106,13 @@ class ExperimentSuiteRepository:
             status=row["status"],
             pid=row["pid"],
             path=row["path"],
+            config_filename=row["config_filename"],
         )
 
     def list(self) -> Iterable[ExperimentSuiteResponse]:
         with self.connect() as connection:
             rows = connection.execute(
-                "SELECT id, name, status, pid, path FROM experiment_suites ORDER BY id DESC"
+                "SELECT id, name, status, pid, path, config_filename FROM experiment_suites ORDER BY id DESC"
             ).fetchall()
 
         for row in rows:
@@ -103,6 +122,7 @@ class ExperimentSuiteRepository:
                 status=row["status"],
                 pid=row["pid"],
                 path=row["path"],
+                config_filename=row["config_filename"],
             )
 
 
@@ -133,21 +153,19 @@ class ExperimentSuiteManager:
         if not full_config_path.exists():
             raise HTTPException(status_code=404, detail=f"Experiment config not found: {full_config_path}")
 
-        # Step 1: Create dedicated folder for this suite
-        # We don't yet know the id, so create with placeholder first
-        tmp_id = self._repository.create(name, ExperimentSuiteStatus.RUNNING, None, None)
+        config_filename = full_config_path.name
+
+        # Step 1: Create DB entry with placeholder path
+        tmp_id = self._repository.create(
+            name, ExperimentSuiteStatus.RUNNING, None, None, config_filename
+        )
         safe_name = _sanitize_name(name)
         suite_dir = DATA_DIR / f"experiment_{tmp_id}_{safe_name}"
         suite_dir.mkdir(parents=True, exist_ok=True)
         log_path = suite_dir / "experiment_log.txt"
 
-        # Update DB with correct path
-        with self._repository.connect() as connection:
-            connection.execute(
-                "UPDATE experiment_suites SET path = ? WHERE id = ?",
-                (str(suite_dir), tmp_id),
-            )
-            connection.commit()
+        # Update DB with correct path + filename
+        self._repository.update_path_and_filename(tmp_id, str(suite_dir), config_filename)
 
         main_py = src_path / "main.py"
 
@@ -195,6 +213,7 @@ class ExperimentSuiteManager:
             status=ExperimentSuiteStatus.RUNNING,
             pid=process.pid,
             path=str(suite_dir),
+            config_filename=config_filename,
         )
 
     def stop_suite(self, suite_id: int) -> ExperimentSuiteResponse:
@@ -227,6 +246,7 @@ class ExperimentSuiteManager:
             status=ExperimentSuiteStatus.ABORTED,
             pid=None,
             path=suite.path,
+            config_filename=suite.config_filename,
         )
 
     def _monitor_process(self, suite_id: int, process: subprocess.Popen, log_file) -> None:
