@@ -69,7 +69,7 @@ def list_experiment_suites():
 
 @router.post("/suites/run", response_model=ExperimentSuiteResponse)
 def run_experiment_suite(req: RunExperimentSuiteRequest):
-    config_path = suite_manager.resolve_config_path(req.config_name)
+    config_path = resolve_config_path(req.config_name)
     return suite_manager.run_suite(req.suite_name, config_path)
 
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { CalendarPlus, Info, Play, Square } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -6,7 +6,12 @@ import CustomPage from '@/components/shared/page.tsx'
 import ExperimentConfigDialog from '@/components/configurator/experiment/experiment-config-dialog.tsx'
 import { Badge } from '@/components/ui/badge.tsx'
 import { Button } from '@/components/ui/button.tsx'
-import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card.tsx'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from '@/components/ui/card.tsx'
 import { cn } from '@/lib/utils.ts'
 import {
   fetchExperimentConfig,
@@ -25,7 +30,10 @@ interface LocalExperimentSuite {
 }
 
 const createLocalId = (): string => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
     return crypto.randomUUID()
   }
 
@@ -53,7 +61,9 @@ const getStatusBadgeClass = (status: ExperimentSuiteStatus): string => {
 const Experiments = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [localSuites, setLocalSuites] = useState<LocalExperimentSuite[]>([])
-  const [persistedSuites, setPersistedSuites] = useState<ExperimentSuiteApiResponse[]>([])
+  const [persistedSuites, setPersistedSuites] = useState<
+    ExperimentSuiteApiResponse[]
+  >([])
   const [pendingRuns, setPendingRuns] = useState<string[]>([])
   const [pendingStops, setPendingStops] = useState<number[]>([])
 
@@ -92,35 +102,34 @@ const Experiments = () => {
     [persistedSuites],
   )
 
-  const handleScheduleSuite = useCallback(
-    async (configName: string) => {
-      try {
-        const config = await fetchExperimentConfig(configName)
-        const content = config.content as { experiments?: Array<{ name?: string }> }
-        const experiments = Array.isArray(content?.experiments)
-          ? content.experiments
-          : []
-
-        const derivedName =
-          experiments.length === 1 && experiments[0]?.name
-            ? experiments[0].name
-            : prettifyName(configName)
-
-        const newSuite: LocalExperimentSuite = {
-          localId: createLocalId(),
-          name: derivedName ?? prettifyName(configName),
-          configName,
-        }
-
-        setLocalSuites((previous) => [newSuite, ...previous])
-        toast.success(`Scheduled "${newSuite.name}"`)
-      } catch (error) {
-        console.error('Failed to schedule experiment suite', error)
-        toast.error('Unable to schedule experiment suite')
+  const handleScheduleSuite = useCallback(async (configName: string) => {
+    try {
+      const config = await fetchExperimentConfig(configName)
+      const content = config.content as {
+        experiments?: Array<{ name?: string }>
       }
-    },
-    [],
-  )
+      const experiments = Array.isArray(content?.experiments)
+        ? content.experiments
+        : []
+
+      const derivedName =
+        experiments.length === 1 && experiments[0]?.name
+          ? experiments[0].name
+          : prettifyName(configName)
+
+      const newSuite: LocalExperimentSuite = {
+        localId: createLocalId(),
+        name: derivedName ?? prettifyName(configName),
+        configName,
+      }
+
+      setLocalSuites((previous) => [newSuite, ...previous])
+      toast.success(`Scheduled "${newSuite.name}"`)
+    } catch (error) {
+      console.error('Failed to schedule experiment suite', error)
+      toast.error('Unable to schedule experiment suite')
+    }
+  }, [])
 
   const handleRunSuite = useCallback(
     async (localId: string) => {
@@ -137,7 +146,9 @@ const Experiments = () => {
           suiteName: suite.name,
         })
 
-        setLocalSuites((previous) => previous.filter((item) => item.localId !== localId))
+        setLocalSuites((previous) =>
+          previous.filter((item) => item.localId !== localId),
+        )
         setPersistedSuites((previous) => {
           const filtered = previous.filter((item) => item.id !== response.id)
           return [response, ...filtered]
@@ -186,12 +197,20 @@ const Experiments = () => {
     actions: React.ReactNode,
     idLabel?: string,
   ) => (
-    <Card key={'localId' in suite ? suite.localId : suite.id} className="border-primary/20">
+    <Card
+      key={'localId' in suite ? suite.localId : suite.id}
+      className="border-primary/20"
+    >
       <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-3">
-            <CardTitle className="text-lg text-primary">{suite.name}</CardTitle>
-            <Badge className={cn('px-3 py-1 text-xs font-semibold uppercase', getStatusBadgeClass(status))}>
+            <CardTitle className="text-primary text-lg">{suite.name}</CardTitle>
+            <Badge
+              className={cn(
+                'px-3 py-1 text-xs font-semibold uppercase',
+                getStatusBadgeClass(status),
+              )}
+            >
               {status}
             </Badge>
           </div>
@@ -214,39 +233,40 @@ const Experiments = () => {
 
   return (
     <CustomPage>
-      <div className="flex flex-col gap-6 pt-2">
-        <div className="rounded-xl border border-primary/20 bg-background p-6 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-semibold text-primary">Experiment Suites</h1>
-              <p className="text-sm text-muted-foreground">
-                Add experiment suites from <span className="font-semibold text-primary">config/experiments</span>
-              </p>
-            </div>
-            <Button
-              onClick={() => setDialogOpen(true)}
-              className="gap-2 self-start md:self-auto"
-              type="button"
-            >
-              <CalendarPlus className="size-4" />
-              Schedule Experiment Suite
-            </Button>
-          </div>
+      <div className="flex flex-col gap-2 pt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-primary text-md pt-2 font-bold md:text-xl">
+            Experiment Suites
+          </span>
+
+          <Button
+            onClick={() => setDialogOpen(true)}
+            className="gap-2"
+            type="button"
+          >
+            <CalendarPlus className="size-4" />
+            Schedule Experiment Suite
+          </Button>
         </div>
 
+        <hr className="border-t-primary w-full pb-2" />
+
         <div className="flex flex-col gap-6">
-          <div className="rounded-xl border border-primary/20 bg-background p-6 shadow-sm">
+          <div className="border-primary/20 bg-background rounded-xl border p-6 shadow-sm">
             <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-primary">New Experiment Suites</h2>
-                <p className="text-sm text-muted-foreground">
-                  Schedule an experiment suite and start it whenever you are ready.
+                <h2 className="text-primary text-xl font-semibold">
+                  New Experiment Suites
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Schedule an experiment suite and start it whenever you are
+                  ready.
                 </p>
               </div>
             </div>
             <div className="space-y-4">
               {localSuites.length === 0 && (
-                <div className="rounded-lg border border-dashed border-primary/30 px-4 py-6 text-center text-muted-foreground">
+                <div className="border-primary/30 text-muted-foreground rounded-lg border border-dashed px-4 py-6 text-center">
                   No experiment suites scheduled yet.
                 </div>
               )}
@@ -270,18 +290,21 @@ const Experiments = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-primary/20 bg-background p-6 shadow-sm">
+          <div className="border-primary/20 bg-background rounded-xl border p-6 shadow-sm">
             <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-primary">Running Experiment Suites</h2>
-                <p className="text-sm text-muted-foreground">
-                  Monitor currently running experiments and stop them when required.
+                <h2 className="text-primary text-xl font-semibold">
+                  Running Experiment Suites
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Monitor currently running experiments and stop them when
+                  required.
                 </p>
               </div>
             </div>
             <div className="space-y-4">
               {runningSuites.length === 0 && (
-                <div className="rounded-lg border border-dashed border-primary/30 px-4 py-6 text-center text-muted-foreground">
+                <div className="border-primary/30 text-muted-foreground rounded-lg border border-dashed px-4 py-6 text-center">
                   There are no running experiment suites.
                 </div>
               )}
@@ -292,13 +315,14 @@ const Experiments = () => {
                   suite.status,
                   <Button
                     key={`stop-${suite.id}`}
-                    className="gap-2 bg-destructive text-white hover:bg-destructive/90"
                     onClick={() => handleStopSuite(suite.id)}
                     disabled={isPending}
                     type="button"
                   >
-                    <Square className="size-4" />
-                    Stop
+                    <div className="flex flex-row gap-2">
+                      <Square className="size-4" />
+                      Stop
+                    </div>
                   </Button>,
                   `ID: ${suite.id}`,
                 )
@@ -306,18 +330,20 @@ const Experiments = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-primary/20 bg-background p-6 shadow-sm">
+          <div className="border-primary/20 bg-background rounded-xl border p-6 shadow-sm">
             <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-primary">Completed Experiment Suites</h2>
-                <p className="text-sm text-muted-foreground">
+                <h2 className="text-primary text-xl font-semibold">
+                  Completed Experiment Suites
+                </h2>
+                <p className="text-muted-foreground text-sm">
                   Review finished or aborted experiment suites.
                 </p>
               </div>
             </div>
             <div className="space-y-4">
               {completedSuites.length === 0 && (
-                <div className="rounded-lg border border-dashed border-primary/30 px-4 py-6 text-center text-muted-foreground">
+                <div className="border-primary/30 text-muted-foreground rounded-lg border border-dashed px-4 py-6 text-center">
                   No experiment suites have finished yet.
                 </div>
               )}
@@ -325,7 +351,12 @@ const Experiments = () => {
                 renderSuiteCard(
                   suite,
                   suite.status,
-                  <Button key={`details-${suite.id}`} variant="outline" disabled className="gap-2">
+                  <Button
+                    key={`details-${suite.id}`}
+                    variant="outline"
+                    disabled
+                    className="gap-2"
+                  >
                     <Info className="size-4" />
                     Show details
                   </Button>,

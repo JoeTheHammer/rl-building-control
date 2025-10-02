@@ -49,7 +49,7 @@ class ExperimentSuiteRepository:
         with self._lock, self._connect() as connection:
             cursor = connection.execute(
                 "INSERT INTO experiment_suites (name, status, pid) VALUES (?, ?, ?)",
-                (name, status.value if isinstance(status, ExperimentSuiteStatus) else status, pid),
+                (name, status.value, pid),
             )
             connection.commit()
             return int(cursor.lastrowid)
@@ -58,7 +58,7 @@ class ExperimentSuiteRepository:
         with self._lock, self._connect() as connection:
             connection.execute(
                 "UPDATE experiment_suites SET status = ?, pid = ? WHERE id = ?",
-                (status.value if isinstance(status, ExperimentSuiteStatus) else status, pid, suite_id),
+                (status.value, pid, suite_id),
             )
             connection.commit()
 
@@ -75,7 +75,7 @@ class ExperimentSuiteRepository:
         return ExperimentSuiteResponse(
             id=int(row["id"]),
             name=str(row["name"]),
-            status=str(row["status"]),
+            status=(row["status"]),
             pid=row["pid"],
         )
 
@@ -89,9 +89,13 @@ class ExperimentSuiteRepository:
             yield ExperimentSuiteResponse(
                 id=int(row["id"]),
                 name=str(row["name"]),
-                status=str(row["status"]),
+                status=(row["status"]),
                 pid=row["pid"],
             )
+
+
+def resolve_config_path(config_name: str) -> Path:
+    return (BASE_DIR / "config" / "experiments" / config_name).resolve()
 
 
 class ExperimentSuiteManager:
@@ -125,8 +129,13 @@ class ExperimentSuiteManager:
             str(full_config_path),
         ]
 
+        print(f"Executing command: {' '.join(command)}")
+
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         log_file = open(LOG_PATH, "w", encoding="utf-8")
+
+        print(src_path)
+        print(str(full_config_path))
 
         try:
             process = subprocess.Popen(
@@ -151,10 +160,12 @@ class ExperimentSuiteManager:
             daemon=True,
         ).start()
 
+        print(process.pid)
+
         return ExperimentSuiteResponse(
             id=suite_id,
             name=name,
-            status=ExperimentSuiteStatus.RUNNING.value,
+            status=ExperimentSuiteStatus.RUNNING,
             pid=process.pid,
         )
 
@@ -185,7 +196,7 @@ class ExperimentSuiteManager:
         return ExperimentSuiteResponse(
             id=suite_id,
             name=suite.name,
-            status=ExperimentSuiteStatus.ABORTED.value,
+            status=ExperimentSuiteStatus.ABORTED,
             pid=None,
         )
 
@@ -203,9 +214,6 @@ class ExperimentSuiteManager:
 
         with self._lock:
             self._processes.pop(suite_id, None)
-
-    def resolve_config_path(self, config_name: str) -> Path:
-        return (BASE_DIR / "config" / "experiments" / config_name).resolve()
 
 
 manager = ExperimentSuiteManager()
