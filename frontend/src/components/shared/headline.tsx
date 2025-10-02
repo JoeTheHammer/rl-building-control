@@ -9,11 +9,11 @@ const Headline: React.FC<HeadlineProps> = ({ text, className }) => {
   return (
     <>
       <span
-        className={`text-primary text-xl font-bold md:text-2xl ${className}`}
+        className={`text-primary pt-2 text-xl font-bold md:text-2xl ${className}`}
       >
         {text}
       </span>
-      <hr className="border-t-primary w-full pb-2" />
+      <hr className="border-t-primary w-full pb-0" />
     </>
   )
 }

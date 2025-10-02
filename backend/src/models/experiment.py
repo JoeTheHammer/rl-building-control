@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import BaseModel, Field
 
 
@@ -21,3 +23,27 @@ class SaveExperimentRequest(BaseModel):
     filename: str
     directory: str = "./data"
     experiments: list[ExperimentConfig] = Field(default_factory=list)
+
+
+class ExperimentSuiteStatus(str, Enum):
+    NEW = "New"
+    RUNNING = "Running"
+    FINISHED = "Finished"
+    ABORTED = "Aborted"
+
+
+class RunExperimentSuiteRequest(BaseModel):
+    config_name: str
+    suite_name: str
+
+
+class ExperimentSuiteResponse(BaseModel):
+    id: int
+    name: str
+    status: ExperimentSuiteStatus
+    pid: int | None = None
+
+
+class StopExperimentSuiteResponse(BaseModel):
+    id: int
+    status: ExperimentSuiteStatus
