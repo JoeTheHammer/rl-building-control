@@ -8,10 +8,15 @@ from ruamel.yaml.scalarstring import DoubleQuotedScalarString
 
 from models.experiment import ExperimentConfig
 
+BASE_DIR = Path(__file__).resolve().parents[3]
+
+CONTROLLERS_DIR = BASE_DIR / "config" / "controllers"
+ENVIRONMENTS_DIR = BASE_DIR / "config" / "environments"
 
 yaml = YAML()
 yaml.indent(mapping=2, sequence=4, offset=2)
 yaml.preserve_quotes = True
+
 
 
 def build_experiment_yaml(configs: Iterable[ExperimentConfig]) -> str:
@@ -22,13 +27,13 @@ def build_experiment_yaml(configs: Iterable[ExperimentConfig]) -> str:
         experiment_map = CommentedMap()
         experiment_map["name"] = DoubleQuotedScalarString(config.name)
         experiment_map["engine"] = DoubleQuotedScalarString(config.engine)
-        experiment_map["environment_config"] = DoubleQuotedScalarString(
+        experiment_map["environment_config"] = str(ENVIRONMENTS_DIR / DoubleQuotedScalarString(
             config.environmentConfig
-        )
+        ))
         experiment_map["controller"] = DoubleQuotedScalarString(config.controller)
-        experiment_map["controller_config"] = DoubleQuotedScalarString(
+        experiment_map["controller_config"] = str(CONTROLLERS_DIR / DoubleQuotedScalarString(
             config.controllerConfig
-        )
+        ))
         experiment_map["episodes"] = config.episodes or 0
 
         reporting_map = CommentedMap()

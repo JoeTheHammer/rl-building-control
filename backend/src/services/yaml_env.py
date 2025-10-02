@@ -12,11 +12,41 @@ yaml = YAML()
 yaml.indent(mapping=2, sequence=4, offset=2)
 yaml.preserve_quotes = True
 
+BASE_DIR = Path(__file__).resolve().parents[3]
+
+WEATHER_DIR = BASE_DIR / "data" / "environment" / "weather"
+BUILDING_DIR = BASE_DIR / "data" / "environment" / "buildings"
+
 
 def build_environment_yaml(cfg: EnvironmentConfig) -> str:
+    # Building model path
+    building_path = BUILDING_DIR / cfg.generalSettings.buildingModelFile
+
+    # Weather input can be either a folder name or a full .epw path
+    weather_input = WEATHER_DIR / cfg.generalSettings.weatherDataFile
+    weather_input = weather_input.resolve()
+
+    if weather_input.is_file() and weather_input.suffix.lower() == ".epw":
+        weather_folder = weather_input.parent
+        epw_file = weather_input
+    elif weather_input.is_dir():
+        epw_files = list(weather_input.glob("*.epw"))
+        if not epw_files:
+            raise FileNotFoundError(f"No .epw file found in {weather_input}")
+        epw_file = epw_files[0]
+        weather_folder = weather_input
+    else:
+        raise FileNotFoundError(f"Weather data must be a folder or .epw file, got {weather_input}")
+
+    # Find the .ddy file in that folder
+    ddy_files = list(weather_folder.glob("*.ddy"))
+    if not ddy_files:
+        raise FileNotFoundError(f"No .ddy file found in {weather_folder}")
+
+    # Build YAML doc with epw (for weather_data)
     doc: dict[str, Any] = {
-        "building_model": str(Path(cfg.generalSettings.buildingModelFile)),
-        "weather_data": str(Path(cfg.generalSettings.weatherDataFile)),
+        "building_model": str(building_path),
+        "weather_data": str(epw_file),
     }
 
     variables: dict[str, Any] = {}
@@ -85,7 +115,6 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
         "expression": FoldedScalarString(cfg.rewardSettings.expression),
         "params": reward_params,
     }
-
 
     episode: dict[str, Any] = {"timesteps_per_hour": cfg.generalSettings.timestepsPerHour}
 

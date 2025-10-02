@@ -13,14 +13,13 @@ def get_all_weather_folders():
         if not WEATHER_DIR.exists() or not WEATHER_DIR.is_dir():
             raise HTTPException(status_code=404, detail=f"Folder not found: {WEATHER_DIR}")
 
-        folders = []
+        ddy_files = []
         for folder in WEATHER_DIR.iterdir():
             if folder.is_dir():
-                has_ddy = any(file.suffix.lower() == ".ddy" for file in folder.iterdir())
-                has_epw = any(file.suffix.lower() == ".epw" for file in folder.iterdir())
-                if has_ddy and has_epw:
-                    folders.append(folder.name)
+                # collect all .ddy files in that folder
+                for file in folder.glob("*.epw"):
+                    ddy_files.append(f"{folder.name}/{file.name}")
 
-        return {"folders": folders}
+        return {"epw_files": ddy_files}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -34,7 +34,7 @@ const WeatherFolderDialog = ({
     }
   }, [open])
 
-  const filtered = folders.filter((f) =>
+  const filtered = (folders ?? []).filter((f) =>
     f.toLowerCase().includes(search.toLowerCase()),
   )
 
@@ -45,7 +45,7 @@ const WeatherFolderDialog = ({
         aria-describedby={undefined}
       >
         <DialogHeader>
-          <DialogTitle>Select Weather Folder</DialogTitle>
+          <DialogTitle>Select Weather File</DialogTitle>
         </DialogHeader>
         <Input
           placeholder="Search..."
@@ -72,7 +72,7 @@ const WeatherFolderDialog = ({
               </Button>
             ))}
             {filtered.length === 0 && (
-              <p className="text-muted-foreground">No folders found.</p>
+              <p className="text-muted-foreground">No weather file found.</p>
             )}
           </div>
         )}

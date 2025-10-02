@@ -35,42 +35,15 @@ interface ControllerOption {
 }
 
 const controllerOptions: ControllerOption[] = [
-  {
-    key: 'rule-based',
-    name: 'Rule Based',
-  },
-  {
-    key: 'custom',
-    name: 'Custom',
-  },
-  {
-    key: 'sac',
-    name: 'SAC',
-  },
-  {
-    key: 'ppo',
-    name: 'PPO',
-  },
-  {
-    key: 'recurrent-ppo',
-    name: 'Recurrent PPO',
-  },
-  {
-    key: 'a2c',
-    name: 'A2C',
-  },
-  {
-    key: 'ddpg',
-    name: 'DDPG',
-  },
-  {
-    key: 'td3',
-    name: 'TD3',
-  },
-  {
-    key: 'dqn',
-    name: 'DQN',
-  },
+  { key: 'rule-based', name: 'Rule Based' },
+  { key: 'custom', name: 'Custom' },
+  { key: 'sac', name: 'SAC' },
+  { key: 'ppo', name: 'PPO' },
+  { key: 'recurrent-ppo', name: 'Recurrent PPO' },
+  { key: 'a2c', name: 'A2C' },
+  { key: 'ddpg', name: 'DDPG' },
+  { key: 'td3', name: 'TD3' },
+  { key: 'dqn', name: 'DQN' },
 ]
 
 const createDefaultExperiment = (): ExperimentFormState => ({
@@ -87,6 +60,11 @@ const createDefaultExperiment = (): ExperimentFormState => ({
   },
   reportingEnabled: false,
 })
+
+// helper to extract only file name from path
+const getFileName = (value: string) => {
+  return value.split(/[/\\]/).pop() || value
+}
 
 const ExperimentConfigurator = () => {
   const [experiments, setExperiments] = useState<ExperimentFormState[]>([
@@ -118,10 +96,7 @@ const ExperimentConfigurator = () => {
     setExperiments((previous) =>
       previous.map((experiment, experimentIndex) =>
         experimentIndex === index
-          ? {
-              ...experiment,
-              [field]: value,
-            }
+          ? { ...experiment, [field]: value }
           : experiment,
       ),
     )
@@ -158,11 +133,7 @@ const ExperimentConfigurator = () => {
               reportingEnabled: enabled,
               reporting: enabled
                 ? experiment.reporting
-                : {
-                    plots: false,
-                    denormalizeState: false,
-                    export: false,
-                  },
+                : { plots: false, denormalizeState: false, export: false },
             }
           : experiment,
       ),
@@ -207,14 +178,9 @@ const ExperimentConfigurator = () => {
       setDevMode(true)
       return
     }
-
     try {
       const parsed = parseExperimentYaml(editorValue)
-      if (parsed.length === 0) {
-        setExperiments([createDefaultExperiment()])
-      } else {
-        setExperiments(parsed)
-      }
+      setExperiments(parsed.length === 0 ? [createDefaultExperiment()] : parsed)
       setDevMode(false)
     } catch (error) {
       console.error('Invalid YAML, keeping previous state', error)
@@ -238,7 +204,6 @@ const ExperimentConfigurator = () => {
         return
       }
     }
-
     setSaveDialogOpen(true)
   }
 
@@ -249,7 +214,6 @@ const ExperimentConfigurator = () => {
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
-
     try {
       const text = await file.text()
       const parsed = parseExperimentYaml(text)
@@ -294,14 +258,12 @@ const ExperimentConfigurator = () => {
 
   const handleEnvironmentSelect = (name: string) => {
     if (environmentDialogIndex === null) return
-
     updateExperiment(environmentDialogIndex, 'environmentConfig', name)
     setEnvironmentDialogIndex(null)
   }
 
   const handleControllerSelect = (name: string) => {
     if (controllerDialogIndex === null) return
-
     updateExperiment(controllerDialogIndex, 'controllerConfig', name)
     setControllerDialogIndex(null)
   }
@@ -372,31 +334,24 @@ const ExperimentConfigurator = () => {
                         placeholder="sinergym"
                       />
                     </div>
+
+                    {/* Environment Config button */}
                     <div className="flex flex-col gap-1">
                       <label className="text-primary text-sm font-semibold">
                         Environment Config
                       </label>
-                      <div className="flex w-full flex-col gap-2 md:flex-row">
-                        <Input
-                          value={experiment.environmentConfig}
-                          onChange={(event) =>
-                            updateExperiment(
-                              index,
-                              'environmentConfig',
-                              event.target.value,
-                            )
-                          }
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setEnvironmentDialogIndex(index)}
-                          className="w-full"
-                        >
-                          Choose Environment Config
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        className="w-full justify-start"
+                        onClick={() => setEnvironmentDialogIndex(index)}
+                      >
+                        {experiment.environmentConfig
+                          ? getFileName(experiment.environmentConfig)
+                          : 'Choose Environment Config'}
+                      </Button>
                     </div>
+
+                    {/* Controller select */}
                     <div className="flex flex-col gap-1">
                       <label className="text-primary text-sm font-semibold">
                         Controller
@@ -411,41 +366,31 @@ const ExperimentConfigurator = () => {
                           <SelectValue placeholder="Select controller" />
                         </SelectTrigger>
                         <SelectContent>
-                          {controllerOptions.map((option) => {
-                            return (
-                              <SelectItem key={option.key} value={option.key}>
-                                {option.name}
-                              </SelectItem>
-                            )
-                          })}
+                          {controllerOptions.map((option) => (
+                            <SelectItem key={option.key} value={option.key}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Controller Config button */}
                     <div className="flex flex-col gap-1">
                       <label className="text-primary text-sm font-semibold">
                         Controller Config
                       </label>
-                      <div className="flex w-full flex-col gap-2 md:flex-row">
-                        <Input
-                          value={experiment.controllerConfig}
-                          onChange={(event) =>
-                            updateExperiment(
-                              index,
-                              'controllerConfig',
-                              event.target.value,
-                            )
-                          }
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setControllerDialogIndex(index)}
-                          className="w-full"
-                        >
-                          Choose Controller Config
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        className="w-full justify-start"
+                        onClick={() => setControllerDialogIndex(index)}
+                      >
+                        {experiment.controllerConfig
+                          ? getFileName(experiment.controllerConfig)
+                          : 'Choose Controller Config'}
+                      </Button>
                     </div>
+
                     <div className="flex flex-col gap-1">
                       <label
                         className="text-primary text-sm font-semibold"

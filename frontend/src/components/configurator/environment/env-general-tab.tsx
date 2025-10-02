@@ -4,8 +4,12 @@ import { DatePicker } from '../../ui/date-picker.tsx'
 import { Input } from '../../ui/input.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import BuildingModelDialog from '@/components/configurator/environment/building-model-dialog.tsx'
-import { File, Folder } from 'lucide-react'
-import WeatherFolderDialog from '@/components/configurator/environment/weather-data-dialog.tsx'
+import { File } from 'lucide-react'
+import WeatherFileDialog from '@/components/configurator/environment/weather-data-dialog.tsx'
+
+const getFileName = (value: string) => {
+  return value.split(/[/\\]/).pop() || value
+}
 
 export interface EnvironmentGeneralSettings {
   buildingModelFile: File | string | null
@@ -28,9 +32,7 @@ const formatDateForStorage = (date: Date) => {
 }
 
 const parseStoredDate = (value: string) => {
-  if (!value) {
-    return undefined
-  }
+  if (!value) return undefined
 
   const [yearString, monthString, dayString] = value.split('-')
   const year = Number(yearString)
@@ -77,6 +79,12 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
   const startDate = parseStoredDate(settings.startDate)
   const endDate = parseStoredDate(settings.endDate)
 
+  // helper to display only filename if it's a string path
+  const displayName = (file: File | string | null, fallback: string) => {
+    if (!file) return fallback
+    return typeof file === 'string' ? getFileName(file) : file.name
+  }
+
   return (
     <div className="text-primary flex flex-col gap-4 pt-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -85,13 +93,9 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
             Building Model
           </label>
           <Button type="button" onClick={() => setBuildingDialogOpen(true)}>
-            <div className="justinfy-center flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <File className="h-5 w-5" />
-              {settings.buildingModelFile
-                ? typeof settings.buildingModelFile === 'string'
-                  ? settings.buildingModelFile
-                  : settings.buildingModelFile.name
-                : 'Select Building Model'}
+              {displayName(settings.buildingModelFile, 'Select Building Model')}
             </div>
           </Button>
           <BuildingModelDialog
@@ -101,39 +105,33 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
           />
           {settings.buildingModelFile && (
             <span className="text-primary/70 truncate text-xs">
-              {typeof settings.buildingModelFile === 'string'
-                ? settings.buildingModelFile
-                : settings.buildingModelFile.name}
+              {displayName(settings.buildingModelFile, '')}
             </span>
           )}
         </div>
+
         <div className={fieldContainerStyles}>
           <label className={fieldLabelStyles} htmlFor="weather-data-input">
             Weather Data
           </label>
           <Button type="button" onClick={() => setWeatherDialogOpen(true)}>
-            <div className="justinfy-center flex items-center gap-2">
-              <Folder className="h-5 w-5" />
-              {settings.weatherDataFile
-                ? typeof settings.weatherDataFile === 'string'
-                  ? settings.weatherDataFile
-                  : settings.weatherDataFile.name
-                : 'Select Weather Folder'}
+            <div className="flex items-center gap-2">
+              <File className="h-5 w-5" />
+              {displayName(settings.weatherDataFile, 'Select Weather Folder')}
             </div>
           </Button>
-          <WeatherFolderDialog
+          <WeatherFileDialog
             open={weatherDialogOpen}
             onClose={() => setWeatherDialogOpen(false)}
             onSelect={(folder) => onSettingsChange({ weatherDataFile: folder })}
           />
           {settings.weatherDataFile && (
             <span className="text-primary/70 truncate text-xs">
-              {typeof settings.weatherDataFile === 'string'
-                ? settings.weatherDataFile
-                : settings.weatherDataFile.name}
+              {displayName(settings.weatherDataFile, '')}
             </span>
           )}
         </div>
+
         <div className={fieldContainerStyles}>
           <label className={fieldLabelStyles} htmlFor="start-date-input">
             Start Date Episode
@@ -145,6 +143,7 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
             placeholder="Select start date"
           />
         </div>
+
         <div className={fieldContainerStyles}>
           <label className={fieldLabelStyles} htmlFor="end-date-input">
             End Date Episode
@@ -156,6 +155,7 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
             placeholder="Select end date"
           />
         </div>
+
         <div className={fieldContainerStyles}>
           <label className={fieldLabelStyles} htmlFor="timesteps-input">
             Timesteps per hour
