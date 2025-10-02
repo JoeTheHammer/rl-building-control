@@ -50,9 +50,9 @@ const getStatusBadgeClass = (status: ExperimentSuiteStatus): string => {
     case 'Running':
       return 'bg-emerald-500 text-white'
     case 'Finished':
-      return 'bg-primary text-primary-foreground'
+      return 'bg-green-800 text-primary-foreground'
     case 'Aborted':
-      return 'bg-destructive text-white'
+      return 'bg-red-800 text-primary-foreground'
     default:
       return 'bg-secondary text-secondary-foreground'
   }
@@ -160,7 +160,7 @@ const Experiments = () => {
         toast.error('Unable to start experiment suite')
       } finally {
         setPendingRuns((previous) => previous.filter((id) => id !== localId))
-        refreshPersistedSuites()
+        await refreshPersistedSuites()
       }
     },
     [localSuites, refreshPersistedSuites],
@@ -185,7 +185,7 @@ const Experiments = () => {
         toast.error('Unable to stop experiment suite')
       } finally {
         setPendingStops((previous) => previous.filter((id) => id !== suiteId))
-        refreshPersistedSuites()
+        await refreshPersistedSuites()
       }
     },
     [refreshPersistedSuites],
@@ -196,41 +196,44 @@ const Experiments = () => {
     status: ExperimentSuiteStatus,
     actions: React.ReactNode,
     idLabel?: string,
-  ) => (
-    <Card
-      key={'localId' in suite ? suite.localId : suite.id}
-      className="border-primary/20"
-    >
-      <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <CardTitle className="text-primary text-lg">{suite.name}</CardTitle>
-            <Badge
-              className={cn(
-                'px-3 py-1 text-xs font-semibold uppercase',
-                getStatusBadgeClass(status),
-              )}
-            >
-              {status}
-            </Badge>
+  ) => {
+    return (
+      <Card
+        key={'localId' in suite ? suite.localId : suite.id}
+        className="border-primary/20"
+      >
+        <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <CardTitle className="text-primary text-lg">
+                {suite.name}
+              </CardTitle>
+              <Badge
+                className={cn(
+                  'px-3 py-1 text-xs font-semibold uppercase',
+                  getStatusBadgeClass(status),
+                )}
+              >
+                {String(status)}
+              </Badge>
+            </div>
+            {idLabel && (
+              <CardDescription className="text-muted-foreground text-sm font-medium">
+                {idLabel}
+              </CardDescription>
+            )}
           </div>
-          {idLabel && (
-            <CardDescription className="text-muted-foreground text-sm font-medium">
-              {idLabel}
-            </CardDescription>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" disabled className="gap-2">
-            <Info className="size-4" />
-            Show details
-          </Button>
-          {actions}
-        </div>
-      </CardContent>
-    </Card>
-  )
-
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" disabled className="gap-2">
+              <Info className="size-4" />
+              Show details
+            </Button>
+            {actions}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
   return (
     <CustomPage>
       <div className="flex flex-col gap-2 pt-2">
@@ -258,10 +261,6 @@ const Experiments = () => {
                 <h2 className="text-primary text-xl font-semibold">
                   New Experiment Suites
                 </h2>
-                <p className="text-muted-foreground text-sm">
-                  Schedule an experiment suite and start it whenever you are
-                  ready.
-                </p>
               </div>
             </div>
             <div className="space-y-4">
@@ -296,10 +295,6 @@ const Experiments = () => {
                 <h2 className="text-primary text-xl font-semibold">
                   Running Experiment Suites
                 </h2>
-                <p className="text-muted-foreground text-sm">
-                  Monitor currently running experiments and stop them when
-                  required.
-                </p>
               </div>
             </div>
             <div className="space-y-4">
@@ -336,9 +331,6 @@ const Experiments = () => {
                 <h2 className="text-primary text-xl font-semibold">
                   Completed Experiment Suites
                 </h2>
-                <p className="text-muted-foreground text-sm">
-                  Review finished or aborted experiment suites.
-                </p>
               </div>
             </div>
             <div className="space-y-4">
