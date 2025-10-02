@@ -64,19 +64,21 @@ def save_controller(req: SaveControllerRequest) -> str:
             "tensorboard_logs": s.tensorboardLogs,
         }
 
-        hp_tuning = {
-            "enabled": s.hpTuning,
-            "num_trials": s.numTrials,
-            "num_episodes": s.numEpisodes,
-        }
-
         doc = {
             "training": training,
-            "hyperparameter_tuning": hp_tuning,
             "hyperparameters": {
                 kv.key: _convert_value(kv.value) for kv in s.hyperparameters
             },
         }
+
+        # Only add hyperparameter_tuning if enabled == True
+        if s.hpTuning:
+            hp_tuning = {
+                "enabled": True,
+                "num_trials": s.numTrials,
+                "num_episodes": s.numEpisodes,
+            }
+            doc["hyperparameter_tuning"] = hp_tuning
 
     Path(req.directory).mkdir(parents=True, exist_ok=True)
     path = Path(req.directory) / req.filename

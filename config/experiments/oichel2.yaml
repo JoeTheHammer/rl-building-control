@@ -1,0 +1,13 @@
+experiments:
+  - name: "PPO experiment"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/environment1.yaml
+    controller: "ppo"
+    controller_config: 
+      /home/johannes/workspace/rl-building-control/config/controllers/sac_controller.yaml
+    episodes: 1
+    reporting:
+      plots: false
+      denormalize_state: false
+      export: false

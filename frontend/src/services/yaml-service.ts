@@ -370,6 +370,7 @@ interface ControllerYamlDoc {
   hyperparameter_tuning?: {
     num_trials?: unknown
     num_episodes?: unknown
+    enabled?: boolean
   } | null
   hyperparameters?: Record<string, unknown>
   state_space?: unknown
@@ -602,7 +603,11 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
     reportTraining: training.report_training === true,
     denormalize: training.report_denormalized_state === true,
     tensorboardLogs: training.tensorboard_logs === true,
-    hpTuning: !!hyperparameterTuning,
+    hpTuning:
+      (hyperparameterTuning !== null &&
+        hyperparameterTuning !== undefined &&
+        hyperparameterTuning.enabled) ??
+      false,
     numTrials:
       typeof hyperparameterTuning?.num_trials === 'number'
         ? hyperparameterTuning.num_trials
@@ -721,22 +726,21 @@ export const buildExperimentYaml = (
   return yaml.dump(doc, { noRefs: true })
 }
 
-export const parseExperimentYaml = (
-  yamlStr: string,
-): ExperimentFormState[] => {
-  const parsed = yaml.load(yamlStr) as ExperimentsYamlDoc | ExperimentYamlEntry[] | null
+export const parseExperimentYaml = (yamlStr: string): ExperimentFormState[] => {
+  const parsed = yaml.load(yamlStr) as
+    | ExperimentsYamlDoc
+    | ExperimentYamlEntry[]
+    | null
 
   const experimentsArray: ExperimentYamlEntry[] = Array.isArray(parsed)
     ? parsed
-    : parsed?.experiments ?? []
+    : (parsed?.experiments ?? [])
 
   return experimentsArray.map((experiment) => {
     const reporting = experiment.reporting ?? {}
     const reportingOptions: ExperimentReportingOptions = {
       plots: resolveExperimentBoolean(reporting.plots),
-      denormalizeState: resolveExperimentBoolean(
-        reporting.denormalize_state,
-      ),
+      denormalizeState: resolveExperimentBoolean(reporting.denormalize_state),
       export: resolveExperimentBoolean(reporting.export),
     }
 
@@ -748,13 +752,9 @@ export const parseExperimentYaml = (
     return {
       name: resolveExperimentString(experiment.name),
       engine: resolveExperimentString(experiment.engine),
-      environmentConfig: resolveExperimentString(
-        experiment.environment_config,
-      ),
+      environmentConfig: resolveExperimentString(experiment.environment_config),
       controller: resolveExperimentString(experiment.controller),
-      controllerConfig: resolveExperimentString(
-        experiment.controller_config,
-      ),
+      controllerConfig: resolveExperimentString(experiment.controller_config),
       episodes: resolveExperimentNumber(experiment.episodes),
       reporting: reportingOptions,
       reportingEnabled,
@@ -771,7 +771,6 @@ export const toExperimentDefinitions = (
     environmentConfig: experiment.environmentConfig,
     controller: experiment.controller,
     controllerConfig: experiment.controllerConfig,
-    episodes:
-      typeof experiment.episodes === 'number' ? experiment.episodes : 0,
+    episodes: typeof experiment.episodes === 'number' ? experiment.episodes : 0,
     reporting: resolveReporting(experiment),
   }))

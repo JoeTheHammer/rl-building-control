@@ -1,0 +1,14 @@
+training:
+  timesteps: 2000
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: false
+hyperparameter_tuning:
+  enabled: false
+  num_trials:
+  num_episodes:
+hyperparameters:
+  learning_rate: 0.0001
+  gamma: 0.99
+  test: 1.43
+  test2: 11
