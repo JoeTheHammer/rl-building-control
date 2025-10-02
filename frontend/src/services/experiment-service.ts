@@ -20,6 +20,25 @@ export interface SaveExperimentPayload {
   directory?: string
 }
 
+export type ExperimentSuiteStatus = 'New' | 'Running' | 'Finished' | 'Aborted'
+
+export interface ExperimentSuiteApiResponse {
+  id: number
+  name: string
+  status: ExperimentSuiteStatus
+  pid?: number | null
+}
+
+export interface RunExperimentSuitePayload {
+  configName: string
+  suiteName: string
+}
+
+export interface StopExperimentSuiteResponse {
+  id: number
+  status: ExperimentSuiteStatus
+}
+
 export const stripExperimentExtension = (value: string): string =>
   value.replace(/\.ya?ml$/i, '')
 
@@ -48,4 +67,32 @@ export const saveExperimentConfig = async ({
     experiments,
     directory,
   })
+}
+
+export const fetchExperimentSuites = async (): Promise<ExperimentSuiteApiResponse[]> => {
+  const response = await axios.get<ExperimentSuiteApiResponse[]>(`${API_BASE}/suites`)
+  return response.data
+}
+
+export const runExperimentSuite = async ({
+  configName,
+  suiteName,
+}: RunExperimentSuitePayload): Promise<ExperimentSuiteApiResponse> => {
+  const response = await axios.post<ExperimentSuiteApiResponse>(
+    `${API_BASE}/suites/run`,
+    {
+      config_name: configName,
+      suite_name: suiteName,
+    },
+  )
+  return response.data
+}
+
+export const stopExperimentSuite = async (
+  suiteId: number,
+): Promise<StopExperimentSuiteResponse> => {
+  const response = await axios.post<StopExperimentSuiteResponse>(
+    `${API_BASE}/suites/${suiteId}/stop`,
+  )
+  return response.data
 }
