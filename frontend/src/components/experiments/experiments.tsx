@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { CalendarPlus, Info, Play, Square } from 'lucide-react'
+import { CalendarPlus, Info, Play, Square, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import CustomPage from '@/components/shared/page.tsx'
@@ -124,7 +124,6 @@ const Experiments = () => {
       }
 
       setLocalSuites((previous) => [newSuite, ...previous])
-      toast.success(`Scheduled "${newSuite.name}"`)
     } catch (error) {
       console.error('Failed to schedule experiment suite', error)
       toast.error('Unable to schedule experiment suite')
@@ -165,6 +164,12 @@ const Experiments = () => {
     },
     [localSuites, refreshPersistedSuites],
   )
+
+  const handleDeleteSuite = useCallback((localId: string) => {
+    setLocalSuites((previous) =>
+      previous.filter((item) => item.localId !== localId),
+    )
+  }, [])
 
   const handleStopSuite = useCallback(
     async (suiteId: number) => {
@@ -274,16 +279,28 @@ const Experiments = () => {
                 return renderSuiteCard(
                   suite,
                   'New',
-                  <Button
-                    key={`run-${suite.localId}`}
-                    className="gap-2"
-                    onClick={() => handleRunSuite(suite.localId)}
-                    disabled={isPending}
-                    type="button"
-                  >
-                    <Play className="size-4" />
-                    Run
-                  </Button>,
+                  <div className="flex gap-2">
+                    <Button
+                      key={`run-${suite.localId}`}
+                      className="gap-2"
+                      onClick={() => handleRunSuite(suite.localId)}
+                      disabled={isPending}
+                      type="button"
+                    >
+                      <Play className="size-4" />
+                      Run
+                    </Button>
+
+                    <Button
+                      key={`delete-${suite.localId}`}
+                      className="gap-2"
+                      onClick={() => handleDeleteSuite(suite.localId)}
+                      type="button"
+                    >
+                      <Trash2 className="size-4" />
+                      Remove
+                    </Button>
+                  </div>,
                 )
               })}
             </div>
