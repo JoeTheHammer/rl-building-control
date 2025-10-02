@@ -29,23 +29,55 @@ import {
 } from '@/services/yaml-service.ts'
 import { fetchExperimentConfig } from '@/services/experiment-service.ts'
 
-const controllerOptions = [
-  'rule',
-  'custom',
-  'ddpg',
-  'dqn',
-  'ppo',
-  'recurrent-ppo',
-  'sac',
-  'td3',
-  'a2c',
+interface ControllerOption {
+  key: string
+  name: string
+}
+
+const controllerOptions: ControllerOption[] = [
+  {
+    key: 'rule-based',
+    name: 'Rule Based',
+  },
+  {
+    key: 'custom',
+    name: 'Custom',
+  },
+  {
+    key: 'sac',
+    name: 'SAC',
+  },
+  {
+    key: 'ppo',
+    name: 'PPO',
+  },
+  {
+    key: 'recurrent-ppo',
+    name: 'Recurrent PPO',
+  },
+  {
+    key: 'a2c',
+    name: 'A2C',
+  },
+  {
+    key: 'ddpg',
+    name: 'DDPG',
+  },
+  {
+    key: 'td3',
+    name: 'TD3',
+  },
+  {
+    key: 'dqn',
+    name: 'DQN',
+  },
 ]
 
 const createDefaultExperiment = (): ExperimentFormState => ({
   name: '',
   engine: 'sinergym',
   environmentConfig: '',
-  controller: 'dqn',
+  controller: 'ppo',
   controllerConfig: '',
   episodes: 1,
   reporting: {
@@ -186,7 +218,9 @@ const ExperimentConfigurator = () => {
       setDevMode(false)
     } catch (error) {
       console.error('Invalid YAML, keeping previous state', error)
-      toast.error('Invalid YAML. Please fix the syntax before leaving Dev Mode.')
+      toast.error(
+        'Invalid YAML. Please fix the syntax before leaving Dev Mode.',
+      )
     }
   }
 
@@ -196,7 +230,10 @@ const ExperimentConfigurator = () => {
         const parsed = parseExperimentYaml(editorValue)
         setExperiments(parsed.length > 0 ? parsed : [createDefaultExperiment()])
       } catch (error) {
-        console.error('Invalid YAML. Could not save experiment configuration', error)
+        console.error(
+          'Invalid YAML. Could not save experiment configuration',
+          error,
+        )
         toast.error('Invalid YAML. Could not save experiment configuration.')
         return
       }
@@ -258,16 +295,14 @@ const ExperimentConfigurator = () => {
   const handleEnvironmentSelect = (name: string) => {
     if (environmentDialogIndex === null) return
 
-    const resolvedPath = `config/environments/${name}`
-    updateExperiment(environmentDialogIndex, 'environmentConfig', resolvedPath)
+    updateExperiment(environmentDialogIndex, 'environmentConfig', name)
     setEnvironmentDialogIndex(null)
   }
 
   const handleControllerSelect = (name: string) => {
     if (controllerDialogIndex === null) return
 
-    const resolvedPath = `config/controllers/${name}`
-    updateExperiment(controllerDialogIndex, 'controllerConfig', resolvedPath)
+    updateExperiment(controllerDialogIndex, 'controllerConfig', name)
     setControllerDialogIndex(null)
   }
 
@@ -304,7 +339,6 @@ const ExperimentConfigurator = () => {
                   </CardTitle>
                   <Button
                     type="button"
-                    variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveExperiment(index)}
                     disabled={experiments.length <= 1}
@@ -342,7 +376,7 @@ const ExperimentConfigurator = () => {
                       <label className="text-primary text-sm font-semibold">
                         Environment Config
                       </label>
-                      <div className="flex flex-col gap-2 md:flex-row">
+                      <div className="flex w-full flex-col gap-2 md:flex-row">
                         <Input
                           value={experiment.environmentConfig}
                           onChange={(event) =>
@@ -352,13 +386,12 @@ const ExperimentConfigurator = () => {
                               event.target.value,
                             )
                           }
-                          placeholder="config/environments/example.yaml"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => setEnvironmentDialogIndex(index)}
-                          className="md:w-auto"
+                          className="w-full"
                         >
                           Choose Environment Config
                         </Button>
@@ -379,17 +412,9 @@ const ExperimentConfigurator = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {controllerOptions.map((option) => {
-                            const label = option
-                              .split('-')
-                              .map(
-                                (segment) =>
-                                  segment.charAt(0).toUpperCase() +
-                                  segment.slice(1),
-                              )
-                              .join(' ')
                             return (
-                              <SelectItem key={option} value={option}>
-                                {label}
+                              <SelectItem key={option.key} value={option.key}>
+                                {option.name}
                               </SelectItem>
                             )
                           })}
@@ -400,7 +425,7 @@ const ExperimentConfigurator = () => {
                       <label className="text-primary text-sm font-semibold">
                         Controller Config
                       </label>
-                      <div className="flex flex-col gap-2 md:flex-row">
+                      <div className="flex w-full flex-col gap-2 md:flex-row">
                         <Input
                           value={experiment.controllerConfig}
                           onChange={(event) =>
@@ -410,13 +435,12 @@ const ExperimentConfigurator = () => {
                               event.target.value,
                             )
                           }
-                          placeholder="config/controllers/example.yaml"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => setControllerDialogIndex(index)}
-                          className="md:w-auto"
+                          className="w-full"
                         >
                           Choose Controller Config
                         </Button>
@@ -502,7 +526,7 @@ const ExperimentConfigurator = () => {
             ))}
 
             <div>
-              <Button type="button" variant="outline" onClick={handleAddExperiment}>
+              <Button type="button" onClick={handleAddExperiment}>
                 <Plus className="mr-2 h-4 w-4" /> Add Experiment
               </Button>
             </div>

@@ -27,14 +27,14 @@ const ExperimentToolbar = ({
 }: ExperimentToolbarProps) => (
   <CustomPage>
     <div className="flex w-full flex-col gap-4 pt-2">
-      <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-6">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 items-center gap-2 md:grid-cols-16">
+        <div className="col-span-4">
           <span className="text-primary text-md font-bold md:text-xl">
-            Experiment Configurator
+            Experiment Suite Configurator
           </span>
         </div>
 
-        <div className="md:col-start-3">
+        <div className="col-span-3 col-start-5">
           <Button
             onClick={onToggleDevMode}
             type="button"
@@ -55,20 +55,24 @@ const ExperimentToolbar = ({
           </Button>
         </div>
 
-        <div className="md:col-start-4">
-          <Button onClick={onOpenConfig} type="button" className="text-md w-full">
+        <div className="col-span-3 col-start-8">
+          <Button
+            onClick={onOpenConfig}
+            type="button"
+            className="text-md w-full"
+          >
             <div className="flex items-center gap-2">
               <FolderOpen />
-              <span>Open Experiment</span>
+              <span>Open Experiment Suite</span>
             </div>
           </Button>
         </div>
 
-        <div className="md:col-start-5">
+        <div className="col-span-3 md:col-start-11">
           <Button onClick={onUpload} type="button" className="text-md w-full">
             <div className="flex items-center gap-2">
               <Import />
-              <span>Import Experiment</span>
+              <span>Import Experiment Suite</span>
             </div>
           </Button>
           <input
@@ -80,11 +84,11 @@ const ExperimentToolbar = ({
           />
         </div>
 
-        <div className="md:col-start-6">
+        <div className="col-span-3 md:col-start-14">
           <Button onClick={onSave} type="button" className="text-md w-full">
             <div className="flex items-center gap-2">
               <Save />
-              <span>Save Experiment</span>
+              <span>Save Experiment Suite</span>
             </div>
           </Button>
         </div>

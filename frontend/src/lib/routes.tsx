@@ -39,7 +39,7 @@ export const ROUTES: Route[] = [
   },
   {
     path: '/experiment-configurator',
-    label: 'Experiment',
+    label: 'Experiments',
     description: 'Configurator for experiments',
     component: <ExperimentConfigurator />,
   },
