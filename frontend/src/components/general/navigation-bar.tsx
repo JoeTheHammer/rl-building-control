@@ -48,20 +48,6 @@ const NavigationBar = () => {
             </NavigationMenuLink>
           </NavigationMenuItem>
 
-          {/* Data Analytics */}
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              asChild
-              data-active={isActive('/data-analytics') ? 'true' : undefined}
-              className={`${linkAndTriggerStyle} flex items-center gap-2`}
-            >
-              <Link to="/data-analytics">
-                <ChartNoAxesCombined className="size-4" />
-                <span>Data Analytics</span>
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-
           {/* Configurators Dropdown */}
           <NavigationMenuItem>
             <NavigationMenuTrigger
@@ -90,6 +76,19 @@ const NavigationBar = () => {
                 ))}
               </ul>
             </NavigationMenuContent>
+          </NavigationMenuItem>
+          {/* Data Analytics */}
+          <NavigationMenuItem>
+            <NavigationMenuLink
+              asChild
+              data-active={isActive('/data-analytics') ? 'true' : undefined}
+              className={`${linkAndTriggerStyle} flex items-center gap-2`}
+            >
+              <Link to="/data-analytics">
+                <ChartNoAxesCombined className="size-4" />
+                <span>Data Analytics</span>
+              </Link>
+            </NavigationMenuLink>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

@@ -20,12 +20,6 @@ export const ROUTES: Route[] = [
     component: <Experiments />,
   },
   {
-    path: '/data-analytics',
-    label: 'Data Analytics',
-    description: 'Analytics of experiment results',
-    component: <Analytics />,
-  },
-  {
     path: '/environment-configurator',
     label: 'Environment',
     description: 'Configurator for environments',
@@ -42,5 +36,11 @@ export const ROUTES: Route[] = [
     label: 'Experiments',
     description: 'Configurator for experiments',
     component: <ExperimentConfigurator />,
+  },
+  {
+    path: '/data-analytics',
+    label: 'Data Analytics',
+    description: 'Analytics of experiment results',
+    component: <Analytics />,
   },
 ]
