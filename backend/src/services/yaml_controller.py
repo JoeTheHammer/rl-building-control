@@ -11,6 +11,22 @@ yaml.indent(mapping=2, sequence=4, offset=2)
 yaml.preserve_quotes = True
 
 
+def _convert_value(val):
+    """Convert string to int/float if possible, else keep string quoted."""
+    # If already int or float
+    if isinstance(val, (int, float)):
+        return val
+    # Try to parse int
+    if isinstance(val, str):
+        if val.isdigit():
+            return int(val)
+        try:
+            return float(val)
+        except ValueError:
+            return DoubleQuotedScalarString(val)
+    return DoubleQuotedScalarString(str(val))
+
+
 def save_controller(req: SaveControllerRequest) -> str:
     s = req.settings
 
@@ -18,7 +34,7 @@ def save_controller(req: SaveControllerRequest) -> str:
         doc = {
             "class_name": s.customClassName,
             "module": s.customModule,
-            "args": {kv.key: kv.value for kv in s.initArguments},
+            "args": {kv.key: _convert_value(kv.value) for kv in s.initArguments},
         }
 
     elif s.type == "rule based":
@@ -34,11 +50,7 @@ def save_controller(req: SaveControllerRequest) -> str:
         doc = {
             "state_space": s.stateSpace,
             "custom_variables": {
-                kv.key: (
-                    float(kv.value)
-                    if isinstance(kv.value, (int, float)) or str(kv.value).replace(".", "", 1).isdigit()
-                    else kv.value
-                )
+                kv.key: _convert_value(kv.value)
                 for kv in s.customVariables
             },
             "rules": rules_seq,
@@ -61,7 +73,9 @@ def save_controller(req: SaveControllerRequest) -> str:
         doc = {
             "training": training,
             "hyperparameter_tuning": hp_tuning,
-            "hyperparameters": {kv.key: kv.value for kv in s.hyperparameters},
+            "hyperparameters": {
+                kv.key: _convert_value(kv.value) for kv in s.hyperparameters
+            },
         }
 
     Path(req.directory).mkdir(parents=True, exist_ok=True)
