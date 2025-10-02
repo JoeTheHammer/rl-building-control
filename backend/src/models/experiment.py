@@ -42,6 +42,7 @@ class ExperimentSuiteResponse(BaseModel):
     name: str
     status: ExperimentSuiteStatus
     pid: int | None = None
+    path: str | None = None
 
 
 class StopExperimentSuiteResponse(BaseModel):

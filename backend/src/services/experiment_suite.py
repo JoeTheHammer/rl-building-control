@@ -12,32 +12,42 @@ from typing import Dict, Iterable, Optional
 from fastapi import HTTPException
 
 from models.experiment import ExperimentSuiteResponse, ExperimentSuiteStatus
+import re
 
-BASE_DIR = Path(__file__).resolve().parents[3]
-DATA_DIR = BASE_DIR / "data"
-DB_PATH = DATA_DIR / "experiment_suites.db"
-LOG_PATH = BASE_DIR / "experiment_log.txt"
+PROJECT_DIR = Path(__file__).resolve().parents[3]
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+DATA_DIR = PROJECT_DIR / "data" / "experiments"
+DB_PATH = BACKEND_DIR / "experiment_suites.db"
+
+
+def _sanitize_name(name: str) -> str:
+    # replace spaces with underscore, drop unsafe chars
+    safe = re.sub(r'[^a-zA-Z0-9_-]', '_', name.strip())
+    return safe
+
 
 
 class ExperimentSuiteRepository:
     def __init__(self) -> None:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         self._lock = Lock()
-        with self._connect() as connection:
+        with self.connect() as connection:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS experiment_suites (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     status TEXT NOT NULL,
-                    pid INTEGER
+                    pid INTEGER,
+                    path TEXT
                 )
                 """
             )
             connection.commit()
 
     @contextmanager
-    def _connect(self):
+    def connect(self):
         connection = sqlite3.connect(DB_PATH)
         connection.row_factory = sqlite3.Row
         try:
@@ -45,17 +55,17 @@ class ExperimentSuiteRepository:
         finally:
             connection.close()
 
-    def create(self, name: str, status: ExperimentSuiteStatus, pid: Optional[int]) -> int:
-        with self._lock, self._connect() as connection:
+    def create(self, name: str, status: ExperimentSuiteStatus, pid: Optional[int], path: Optional[str]) -> int:
+        with self._lock, self.connect() as connection:
             cursor = connection.execute(
-                "INSERT INTO experiment_suites (name, status, pid) VALUES (?, ?, ?)",
-                (name, status.value, pid),
+                "INSERT INTO experiment_suites (name, status, pid, path) VALUES (?, ?, ?, ?)",
+                (name, status.value, pid, path),
             )
             connection.commit()
             return int(cursor.lastrowid)
 
     def update_status(self, suite_id: int, status: ExperimentSuiteStatus, pid: Optional[int]) -> None:
-        with self._lock, self._connect() as connection:
+        with self._lock, self.connect() as connection:
             connection.execute(
                 "UPDATE experiment_suites SET status = ?, pid = ? WHERE id = ?",
                 (status.value, pid, suite_id),
@@ -63,9 +73,9 @@ class ExperimentSuiteRepository:
             connection.commit()
 
     def get(self, suite_id: int) -> Optional[ExperimentSuiteResponse]:
-        with self._connect() as connection:
+        with self.connect() as connection:
             row = connection.execute(
-                "SELECT id, name, status, pid FROM experiment_suites WHERE id = ?",
+                "SELECT id, name, status, pid, path FROM experiment_suites WHERE id = ?",
                 (suite_id,),
             ).fetchone()
 
@@ -75,27 +85,29 @@ class ExperimentSuiteRepository:
         return ExperimentSuiteResponse(
             id=int(row["id"]),
             name=str(row["name"]),
-            status=(row["status"]),
+            status=row["status"],
             pid=row["pid"],
+            path=row["path"],
         )
 
     def list(self) -> Iterable[ExperimentSuiteResponse]:
-        with self._connect() as connection:
+        with self.connect() as connection:
             rows = connection.execute(
-                "SELECT id, name, status, pid FROM experiment_suites ORDER BY id DESC"
+                "SELECT id, name, status, pid, path FROM experiment_suites ORDER BY id DESC"
             ).fetchall()
 
         for row in rows:
             yield ExperimentSuiteResponse(
                 id=int(row["id"]),
                 name=str(row["name"]),
-                status=(row["status"]),
+                status=row["status"],
                 pid=row["pid"],
+                path=row["path"],
             )
 
 
 def resolve_config_path(config_name: str) -> Path:
-    return (BASE_DIR / "config" / "experiments" / config_name).resolve()
+    return (PROJECT_DIR / "config" / "experiments" / config_name).resolve()
 
 
 class ExperimentSuiteManager:
@@ -121,52 +133,68 @@ class ExperimentSuiteManager:
         if not full_config_path.exists():
             raise HTTPException(status_code=404, detail=f"Experiment config not found: {full_config_path}")
 
+        # Step 1: Create dedicated folder for this suite
+        # We don't yet know the id, so create with placeholder first
+        tmp_id = self._repository.create(name, ExperimentSuiteStatus.RUNNING, None, None)
+        safe_name = _sanitize_name(name)
+        suite_dir = DATA_DIR / f"experiment_{tmp_id}_{safe_name}"
+        suite_dir.mkdir(parents=True, exist_ok=True)
+        log_path = suite_dir / "experiment_log.txt"
+
+        # Update DB with correct path
+        with self._repository.connect() as connection:
+            connection.execute(
+                "UPDATE experiment_suites SET path = ? WHERE id = ?",
+                (str(suite_dir), tmp_id),
+            )
+            connection.commit()
+
+        main_py = src_path / "main.py"
+
         command = [
             "pipenv",
             "run",
             "python",
-            "main.py",
+            str(main_py),
             str(full_config_path),
         ]
 
-        print(f"Executing command: {' '.join(command)}")
-
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        log_file = open(LOG_PATH, "w", encoding="utf-8")
-
-        print(src_path)
-        print(str(full_config_path))
+        # extend environment with PIPENV_PIPFILE pointing to the testbed
+        env = os.environ.copy()
+        env["PIPENV_PIPFILE"] = str(Path(testbed_path) / "Pipfile")
 
         try:
+            log_file = open(log_path, "w", encoding="utf-8")
             process = subprocess.Popen(
                 command,
-                cwd=src_path,
+                cwd=suite_dir,
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
+                env=env,
             )
         except FileNotFoundError as exc:
-            log_file.close()
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-        suite_id = self._repository.create(name, ExperimentSuiteStatus.RUNNING, process.pid)
+        # Step 2: Update DB with pid
+        self._repository.update_status(tmp_id, ExperimentSuiteStatus.RUNNING, process.pid)
 
+        # Step 3: Track process
         with self._lock:
-            self._config_paths[suite_id] = full_config_path
-            self._processes[suite_id] = process
+            self._config_paths[tmp_id] = full_config_path
+            self._processes[tmp_id] = process
 
         Thread(
             target=self._monitor_process,
-            args=(suite_id, process, log_file),
+            args=(tmp_id, process, log_file),
             daemon=True,
         ).start()
 
-        print(process.pid)
-
         return ExperimentSuiteResponse(
-            id=suite_id,
+            id=tmp_id,
             name=name,
             status=ExperimentSuiteStatus.RUNNING,
             pid=process.pid,
+            path=str(suite_dir),
         )
 
     def stop_suite(self, suite_id: int) -> ExperimentSuiteResponse:
@@ -198,6 +226,7 @@ class ExperimentSuiteManager:
             name=suite.name,
             status=ExperimentSuiteStatus.ABORTED,
             pid=None,
+            path=suite.path,
         )
 
     def _monitor_process(self, suite_id: int, process: subprocess.Popen, log_file) -> None:
@@ -217,4 +246,3 @@ class ExperimentSuiteManager:
 
 
 manager = ExperimentSuiteManager()
-

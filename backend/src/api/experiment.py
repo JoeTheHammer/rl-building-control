@@ -11,7 +11,7 @@ from models.experiment import (
     StopExperimentSuiteResponse,
 )
 from services.yaml_experiment import save_experiment_yaml
-from services.experiment_suite import manager as suite_manager
+from services.experiment_suite import manager as suite_manager, resolve_config_path
 
 router = APIRouter()
 
@@ -46,6 +46,23 @@ def get_all_experiment_configs():
         raise HTTPException(status_code=500, detail=str(exc))
 
 
+@router.get("/suites", response_model=List[ExperimentSuiteResponse])
+def list_experiment_suites():
+    return suite_manager.list_suites()
+
+
+@router.post("/suites/run", response_model=ExperimentSuiteResponse)
+def run_experiment_suite(req: RunExperimentSuiteRequest):
+    config_path = resolve_config_path(req.config_name)
+    return suite_manager.run_suite(req.suite_name, config_path)
+
+
+@router.post("/suites/{suite_id}/stop", response_model=StopExperimentSuiteResponse)
+def stop_experiment_suite(suite_id: int):
+    suite = suite_manager.stop_suite(suite_id)
+    return StopExperimentSuiteResponse(id=suite.id, status=suite.status)
+
+
 @router.get("/{name}")
 def get_experiment_config(name: str):
     try:
@@ -62,18 +79,3 @@ def get_experiment_config(name: str):
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
-@router.get("/suites", response_model=List[ExperimentSuiteResponse])
-def list_experiment_suites():
-    return suite_manager.list_suites()
-
-
-@router.post("/suites/run", response_model=ExperimentSuiteResponse)
-def run_experiment_suite(req: RunExperimentSuiteRequest):
-    config_path = resolve_config_path(req.config_name)
-    return suite_manager.run_suite(req.suite_name, config_path)
-
-
-@router.post("/suites/{suite_id}/stop", response_model=StopExperimentSuiteResponse)
-def stop_experiment_suite(suite_id: int):
-    suite = suite_manager.stop_suite(suite_id)
-    return StopExperimentSuiteResponse(id=suite.id, status=suite.status)
