@@ -3,7 +3,7 @@ from typing import Any
 from io import StringIO
 
 from ruamel.yaml import YAML
-from ruamel.yaml.scalarstring import FoldedScalarString
+from ruamel.yaml.scalarstring import FoldedScalarString, DoubleQuotedScalarString
 from ruamel.yaml.comments import CommentedSeq
 
 from models.environment import EnvironmentConfig
@@ -45,21 +45,22 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
 
     # Build YAML doc with epw (for weather_data)
     doc: dict[str, Any] = {
-        "building_model": str(building_path),
-        "weather_data": str(epw_file),
+        "building_model": DoubleQuotedScalarString(str(building_path)),
+        "weather_data": DoubleQuotedScalarString(str(epw_file)),
     }
 
+    # --- State space ---
     variables: dict[str, Any] = {}
     meters: dict[str, Any] = {}
     state_space: dict[str, Any] = {}
 
     for v in cfg.stateSpaceSettings.variables:
         if v.variableType == "meter":
-            meters[v.name] = f'"{v.meterName}"'
+            meters[v.name] = DoubleQuotedScalarString(v.meterName.strip('"'))
         else:
             variables[v.name] = {
-                "type": f'"{v.energyPlusType}"',
-                "zone": f'"{v.zone}"',
+                "type": DoubleQuotedScalarString(v.energyPlusType.strip('"')),
+                "zone": DoubleQuotedScalarString(v.zone.strip('"')),
             }
 
     if variables:
@@ -77,45 +78,59 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
 
     doc["state_space"] = state_space
 
+    # --- Action space ---
     actuators: dict[str, Any] = {}
     for a in cfg.actionSpaceSettings.actuators:
         if a.type == "continuous":
+            seq = CommentedSeq([a.min, a.max])
+            seq.fa.set_flow_style()
             actuators[a.actuatorName] = {
-                "type": '"continuous"',
-                "range": [a.min, a.max],
-                "component": f'"{a.component}"',
-                "control_type": f'"{a.controlType}"',
-                "actuator_key": f'"{a.actuatorKey}"',
+                "type": DoubleQuotedScalarString("continuous"),
+                "range": seq,
+                "component": DoubleQuotedScalarString(a.component.strip('"')),
+                "control_type": DoubleQuotedScalarString(a.controlType.strip('"')),
+                "actuator_key": DoubleQuotedScalarString(a.actuatorKey.strip('"')),
             }
         elif a.type == "discrete" and a.mode == "range":
+            seq = CommentedSeq([a.min, a.max])
+            seq.fa.set_flow_style()
             actuators[a.actuatorName] = {
-                "type": '"discrete"',
-                "range": [a.min, a.max],
+                "type": DoubleQuotedScalarString("discrete"),
+                "range": seq,
                 "step_size": a.stepSize,
-                "component": f'"{a.component}"',
-                "control_type": f'"{a.controlType}"',
-                "actuator_key": f'"{a.actuatorKey}"',
+                "component": DoubleQuotedScalarString(a.component.strip('"')),
+                "control_type": DoubleQuotedScalarString(a.controlType.strip('"')),
+                "actuator_key": DoubleQuotedScalarString(a.actuatorKey.strip('"')),
             }
         elif a.type == "discrete" and a.mode == "values":
+            val_seq = CommentedSeq(a.valueList)
+            val_seq.fa.set_flow_style()
             actuators[a.actuatorName] = {
-                "type": '"discrete"',
-                "values": a.valueList,
-                "component": f'"{a.component}"',
-                "control_type": f'"{a.controlType}"',
-                "actuator_key": f'"{a.actuatorKey}"',
+                "type": DoubleQuotedScalarString("discrete"),
+                "values": val_seq,
+                "component": DoubleQuotedScalarString(a.component.strip('"')),
+                "control_type": DoubleQuotedScalarString(a.controlType.strip('"')),
+                "actuator_key": DoubleQuotedScalarString(a.actuatorKey.strip('"')),
             }
 
     doc["action_space"] = {"actuators": actuators}
 
+    # --- Reward function ---
     reward_params: dict[str, Any] = {p.key: p.value for p in cfg.rewardSettings.parameters}
 
+    var_seq = CommentedSeq(
+        [DoubleQuotedScalarString(v.strip('"')) for v in cfg.rewardSettings.variables]
+    )
+    var_seq.fa.set_flow_style()
+
     doc["reward_function"] = {
-        "type": f'"{cfg.rewardSettings.type}"',
-        "variables": [f'"{v}"' for v in cfg.rewardSettings.variables],
+        "type": DoubleQuotedScalarString(cfg.rewardSettings.type.strip('"')),
+        "variables": var_seq,
         "expression": FoldedScalarString(cfg.rewardSettings.expression),
         "params": reward_params,
     }
 
+    # --- Episode ---
     episode: dict[str, Any] = {"timesteps_per_hour": cfg.generalSettings.timestepsPerHour}
 
     if cfg.generalSettings.startDate and cfg.generalSettings.endDate:
@@ -129,6 +144,7 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
 
     doc["episode"] = episode
 
+    # Dump YAML
     stream = StringIO()
     yaml.dump(doc, stream)
     return stream.getvalue()
