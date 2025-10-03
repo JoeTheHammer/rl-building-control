@@ -5,7 +5,7 @@ import os
 from datetime import date
 from pathlib import Path
 from threading import Lock
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Sequence
 
 import yaml
 
@@ -13,6 +13,7 @@ from parser.config_parser import parse_sinergym_environment_config
 
 _STATUS_LOCK = Lock()
 _STATUS_PATH = Path(os.getenv("EXPERIMENT_STATUS_FILE", Path.cwd() / "status.yaml"))
+_CURRENT_EXPERIMENT_ID: Optional[int] = None
 
 
 def _load_status() -> Dict[str, Any]:
@@ -30,65 +31,131 @@ def _write_status(data: Dict[str, Any]) -> None:
         yaml.safe_dump(data, file, sort_keys=False)
 
 
-def _coerce_int(value: Any) -> int:
+def _to_int(value: Any) -> Optional[int]:
     try:
         return int(value)
     except (TypeError, ValueError):
-        return 0
+        return None
 
 
-def update_status(**updates: Any) -> None:
-    cleaned = {key: value for key, value in updates.items() if value is not None}
-    if not cleaned:
+def _default_zero(value: Any) -> int:
+    converted = _to_int(value)
+    return converted if converted is not None else 0
+
+
+def initialize_status(experiments: Sequence[Dict[str, Any]]) -> None:
+    normalized: list[Dict[str, Any]] = []
+    for entry in experiments:
+        experiment_id = _to_int(entry.get("id"))
+        if experiment_id is None:
+            continue
+        name_value = entry.get("name")
+        name = str(name_value) if isinstance(name_value, str) else None
+        total_eval = _to_int(entry.get("total_evaluation_episodes"))
+        total_training = _to_int(entry.get("total_training_episodes"))
+        normalized.append(
+            {
+                "id": experiment_id,
+                "name": name,
+                "status": "pending",
+                "total_training_episodes": total_training,
+                "current_training_episode": 0,
+                "total_evaluation_episodes": total_eval,
+                "current_evaluation_episode": 0,
+            }
+        )
+
+    normalized.sort(key=lambda item: item["id"])
+    with _STATUS_LOCK:
+        _write_status({"experiments": normalized})
+    set_current_experiment(None)
+
+
+def set_current_experiment(experiment_id: Optional[int]) -> None:
+    global _CURRENT_EXPERIMENT_ID
+    if experiment_id is None:
+        _CURRENT_EXPERIMENT_ID = None
         return
+    converted = _to_int(experiment_id)
+    _CURRENT_EXPERIMENT_ID = converted if converted is not None else None
+
+
+def _update_current_experiment(
+    updater: Callable[[Dict[str, Any]], bool | None]
+) -> None:
+    experiment_id = _CURRENT_EXPERIMENT_ID
+    if experiment_id is None:
+        return
+
     with _STATUS_LOCK:
         data = _load_status()
-        data.update(cleaned)
-        _write_status(data)
+        experiments = data.get("experiments")
+        if not isinstance(experiments, list):
+            return
+
+        for entry in experiments:
+            if not isinstance(entry, dict):
+                continue
+            entry_id = _to_int(entry.get("id"))
+            if entry_id == experiment_id:
+                changed = updater(entry)
+                if changed is False:
+                    return
+                data["experiments"] = experiments
+                _write_status(data)
+                return
 
 
 def set_hyperparameter_tuning_status() -> None:
-    update_status(status="hyperparameter_tuning")
+    def _updater(entry: Dict[str, Any]) -> bool:
+        entry["status"] = "hyperparameter_tuning"
+        return True
+
+    _update_current_experiment(_updater)
 
 
 def set_training_status(total_training_episodes: Optional[int] = None) -> None:
-    updates: Dict[str, Any] = {
-        "status": "training",
-        "current_training_episode": 0,
-    }
-    if total_training_episodes is not None:
-        updates["total_training_episodes"] = int(total_training_episodes)
-    update_status(**updates)
+    def _updater(entry: Dict[str, Any]) -> bool:
+        entry["status"] = "training"
+        entry["current_training_episode"] = 0
+        if total_training_episodes is not None:
+            entry["total_training_episodes"] = int(total_training_episodes)
+        return True
+
+    _update_current_experiment(_updater)
 
 
 def increment_training_episode() -> None:
-    with _STATUS_LOCK:
-        data = _load_status()
-        if data.get("status") != "training":
-            return
-        current = _coerce_int(data.get("current_training_episode")) + 1
-        data["current_training_episode"] = current
-        _write_status(data)
+    def _updater(entry: Dict[str, Any]) -> bool:
+        if entry.get("status") != "training":
+            return False
+        current = _default_zero(entry.get("current_training_episode")) + 1
+        entry["current_training_episode"] = current
+        return True
+
+    _update_current_experiment(_updater)
 
 
 def set_evaluation_status(total_episodes: Optional[int] = None) -> None:
-    updates: Dict[str, Any] = {
-        "status": "evaluation",
-        "current_evaluation_episode": 0,
-    }
-    if total_episodes is not None:
-        updates["total_evaluation_episodes"] = int(total_episodes)
-    update_status(**updates)
+    def _updater(entry: Dict[str, Any]) -> bool:
+        entry["status"] = "evaluation"
+        entry["current_evaluation_episode"] = 0
+        if total_episodes is not None:
+            entry["total_evaluation_episodes"] = int(total_episodes)
+        return True
+
+    _update_current_experiment(_updater)
 
 
 def increment_evaluation_episode() -> None:
-    with _STATUS_LOCK:
-        data = _load_status()
-        if data.get("status") != "evaluation":
-            return
-        current = _coerce_int(data.get("current_evaluation_episode")) + 1
-        data["current_evaluation_episode"] = current
-        _write_status(data)
+    def _updater(entry: Dict[str, Any]) -> bool:
+        if entry.get("status") != "evaluation":
+            return False
+        current = _default_zero(entry.get("current_evaluation_episode")) + 1
+        entry["current_evaluation_episode"] = current
+        return True
+
+    _update_current_experiment(_updater)
 
 
 def calculate_total_training_episodes(

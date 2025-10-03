@@ -106,6 +106,7 @@ class SinergymEnvironment(EplusEnv):
         state, time_info_dict = self._add_time_information_to_state(obs)
         return state, {**info, **time_info_dict}
 
+
     def _add_time_information_to_state(
         self, obs: np.ndarray
     ) -> tuple[np.ndarray, Dict[str, float]]:

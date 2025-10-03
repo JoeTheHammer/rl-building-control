@@ -8,9 +8,11 @@ from fastapi.responses import StreamingResponse
 import yaml
 
 from models.experiment import (
+    ExperimentConfigDetailsExperiment,
     ExperimentConfigDetailsResponse,
     ExperimentConfigSection,
     ExperimentLogResponse,
+    ExperimentProgress,
     ExperimentRunStatus,
     ExperimentSuiteResponse,
     RunExperimentSuiteRequest,
@@ -57,21 +59,65 @@ def _extract_config_filename(value: Optional[Any]) -> Optional[str]:
         return stripped
 
 
-def _resolve_related_config(
-    content: Dict[str, Any],
-    keys: List[str],
-) -> Optional[str]:
-    experiments = content.get("experiments")
-    if isinstance(experiments, list):
-        for experiment in experiments:
-            if not isinstance(experiment, dict):
-                continue
-            for key in keys:
-                if key in experiment:
-                    filename = _extract_config_filename(experiment.get(key))
-                    if filename:
-                        return filename
+def _get_experiment_value(experiment: Dict[str, Any], *keys: str) -> Optional[Any]:
+    for key in keys:
+        if key in experiment:
+            return experiment.get(key)
     return None
+
+
+def _build_experiment_sections(
+    content: Dict[str, Any],
+) -> List[ExperimentConfigDetailsExperiment]:
+    experiments = content.get("experiments")
+    if not isinstance(experiments, list):
+        return []
+
+    entries: List[ExperimentConfigDetailsExperiment] = []
+    for index, experiment in enumerate(experiments, start=1):
+        if not isinstance(experiment, dict):
+            continue
+
+        name_value = experiment.get("name")
+        name = name_value if isinstance(name_value, str) else None
+
+        environment_raw = _get_experiment_value(
+            experiment, "environment_config", "environmentConfig"
+        )
+        controller_raw = _get_experiment_value(
+            experiment, "controller_config", "controllerConfig"
+        )
+
+        environment_filename = _extract_config_filename(environment_raw)
+        controller_filename = _extract_config_filename(controller_raw)
+
+        environment_section = (
+            _build_section(_resolve_within(ENVIRONMENTS_DIR, environment_filename))
+            if environment_filename
+            else None
+        )
+        controller_section = (
+            _build_section(_resolve_within(CONTROLLERS_DIR, controller_filename))
+            if controller_filename
+            else None
+        )
+
+        entries.append(
+            ExperimentConfigDetailsExperiment(
+                id=index,
+                name=name,
+                environment=environment_section,
+                controller=controller_section,
+                environment_path=str(environment_raw)
+                if isinstance(environment_raw, str)
+                else environment_filename,
+                controller_path=str(controller_raw)
+                if isinstance(controller_raw, str)
+                else controller_filename,
+            )
+        )
+
+    return entries
 
 
 def _build_section(path: Path) -> Optional[ExperimentConfigSection]:
@@ -147,30 +193,16 @@ def get_config_details(config_name: str):
             content=experiment_content,
         )
 
-        environment_filename = _resolve_related_config(
-            experiment_content,
-            ["environment_config", "environmentConfig"],
-        )
-        controller_filename = _resolve_related_config(
-            experiment_content,
-            ["controller_config", "controllerConfig"],
-        )
-
-        environment_section = (
-            _build_section(_resolve_within(ENVIRONMENTS_DIR, environment_filename))
-            if environment_filename
-            else None
-        )
-        controller_section = (
-            _build_section(_resolve_within(CONTROLLERS_DIR, controller_filename))
-            if controller_filename
-            else None
-        )
+        experiment_sections = _build_experiment_sections(experiment_content)
+        first_section = experiment_sections[0] if experiment_sections else None
+        environment_section = first_section.environment if first_section else None
+        controller_section = first_section.controller if first_section else None
 
         return ExperimentConfigDetailsResponse(
             experiment=experiment_section,
             environment=environment_section,
             controller=controller_section,
+            experiments=experiment_sections,
         )
     except HTTPException:
         raise
@@ -196,22 +228,74 @@ def get_suite_status(suite_id: int):
     except Exception as exc:  # pragma: no cover - defensive
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    def _first_int(*keys: str) -> Optional[int]:
-        for key in keys:
-            value = data.get(key)
-            if isinstance(value, int):
-                return value
-        return None
+    def _as_int(value: Any) -> Optional[int]:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
 
-    return ExperimentRunStatus(
-        status=data.get("status"),
-        total_training_episodes=_first_int("total_training_episodes"),
-        current_training_episode=_first_int("current_training_episode"),
-        total_evaluation_episodes=_first_int(
-            "total_evaluation_episodes", "total_evluation_episodes"
-        ),
-        current_evaluation_episode=_first_int("current_evaluation_episode"),
-    )
+    experiments_data = data.get("experiments")
+    experiments: List[ExperimentProgress] = []
+
+    if isinstance(experiments_data, list):
+        for item in experiments_data:
+            if not isinstance(item, dict):
+                continue
+            experiment_id = _as_int(item.get("id"))
+            if experiment_id is None:
+                continue
+            experiments.append(
+                ExperimentProgress(
+                    id=experiment_id,
+                    name=item.get("name") if isinstance(item.get("name"), str) else None,
+                    status=item.get("status") if isinstance(item.get("status"), str) else None,
+                    total_training_episodes=_as_int(
+                        item.get("total_training_episodes")
+                    ),
+                    current_training_episode=_as_int(
+                        item.get("current_training_episode")
+                    ),
+                    total_evaluation_episodes=_as_int(
+                        item.get("total_evaluation_episodes")
+                        if item.get("total_evaluation_episodes") is not None
+                        else item.get("total_evluation_episodes")
+                    ),
+                    current_evaluation_episode=_as_int(
+                        item.get("current_evaluation_episode")
+                    ),
+                )
+            )
+    else:
+        # Fallback for legacy status files without per-experiment data
+        total_training = _as_int(data.get("total_training_episodes"))
+        current_training = _as_int(data.get("current_training_episode"))
+        total_evaluation = _as_int(
+            data.get("total_evaluation_episodes")
+            if data.get("total_evaluation_episodes") is not None
+            else data.get("total_evluation_episodes")
+        )
+        current_evaluation = _as_int(data.get("current_evaluation_episode"))
+        legacy_status = data.get("status")
+        if (
+            legacy_status
+            or total_training is not None
+            or current_training is not None
+            or total_evaluation is not None
+            or current_evaluation is not None
+        ):
+            experiments.append(
+                ExperimentProgress(
+                    id=1,
+                    status=legacy_status if isinstance(legacy_status, str) else None,
+                    total_training_episodes=total_training,
+                    current_training_episode=current_training,
+                    total_evaluation_episodes=total_evaluation,
+                    current_evaluation_episode=current_evaluation,
+                )
+            )
+
+    experiments.sort(key=lambda item: item.id)
+    return ExperimentRunStatus(experiments=experiments)
 
 
 @router.get(

@@ -40,14 +40,30 @@ export interface ExperimentConfigDetailsResponse {
   experiment: ConfigDetailsSection
   environment?: ConfigDetailsSection | null
   controller?: ConfigDetailsSection | null
+  experiments: ExperimentConfigDetailsExperiment[]
+}
+
+export interface ExperimentConfigDetailsExperiment {
+  id: number
+  name?: string | null
+  environment?: ConfigDetailsSection | null
+  controller?: ConfigDetailsSection | null
+  environment_path?: string | null
+  controller_path?: string | null
+}
+
+export interface ExperimentProgressResponse {
+  id: number
+  name?: string | null
+  status?: string | null
+  total_training_episodes?: number | undefined
+  current_training_episode?: number | undefined
+  total_evaluation_episodes?: number | undefined
+  current_evaluation_episode?: number | undefined
 }
 
 export interface ExperimentRunStatusResponse {
-  status?: string
-  total_training_episodes?: number
-  current_training_episode?: number
-  total_evaluation_episodes?: number
-  current_evaluation_episode?: number
+  experiments: ExperimentProgressResponse[]
 }
 
 export interface ExperimentLogResponse {
@@ -153,6 +169,5 @@ export const fetchExperimentSuiteLogs = async (
   return response.data
 }
 
-export const createExperimentLogEventSource = (
-  suiteId: number,
-): EventSource => new EventSource(`${API_BASE}/suites/${suiteId}/logs/stream`)
+export const createExperimentLogEventSource = (suiteId: number): EventSource =>
+  new EventSource(`${API_BASE}/suites/${suiteId}/logs/stream`)

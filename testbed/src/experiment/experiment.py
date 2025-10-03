@@ -6,7 +6,11 @@ from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
 from wrappers.reporting_wrapper import ReportingWrapper
 
-from experiment.status import increment_evaluation_episode, set_evaluation_status
+from experiment.status import (
+    increment_evaluation_episode,
+    set_current_experiment,
+    set_evaluation_status,
+)
 
 
 class Experiment:
@@ -15,6 +19,7 @@ class Experiment:
         name: str,
         env: gym.Env,
         controller: IController,
+        experiment_id: int,
         episodes: int = 1,
         denorm_state: bool = False,
         plots: bool = False,
@@ -24,6 +29,7 @@ class Experiment:
         self.name = name
         self.env = env
         self.controller = controller
+        self.experiment_id = experiment_id
         self.episodes = episodes
         self.denorm_state = denorm_state
         self.plots = plots
@@ -36,6 +42,7 @@ class Experiment:
 
         logger.info(f"Experiment {self.name} started for {self.episodes} episodes.")
         if self.status_tracking:
+            set_current_experiment(self.experiment_id)
             set_evaluation_status(self.episodes)
         episode_rewards = []
         total_rewards = []

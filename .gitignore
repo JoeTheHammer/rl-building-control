@@ -3,4 +3,4 @@ pipenv.lock/
 __pycache__/
 backend/experiment_suites.db
 testbed/src/.lock
-data/experiments
+data/experiments/*
