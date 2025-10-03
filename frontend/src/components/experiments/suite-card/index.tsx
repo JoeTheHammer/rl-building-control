@@ -32,6 +32,7 @@ import {
 import type { LocalExperimentSuite } from '@/components/experiments/types.ts'
 
 import ConfigSectionDialog from './config-details-dialog.tsx'
+import CompletedLogDialog from './completed-log-dialog.tsx'
 import ProgressSection from './progress-section.tsx'
 import LogViewer from './log-viewer.tsx'
 
@@ -105,6 +106,10 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
   const [logLines, setLogLines] = useState<string[]>([])
   const [logLoading, setLogLoading] = useState(false)
   const [logError, setLogError] = useState<string | null>(null)
+  const [completedLogsOpen, setCompletedLogsOpen] = useState(false)
+  const [completedLogLines, setCompletedLogLines] = useState<string[]>([])
+  const [completedLogsLoading, setCompletedLogsLoading] = useState(false)
+  const [completedLogsError, setCompletedLogsError] = useState<string | null>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
 
   const configName = useMemo(() => {
@@ -320,6 +325,56 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
     setActiveConfigSection(section)
   }
 
+  useEffect(() => {
+    if (!completedLogsOpen) {
+      return
+    }
+
+    if (typeof suiteId !== 'number') {
+      setCompletedLogLines([])
+      setCompletedLogsError('Logs are only available for saved experiment suites')
+      setCompletedLogsLoading(false)
+      return
+    }
+
+    let ignore = false
+    setCompletedLogsLoading(true)
+    setCompletedLogsError(null)
+
+    fetchExperimentSuiteLogs(suiteId)
+      .then(({ content }) => {
+        if (ignore) return
+        setCompletedLogLines(splitLines(content))
+      })
+      .catch((error: unknown) => {
+        if (ignore) return
+        const responseStatus = (error as AxiosError)?.response?.status
+        if (responseStatus === 404) {
+          setCompletedLogLines([])
+          setCompletedLogsError('Log file could not be found for this suite')
+        } else {
+          console.error('Failed to load completed logs', error)
+          setCompletedLogsError('Unable to load logs for this suite')
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setCompletedLogsLoading(false)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [completedLogsOpen, suiteId])
+
+  const handleCompletedLogsOpenChange = (open: boolean) => {
+    setCompletedLogsOpen(open)
+    if (!open) {
+      setCompletedLogsError(null)
+    }
+  }
+
   const activeSection = (() => {
     if (!activeConfigSection || !configDetails) {
       return null
@@ -410,6 +465,15 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
               >
                 Show controller config
               </Button>
+              {status === 'Finished' && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleCompletedLogsOpenChange(true)}
+                  disabled={typeof suiteId !== 'number'}
+                >
+                  Show logs
+                </Button>
+              )}
             </div>
 
             {status === 'Running' && (
@@ -443,6 +507,13 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
             ? () => handleEdit(activeConfigSection)
             : undefined
         }
+      />
+      <CompletedLogDialog
+        open={completedLogsOpen}
+        onOpenChange={handleCompletedLogsOpenChange}
+        lines={completedLogLines}
+        loading={completedLogsLoading}
+        error={completedLogsError}
       />
     </Collapsible>
   )
