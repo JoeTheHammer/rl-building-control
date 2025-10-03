@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChartNoAxesCombined } from 'lucide-react'
+import { ChartNoAxesCombined, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import CustomPage from '@/components/shared/page.tsx'
@@ -150,11 +150,10 @@ const Archive = () => {
                         <ChartNoAxesCombined className="size-4" /> Show Results
                       </div>
                     </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => setSuitePendingDeletion(suite)}
-                    >
-                      Delete
+                    <Button onClick={() => setSuitePendingDeletion(suite)}>
+                      <div className="flex gap-2">
+                        <Trash2 className="size-4" /> Delete
+                      </div>
                     </Button>
                   </div>
                 }
@@ -175,15 +174,16 @@ const Archive = () => {
         >
           <DialogContent showCloseButton={!deleting}>
             <DialogHeader>
-              <DialogTitle>Delete experiment suite</DialogTitle>
+              <DialogTitle>Delete experiment data</DialogTitle>
               <DialogDescription>
                 Are you sure you want to delete this experiment suite? All data
                 will be deleted.
               </DialogDescription>
             </DialogHeader>
-            <p className="text-sm text-muted-foreground">
-              {suitePendingDeletion?.name}
-            </p>
+            <span className="text-sm font-bold">
+              {'Folder: ' + suitePendingDeletion?.path + '/'}
+            </span>
+
             <DialogFooter>
               <Button
                 variant="outline"
