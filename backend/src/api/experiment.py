@@ -18,9 +18,14 @@ from models.experiment import (
     RunExperimentSuiteRequest,
     SaveExperimentRequest,
     StopExperimentSuiteResponse,
+    StartTensorBoardRequest,
+    StopTensorBoardRequest,
+    TensorBoardStatusResponse,
+    StopTensorBoardResponse,
 )
 from services.yaml_experiment import save_experiment_yaml
 from services.experiment_suite import manager as suite_manager, resolve_config_path
+from services.tensorboard import tensorboard_manager
 
 router = APIRouter()
 
@@ -159,24 +164,59 @@ def get_all_experiment_configs():
 
 @router.get("/suites", response_model=List[ExperimentSuiteResponse])
 def list_experiment_suites():
-    return suite_manager.list_suites()
+    suites = suite_manager.list_suites()
+    return [tensorboard_manager.enrich_suite(suite) for suite in suites]
 
 
 @router.post("/suites/run", response_model=ExperimentSuiteResponse)
 def run_experiment_suite(req: RunExperimentSuiteRequest):
     config_path = resolve_config_path(req.config_name)
-    return suite_manager.run_suite(req.suite_name, config_path)
+    suite = suite_manager.run_suite(req.suite_name, config_path)
+    return tensorboard_manager.enrich_suite(suite)
 
 
 @router.post("/suites/{suite_id}/stop", response_model=StopExperimentSuiteResponse)
 def stop_experiment_suite(suite_id: int):
     suite = suite_manager.stop_suite(suite_id)
+    try:
+        tensorboard_manager.stop(suite_id)
+    except HTTPException:
+        pass
     return StopExperimentSuiteResponse(id=suite.id, status=suite.status)
 
 
 @router.post("/suites/{suite_id}/archive", response_model=ExperimentSuiteResponse)
 def archive_experiment_suite(suite_id: int):
-    return suite_manager.archive_suite(suite_id)
+    suite = suite_manager.archive_suite(suite_id)
+    return tensorboard_manager.enrich_suite(suite)
+
+
+@router.get(
+    "/suites/{suite_id}/tensorboard",
+    response_model=TensorBoardStatusResponse,
+)
+def get_tensorboard_status(suite_id: int):
+    return tensorboard_manager.status(suite_id)
+
+
+@router.post(
+    "/suites/{suite_id}/tensorboard/start",
+    response_model=TensorBoardStatusResponse,
+)
+def start_tensorboard(suite_id: int, payload: StartTensorBoardRequest | None = None):
+    owner = payload.owner if payload else None
+    return tensorboard_manager.start(suite_id, owner=owner)
+
+
+@router.post(
+    "/suites/{suite_id}/tensorboard/stop",
+    response_model=StopTensorBoardResponse,
+)
+def stop_tensorboard(
+    suite_id: int,
+    payload: StopTensorBoardRequest | None = None,  # noqa: ARG001 - accepted for sendBeacon payloads
+):
+    return tensorboard_manager.stop(suite_id)
 
 
 @router.get(

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import os
+import re
 import signal
 import sqlite3
 import subprocess
-import re
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
+
+import yaml
 
 from fastapi import HTTPException
 
@@ -42,10 +44,11 @@ class ExperimentSuiteRepository:
                     pid INTEGER,
                     path TEXT,
                     config_filename TEXT,
-                    archived INTEGER NOT NULL DEFAULT 0
+                    archived INTEGER NOT NULL DEFAULT 0,
+                    tensorboard_enabled INTEGER NOT NULL DEFAULT 0
                 )
             """
-        )
+            )
 
 
             columns = connection.execute(
@@ -55,6 +58,10 @@ class ExperimentSuiteRepository:
             if "archived" not in column_names:
                 connection.execute(
                     "ALTER TABLE experiment_suites ADD COLUMN archived INTEGER NOT NULL DEFAULT 0"
+                )
+            if "tensorboard_enabled" not in column_names:
+                connection.execute(
+                    "ALTER TABLE experiment_suites ADD COLUMN tensorboard_enabled INTEGER NOT NULL DEFAULT 0"
                 )
 
             connection.commit()
@@ -75,11 +82,22 @@ class ExperimentSuiteRepository:
         pid: Optional[int],
         path: Optional[str],
         config_filename: Optional[str],
+        tensorboard_enabled: bool,
     ) -> int:
         with self._lock, self.connect() as connection:
             cursor = connection.execute(
-                "INSERT INTO experiment_suites (name, status, pid, path, config_filename, archived) VALUES (?, ?, ?, ?, ?, ?)",
-                (name, status.value, pid, path, config_filename, 0),
+                """
+                INSERT INTO experiment_suites (
+                    name,
+                    status,
+                    pid,
+                    path,
+                    config_filename,
+                    archived,
+                    tensorboard_enabled
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (name, status.value, pid, path, config_filename, 0, 1 if tensorboard_enabled else 0),
             )
             connection.commit()
             return int(cursor.lastrowid)
@@ -103,7 +121,19 @@ class ExperimentSuiteRepository:
     def get(self, suite_id: int) -> Optional[ExperimentSuiteResponse]:
         with self.connect() as connection:
             row = connection.execute(
-                "SELECT id, name, status, pid, path, config_filename, archived FROM experiment_suites WHERE id = ?",
+                """
+                SELECT
+                    id,
+                    name,
+                    status,
+                    pid,
+                    path,
+                    config_filename,
+                    archived,
+                    tensorboard_enabled
+                FROM experiment_suites
+                WHERE id = ?
+                """,
                 (suite_id,),
             ).fetchone()
 
@@ -118,12 +148,25 @@ class ExperimentSuiteRepository:
             path=row["path"],
             config_filename=row["config_filename"],
             archived=bool(row["archived"]),
+            tensorboard_enabled=bool(row["tensorboard_enabled"]),
         )
 
     def list(self) -> Iterable[ExperimentSuiteResponse]:
         with self.connect() as connection:
             rows = connection.execute(
-                "SELECT id, name, status, pid, path, config_filename, archived FROM experiment_suites ORDER BY id DESC"
+                """
+                SELECT
+                    id,
+                    name,
+                    status,
+                    pid,
+                    path,
+                    config_filename,
+                    archived,
+                    tensorboard_enabled
+                FROM experiment_suites
+                ORDER BY id DESC
+                """
             ).fetchall()
 
         for row in rows:
@@ -135,6 +178,7 @@ class ExperimentSuiteRepository:
                 path=row["path"],
                 config_filename=row["config_filename"],
                 archived=bool(row["archived"]),
+                tensorboard_enabled=bool(row["tensorboard_enabled"]),
             )
 
     def set_archived(self, suite_id: int, archived: bool) -> None:
@@ -145,14 +189,85 @@ class ExperimentSuiteRepository:
             )
             connection.commit()
 
+    def set_tensorboard_enabled(self, suite_id: int, enabled: bool) -> None:
+        with self._lock, self.connect() as connection:
+            connection.execute(
+                "UPDATE experiment_suites SET tensorboard_enabled = ? WHERE id = ?",
+                (1 if enabled else 0, suite_id),
+            )
+            connection.commit()
+
 
 def resolve_config_path(config_name: str) -> Path:
     return (PROJECT_DIR / "config" / "experiments" / config_name).resolve()
 
 
+def _load_yaml_file(path: Path) -> Dict[str, Any]:
+    with path.open("r", encoding="utf-8") as file:
+        data = yaml.safe_load(file)
+    if isinstance(data, dict):
+        return data
+    return {}
+
+
+def _resolve_controller_config_path(base_config: Path, controller_value: Any) -> Optional[Path]:
+    if not isinstance(controller_value, str):
+        return None
+    raw = controller_value.strip()
+    if not raw:
+        return None
+    path = Path(raw)
+    if not path.is_absolute():
+        path = (base_config.parent / path).resolve()
+    else:
+        path = path.expanduser().resolve()
+    return path if path.exists() and path.is_file() else None
+
+
+def _controller_uses_tensorboard(path: Path) -> bool:
+    try:
+        content = _load_yaml_file(path)
+    except Exception:
+        return False
+
+    training = content.get("training")
+    if isinstance(training, dict) and training.get("tensorboard_logs") is True:
+        return True
+
+    hyperparameters = content.get("hyperparameters")
+    if isinstance(hyperparameters, dict):
+        value = hyperparameters.get("tensorboard_log")
+        if isinstance(value, str) and value.strip():
+            return True
+        if bool(value) and value is not None:
+            return True
+
+    return False
+
+
+def _detect_tensorboard_enabled(config_path: Path) -> bool:
+    try:
+        experiment_config = _load_yaml_file(config_path)
+    except Exception:
+        return False
+
+    experiments = experiment_config.get("experiments")
+    if not isinstance(experiments, list):
+        return False
+
+    for experiment in experiments:
+        if not isinstance(experiment, dict):
+            continue
+        controller_value = experiment.get("controller_config") or experiment.get("controllerConfig")
+        controller_path = _resolve_controller_config_path(config_path, controller_value)
+        if controller_path and _controller_uses_tensorboard(controller_path):
+            return True
+    return False
+
+
 class ExperimentSuiteManager:
-    def __init__(self) -> None:
-        self._repository = ExperimentSuiteRepository()
+    def __init__(self, repository: Optional[ExperimentSuiteRepository] = None) -> None:
+        self._repository = repository or ExperimentSuiteRepository()
         self._config_paths: Dict[int, Path] = {}
         self._processes: Dict[int, subprocess.Popen] = {}
         self._lock = Lock()
@@ -181,9 +296,16 @@ class ExperimentSuiteManager:
 
         config_filename = full_config_path.name
 
+        tensorboard_enabled = _detect_tensorboard_enabled(full_config_path)
+
         # Step 1: Create DB entry with placeholder path
         tmp_id = self._repository.create(
-            name, ExperimentSuiteStatus.RUNNING, None, None, config_filename
+            name,
+            ExperimentSuiteStatus.RUNNING,
+            None,
+            None,
+            config_filename,
+            tensorboard_enabled,
         )
         safe_name = _sanitize_name(name)
         suite_dir = DATA_DIR / f"experiment_{tmp_id}_{safe_name}"
@@ -241,6 +363,7 @@ class ExperimentSuiteManager:
             path=str(suite_dir),
             config_filename=config_filename,
             archived=False,
+            tensorboard_enabled=tensorboard_enabled,
         )
 
     def stop_suite(self, suite_id: int) -> ExperimentSuiteResponse:
@@ -275,6 +398,7 @@ class ExperimentSuiteManager:
             path=suite.path,
             config_filename=suite.config_filename,
             archived=suite.archived,
+            tensorboard_enabled=suite.tensorboard_enabled,
         )
 
     def archive_suite(self, suite_id: int) -> ExperimentSuiteResponse:

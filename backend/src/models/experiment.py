@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -38,6 +39,17 @@ class RunExperimentSuiteRequest(BaseModel):
     suite_name: str
 
 
+class TensorBoardStatus(BaseModel):
+    enabled: bool = False
+    running: bool = False
+    url: Optional[str] = None
+    port: Optional[int] = None
+    pid: Optional[int] = None
+    owner: Optional[str] = None
+    started_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+
+
 class ExperimentSuiteResponse(BaseModel):
     id: int
     name: str
@@ -46,6 +58,8 @@ class ExperimentSuiteResponse(BaseModel):
     path: str | None = None
     config_filename: str | None = None
     archived: bool = False
+    tensorboard_enabled: bool = False
+    tensorboard: TensorBoardStatus = Field(default_factory=TensorBoardStatus)
 
 
 class StopExperimentSuiteResponse(BaseModel):
@@ -90,3 +104,19 @@ class ExperimentRunStatus(BaseModel):
 
 class ExperimentLogResponse(BaseModel):
     content: str = ""
+
+
+class TensorBoardStatusResponse(TensorBoardStatus):
+    suite_id: int
+
+
+class StopTensorBoardResponse(TensorBoardStatusResponse):
+    stopped: bool = False
+
+
+class StartTensorBoardRequest(BaseModel):
+    owner: Optional[str] = None
+
+
+class StopTensorBoardRequest(BaseModel):
+    reason: Optional[str] = None

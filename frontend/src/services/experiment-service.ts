@@ -22,6 +22,25 @@ export interface SaveExperimentPayload {
 
 export type ExperimentSuiteStatus = 'New' | 'Running' | 'Finished' | 'Aborted'
 
+export interface TensorBoardStatus {
+  enabled: boolean
+  running: boolean
+  url?: string | null
+  port?: number | null
+  pid?: number | null
+  owner?: string | null
+  started_at?: string | null
+  expires_at?: string | null
+}
+
+export interface TensorBoardStatusResponse extends TensorBoardStatus {
+  suite_id: number
+}
+
+export interface StopTensorBoardResponse extends TensorBoardStatusResponse {
+  stopped: boolean
+}
+
 export interface ExperimentSuiteApiResponse {
   id: number
   name: string
@@ -30,6 +49,8 @@ export interface ExperimentSuiteApiResponse {
   path?: string
   config_filename?: string
   archived: boolean
+  tensorboard_enabled: boolean
+  tensorboard: TensorBoardStatus
 }
 
 export interface ConfigDetailsSection {
@@ -86,6 +107,8 @@ export const stripExperimentExtension = (value: string): string =>
 
 export const normalizeExperimentFilename = (value: string): string =>
   value.trim().toLowerCase()
+
+export const EXPERIMENT_API_BASE = API_BASE
 
 export const fetchExperimentConfigs = async (): Promise<string[]> => {
   const response = await axios.get<ExperimentConfigFileList>(`${API_BASE}/all`)
@@ -181,3 +204,27 @@ export const fetchExperimentSuiteLogs = async (
 
 export const createExperimentLogEventSource = (suiteId: number): EventSource =>
   new EventSource(`${API_BASE}/suites/${suiteId}/logs/stream`)
+
+export const startTensorBoard = async (
+  suiteId: number,
+  owner?: string,
+): Promise<TensorBoardStatusResponse> => {
+  const payload = owner ? { owner } : undefined
+  const response = await axios.post<TensorBoardStatusResponse>(
+    `${API_BASE}/suites/${suiteId}/tensorboard/start`,
+    payload,
+  )
+  return response.data
+}
+
+export const stopTensorBoard = async (
+  suiteId: number,
+  reason?: string,
+): Promise<StopTensorBoardResponse> => {
+  const payload = reason ? { reason } : undefined
+  const response = await axios.post<StopTensorBoardResponse>(
+    `${API_BASE}/suites/${suiteId}/tensorboard/stop`,
+    payload,
+  )
+  return response.data
+}

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input.tsx'
 import {
   fetchExperimentSuites,
   type ExperimentSuiteApiResponse,
+  type TensorBoardStatusResponse,
 } from '@/services/experiment-service.ts'
 
 const Archive = () => {
@@ -15,6 +16,23 @@ const Archive = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+
+  const handleTensorboardStatusChange = useCallback(
+    (suiteId: number, status: TensorBoardStatusResponse) => {
+      setSuites((prev) =>
+        prev.map((suite) =>
+          suite.id === suiteId
+            ? {
+                ...suite,
+                tensorboard: status,
+                tensorboard_enabled: status.enabled,
+              }
+            : suite,
+        ),
+      )
+    },
+    [],
+  )
 
   const refreshSuites = useCallback(async () => {
     setLoading(true)
@@ -92,6 +110,9 @@ const Archive = () => {
                       <ChartNoAxesCombined className="size-4" /> Show Results
                     </div>
                   </Button>
+                }
+                onTensorboardStatusChange={(status) =>
+                  handleTensorboardStatusChange(suite.id, status)
                 }
               />
             ))
