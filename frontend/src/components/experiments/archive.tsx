@@ -4,6 +4,7 @@ import { ChartNoAxesCombined } from 'lucide-react'
 import CustomPage from '@/components/shared/page.tsx'
 import SuiteCard from '@/components/experiments/suite-card/suite-card.tsx'
 import { Button } from '@/components/ui/button.tsx'
+import { Input } from '@/components/ui/input.tsx'
 import {
   fetchExperimentSuites,
   type ExperimentSuiteApiResponse,
@@ -13,6 +14,7 @@ const Archive = () => {
   const [suites, setSuites] = useState<ExperimentSuiteApiResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const refreshSuites = useCallback(async () => {
     setLoading(true)
@@ -37,18 +39,48 @@ const Archive = () => {
     [suites],
   )
 
+  const filteredSuites = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) {
+      return archivedSuites
+    }
+
+    return archivedSuites.filter((suite) => {
+      const searchableValues = [suite.name, suite.path, suite.config_filename]
+      return searchableValues
+        .filter((value): value is string => Boolean(value))
+        .some((value) => value.toLowerCase().includes(query))
+    })
+  }, [archivedSuites, searchQuery])
+
   return (
     <CustomPage>
       <div className="flex flex-col gap-6 pt-4">
-        <Section title="Completed Experiment Suites">
+        <Section
+          title="Completed Experiment Suites"
+          actions={
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search by name, path, or file..."
+              className="w-full sm:max-w-xs"
+            />
+          }
+        >
           {loading ? (
             <EmptyState message="Loading archived experiment suites..." />
           ) : error ? (
             <EmptyState message={error} />
-          ) : archivedSuites.length === 0 ? (
-            <EmptyState message="No archived experiment suites." />
+          ) : filteredSuites.length === 0 ? (
+            <EmptyState
+              message={
+                searchQuery.trim()
+                  ? 'No archived experiment suites match your search.'
+                  : 'No archived experiment suites.'
+              }
+            />
           ) : (
-            archivedSuites.map((suite) => (
+            filteredSuites.map((suite) => (
               <SuiteCard
                 key={suite.id}
                 suite={suite}
@@ -70,12 +102,16 @@ const Archive = () => {
   )
 }
 
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({
-  title,
-  children,
-}) => (
+const Section: React.FC<{
+  title: string
+  actions?: React.ReactNode
+  children: React.ReactNode
+}> = ({ title, actions, children }) => (
   <div className="border-primary/20 bg-background rounded-xl border p-6 shadow-sm">
-    <h2 className="text-primary mb-4 text-xl font-semibold">{title}</h2>
+    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h2 className="text-primary text-xl font-semibold">{title}</h2>
+      {actions ? <div className="w-full sm:max-w-xs">{actions}</div> : null}
+    </div>
     <div className="space-y-4">{children}</div>
   </div>
 )
