@@ -515,7 +515,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
               >
                 Show experiment config
               </Button>
-              {status === 'Finished' && (
+              {(status === 'Finished' || status === 'Aborted') && (
                 <Button
                   variant="outline"
                   onClick={() => handleCompletedLogsOpenChange(true)}
