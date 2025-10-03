@@ -57,7 +57,7 @@ const Archive = () => {
     <CustomPage>
       <div className="flex flex-col gap-6 pt-4">
         <Section
-          title="Completed Experiment Suites"
+          title="Archived Experiment Suites"
           actions={
             <Input
               value={searchQuery}
