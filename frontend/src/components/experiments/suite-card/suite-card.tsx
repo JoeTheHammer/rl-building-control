@@ -86,6 +86,12 @@ const mergeLogLines = (current: string[], incoming: string[]): string[] => {
 
 type Suite = LocalExperimentSuite | ExperimentSuiteApiResponse
 
+type ActiveConfigState =
+  | { type: 'experiment' }
+  | { type: 'environment'; experimentId: number }
+  | { type: 'controller'; experimentId: number }
+  | null
+
 interface SuiteCardProps {
   suite: Suite
   status: ExperimentSuiteStatus
@@ -102,9 +108,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   const navigate = useNavigate()
   const isLocal = 'localId' in suite
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const [activeConfigSection, setActiveConfigSection] = useState<
-    'experiment' | 'environment' | 'controller' | null
-  >(null)
+  const [activeConfig, setActiveConfig] = useState<ActiveConfigState>(null)
   const [configDetails, setConfigDetails] =
     useState<ExperimentConfigDetailsResponse | null>(null)
   const [configLoading, setConfigLoading] = useState(false)
@@ -143,6 +147,19 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     if (isLocal) return undefined
     return (suite as ExperimentSuiteApiResponse).path ?? undefined
   }, [isLocal, suite])
+
+  const experimentDetails = configDetails?.experiments ?? []
+
+  const progressById = useMemo(() => {
+    const map = new Map<number, ExperimentRunStatusResponse['experiments'][number]>()
+    const experiments = statusInfo?.experiments ?? []
+    for (const entry of experiments) {
+      map.set(entry.id, entry)
+    }
+    return map
+  }, [statusInfo])
+
+  const hasStatusEntries = (statusInfo?.experiments?.length ?? 0) > 0
 
   useEffect(() => {
     if (!detailsOpen || !configName) {
@@ -298,44 +315,52 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     }
   }, [shouldStreamLogs, suiteId])
 
-  const handleEdit = (section: 'experiment' | 'environment' | 'controller') => {
-    if (!configDetails) {
-      setActiveConfigSection(null)
+  const handleEdit = () => {
+    if (!activeConfig || !configDetails) {
+      setActiveConfig(null)
       return
     }
 
-    if (section === 'experiment' && configDetails.experiment) {
+    if (activeConfig.type === 'experiment' && configDetails.experiment) {
       navigate('/experiment-configurator', {
         state: { initialExperimentConfig: configDetails.experiment },
       })
-    } else if (section === 'environment' && configDetails.environment) {
-      navigate('/environment-configurator', {
-        state: { initialEnvironmentConfig: configDetails.environment },
-      })
-    } else if (section === 'controller' && configDetails.controller) {
-      navigate('/controller-configurator', {
-        state: { initialControllerConfig: configDetails.controller },
-      })
+    } else if (activeConfig.type === 'environment') {
+      const entry = configDetails.experiments?.find(
+        (item) => item.id === activeConfig.experimentId,
+      )
+      if (entry?.environment) {
+        navigate('/environment-configurator', {
+          state: { initialEnvironmentConfig: entry.environment },
+        })
+      }
+    } else if (activeConfig.type === 'controller') {
+      const entry = configDetails.experiments?.find(
+        (item) => item.id === activeConfig.experimentId,
+      )
+      if (entry?.controller) {
+        navigate('/controller-configurator', {
+          state: { initialControllerConfig: entry.controller },
+        })
+      }
     }
-    setActiveConfigSection(null)
+    setActiveConfig(null)
   }
 
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
-      setActiveConfigSection(null)
+      setActiveConfig(null)
     }
   }
 
-  const openSectionDialog = (
-    section: 'experiment' | 'environment' | 'controller',
-  ) => {
+  const openConfigDialog = (config: Exclude<ActiveConfigState, null>) => {
     if (!configName) {
       setConfigError('No configuration file associated with this suite')
-      setActiveConfigSection(null)
+      setActiveConfig(null)
       return
     }
     setConfigError(null)
-    setActiveConfigSection(section)
+    setActiveConfig(config)
   }
 
   useEffect(() => {
@@ -390,26 +415,44 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     }
   }
 
-  const activeSection = (() => {
-    if (!activeConfigSection || !configDetails) {
+  const activeSection = useMemo(() => {
+    if (!activeConfig || !configDetails) {
       return null
     }
-    if (activeConfigSection === 'experiment') {
-      return configDetails.experiment
+    if (activeConfig.type === 'experiment') {
+      return configDetails.experiment ?? null
     }
-    if (activeConfigSection === 'environment') {
-      return configDetails.environment ?? null
+    const entry = configDetails.experiments?.find(
+      (item) => item.id === activeConfig.experimentId,
+    )
+    if (!entry) {
+      return null
     }
-    return configDetails.controller ?? null
-  })()
+    if (activeConfig.type === 'environment') {
+      return entry.environment ?? null
+    }
+    return entry.controller ?? null
+  }, [activeConfig, configDetails])
 
-  const dialogTitle =
-    activeConfigSection !== null
-      ? `${
-          activeConfigSection.charAt(0).toUpperCase() +
-          activeConfigSection.slice(1)
-        }`
-      : ''
+  const dialogTitle = useMemo(() => {
+    if (!activeConfig) {
+      return ''
+    }
+    const base =
+      activeConfig.type === 'experiment'
+        ? 'Experiment'
+        : activeConfig.type === 'environment'
+          ? 'Environment'
+          : 'Controller'
+    if (activeConfig.type === 'experiment') {
+      return base
+    }
+    const entry = configDetails?.experiments?.find(
+      (item) => item.id === activeConfig.experimentId,
+    )
+    const name = entry?.name ?? `Experiment ${activeConfig.experimentId}`
+    return `${base} – ${name}`
+  }, [activeConfig, configDetails])
 
   return (
     <Collapsible
@@ -467,24 +510,10 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => openSectionDialog('experiment')}
+                onClick={() => openConfigDialog({ type: 'experiment' })}
                 disabled={!configName}
               >
                 Show experiment config
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => openSectionDialog('environment')}
-                disabled={!configName}
-              >
-                Show environment config
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => openSectionDialog('controller')}
-                disabled={!configName}
-              >
-                Show controller config
               </Button>
               {status === 'Finished' && (
                 <Button
@@ -497,37 +526,99 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
               )}
             </div>
 
+            <div className="space-y-4">
+              {experimentDetails.length > 0 ? (
+                experimentDetails.map((experiment, index) => {
+                  const progress = progressById.get(experiment.id)
+                  const showLoading =
+                    status === 'Running' && statusLoading && !hasStatusEntries && !progress
+                  const showError =
+                    status === 'Running' && index === 0 ? statusError : null
+                  const environmentPath = experiment.environment_path?.trim()
+                  const controllerPath = experiment.controller_path?.trim()
+                  const hasPathInfo = Boolean(environmentPath || controllerPath)
+
+                  return (
+                    <div
+                      key={experiment.id}
+                      className="border-border/40 bg-background/60 space-y-3 rounded-md border p-4"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold md:text-base">
+                          Name: {experiment.name ?? `Experiment ${experiment.id}`}
+                        </span>
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            openConfigDialog({
+                              type: 'environment',
+                              experimentId: experiment.id,
+                            })
+                          }
+                          disabled={!configName || !experiment.environment}
+                        >
+                          Show environment config
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            openConfigDialog({
+                              type: 'controller',
+                              experimentId: experiment.id,
+                            })
+                          }
+                          disabled={!configName || !experiment.controller}
+                        >
+                          Show controller config
+                        </Button>
+                      </div>
+                      {hasPathInfo && (
+                        <div className="text-muted-foreground text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-6">
+                          {environmentPath && (
+                            <span className="block">Environment: {environmentPath}</span>
+                          )}
+                          {controllerPath && (
+                            <span className="block">Controller: {controllerPath}</span>
+                          )}
+                        </div>
+                      )}
+                      {status === 'Running' && (
+                        <ProgressSection
+                          progress={progress ?? null}
+                          loading={showLoading}
+                          error={showError}
+                        />
+                      )}
+                    </div>
+                  )
+                })
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No experiments were found in this configuration.
+                </p>
+              )}
+            </div>
+
             {status === 'Running' && (
-              <div className="space-y-4">
-                <ProgressSection
-                  status={statusInfo}
-                  loading={statusLoading}
-                  error={statusError}
-                />
-                <LogViewer
-                  title="Logs (optional)"
-                  lines={logLines}
-                  loading={logLoading}
-                  error={logError}
-                />
-              </div>
+              <LogViewer
+                title="Logs (optional)"
+                lines={logLines}
+                loading={logLoading}
+                error={logError}
+              />
             )}
           </CardContent>
         </CollapsibleContent>
       </Card>
 
       <ConfigSectionDialog
-        open={activeConfigSection !== null}
+        open={activeConfig !== null}
         onOpenChange={handleDialogOpenChange}
         title={dialogTitle}
         section={activeSection}
         loading={configLoading}
         error={configError}
-        onEdit={
-          activeConfigSection
-            ? () => handleEdit(activeConfigSection)
-            : undefined
-        }
+        onEdit={activeConfig ? handleEdit : undefined}
       />
       <CompletedLogDialog
         open={completedLogsOpen}

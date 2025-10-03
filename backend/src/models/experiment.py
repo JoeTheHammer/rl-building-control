@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -57,18 +57,34 @@ class ExperimentConfigSection(BaseModel):
     content: Dict[str, Any] = Field(default_factory=dict)
 
 
+class ExperimentConfigDetailsExperiment(BaseModel):
+    id: int
+    name: Optional[str] = None
+    environment: Optional[ExperimentConfigSection] = None
+    controller: Optional[ExperimentConfigSection] = None
+    environment_path: Optional[str] = None
+    controller_path: Optional[str] = None
+
+
 class ExperimentConfigDetailsResponse(BaseModel):
     experiment: ExperimentConfigSection
     environment: Optional[ExperimentConfigSection] = None
     controller: Optional[ExperimentConfigSection] = None
+    experiments: List[ExperimentConfigDetailsExperiment] = Field(default_factory=list)
 
 
-class ExperimentRunStatus(BaseModel):
+class ExperimentProgress(BaseModel):
+    id: int
+    name: Optional[str] = None
     status: Optional[str] = None
     total_training_episodes: Optional[int] = None
     current_training_episode: Optional[int] = None
     total_evaluation_episodes: Optional[int] = None
     current_evaluation_episode: Optional[int] = None
+
+
+class ExperimentRunStatus(BaseModel):
+    experiments: List[ExperimentProgress] = Field(default_factory=list)
 
 
 class ExperimentLogResponse(BaseModel):

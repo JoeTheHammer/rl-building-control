@@ -2,10 +2,10 @@ import React, { useMemo } from 'react'
 
 import { Badge } from '@/components/ui/badge.tsx'
 import { Progress } from '@/components/ui/progress.tsx'
-import type { ExperimentRunStatusResponse } from '@/services/experiment-service.ts'
+import type { ExperimentProgressResponse } from '@/services/experiment-service.ts'
 
 interface ProgressSectionProps {
-  status: ExperimentRunStatusResponse | null
+  progress: ExperimentProgressResponse | null | undefined
   loading: boolean
   error?: string | null
 }
@@ -29,18 +29,18 @@ const computePercentage = (current?: number, total?: number): number => {
   return Math.min(100, Math.max(0, (current / total) * 100))
 }
 
-const ProgressSection: React.FC<ProgressSectionProps> = ({ status, loading, error }) => {
-  const normalizedStatus = status?.status?.toLowerCase()
+const ProgressSection: React.FC<ProgressSectionProps> = ({ progress, loading, error }) => {
+  const normalizedStatus = progress?.status?.toLowerCase()
 
   const trainingPercent = useMemo(
-    () => computePercentage(status?.current_training_episode, status?.total_training_episodes),
-    [status?.current_training_episode, status?.total_training_episodes],
+    () => computePercentage(progress?.current_training_episode, progress?.total_training_episodes),
+    [progress?.current_training_episode, progress?.total_training_episodes],
   )
 
   const evaluationPercent = useMemo(
     () =>
-      computePercentage(status?.current_evaluation_episode, status?.total_evaluation_episodes),
-    [status?.current_evaluation_episode, status?.total_evaluation_episodes],
+      computePercentage(progress?.current_evaluation_episode, progress?.total_evaluation_episodes),
+    [progress?.current_evaluation_episode, progress?.total_evaluation_episodes],
   )
 
   if (loading) {
@@ -51,7 +51,7 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ status, loading, erro
     return <p className="text-destructive text-sm">{error}</p>
   }
 
-  if (!status) {
+  if (!progress) {
     return <p className="text-muted-foreground text-sm">Progress information is not available yet.</p>
   }
 
@@ -70,7 +70,9 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ status, loading, erro
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm font-medium">
           <span>Training progress</span>
-          <span>{formatEpisodes(status.current_training_episode, status.total_training_episodes)}</span>
+          <span>
+            {formatEpisodes(progress.current_training_episode, progress.total_training_episodes)}
+          </span>
         </div>
         <Progress value={trainingPercent} />
       </div>
@@ -79,7 +81,7 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ status, loading, erro
         <div className="flex items-center justify-between text-sm font-medium">
           <span>Evaluation progress</span>
           <span>
-            {formatEpisodes(status.current_evaluation_episode, status.total_evaluation_episodes)}
+            {formatEpisodes(progress.current_evaluation_episode, progress.total_evaluation_episodes)}
           </span>
         </div>
         <Progress value={evaluationPercent} />
