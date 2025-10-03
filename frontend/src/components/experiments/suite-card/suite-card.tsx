@@ -24,6 +24,7 @@ import { useSuiteStatus } from './hooks/use-suite-status.ts'
 import { useTensorboardControls } from './hooks/use-tensorboard-controls.ts'
 import type { Suite, TensorboardControls } from './types.ts'
 import { getFileName } from './utils.ts'
+import type { LocalExperimentSuite } from '@/components/experiments/types.ts'
 
 interface SuiteCardProps {
   suite: Suite
@@ -61,27 +62,33 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     return getFileName(persistedSuite.config_filename ?? persistedSuite.name)
   }, [isLocal, persistedSuite, suite])
 
+  const localSuite = isLocal ? (suite as LocalExperimentSuite) : null
+
   const fullPath = useMemo(() => {
-    if (isLocal) return undefined
     return persistedSuite?.path ?? undefined
-  }, [isLocal, persistedSuite])
+  }, [persistedSuite])
 
   const [experimentConfigFile, setExperimentConfigFile] = useState<
     string | undefined
   >(() => {
-    if (isLocal) return suite.configName
-    return persistedSuite?.config_filename ?? undefined
+    if (isLocal) {
+      return localSuite?.fullPath ?? localSuite?.configName
+    }
+    if (persistedSuite?.path && persistedSuite?.config_filename) {
+      return `${persistedSuite.path}/${persistedSuite.config_filename}`
+    }
+    return undefined
   })
 
   useEffect(() => {
-    if (!experimentConfigFile) {
-      if (isLocal && suite.configName) {
-        setExperimentConfigFile(suite.configName)
-      } else if (persistedSuite?.config_filename) {
-        setExperimentConfigFile(persistedSuite.config_filename)
-      }
+    if (isLocal && suite.configName) {
+      setExperimentConfigFile(suite.configName)
+    } else if (persistedSuite?.path && persistedSuite?.config_filename) {
+      setExperimentConfigFile(
+        `${persistedSuite.path}/${persistedSuite.config_filename}`,
+      )
     }
-  }, [isLocal, suite, persistedSuite, experimentConfigFile])
+  }, [isLocal, suite, persistedSuite])
 
   const initialTensorboardStatus = useMemo(() => {
     if (!persistedSuite) {

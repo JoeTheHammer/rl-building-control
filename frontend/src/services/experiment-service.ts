@@ -7,6 +7,7 @@ const DEFAULT_DIRECTORY = './config/experiments'
 
 export interface ExperimentConfigFileList {
   files: string[]
+  fullPaths: string[]
 }
 
 export interface ExperimentConfig {
@@ -102,6 +103,11 @@ export interface StopExperimentSuiteResponse {
   status: ExperimentSuiteStatus
 }
 
+export interface ExperimentPathsResponse {
+  files: string[]
+  fullPaths: string[]
+}
+
 export const stripExperimentExtension = (value: string): string =>
   value.replace(/\.ya?ml$/i, '')
 
@@ -110,10 +116,16 @@ export const normalizeExperimentFilename = (value: string): string =>
 
 export const EXPERIMENT_API_BASE = API_BASE
 
-export const fetchExperimentConfigs = async (): Promise<string[]> => {
-  const response = await axios.get<ExperimentConfigFileList>(`${API_BASE}/all`)
-  return response.data.files
-}
+export const fetchExperimentConfigs =
+  async (): Promise<ExperimentPathsResponse> => {
+    const response = await axios.get<ExperimentConfigFileList>(
+      `${API_BASE}/all`,
+    )
+    return {
+      files: response.data.files,
+      fullPaths: response.data.fullPaths,
+    }
+  }
 
 export const fetchExperimentConfig = async (
   name: string,

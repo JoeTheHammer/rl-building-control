@@ -13,7 +13,12 @@ import { fetchExperimentConfigs } from '@/services/experiment-service.ts'
 interface ExperimentConfigDialogProps {
   open: boolean
   onClose: () => void
-  onSelect: (name: string) => void
+  onSelect: (fullPath: string, fileName: string) => void
+}
+
+interface ConfigEntry {
+  file: string
+  fullPath: string
 }
 
 const ExperimentConfigDialog = ({
@@ -21,23 +26,28 @@ const ExperimentConfigDialog = ({
   onClose,
   onSelect,
 }: ExperimentConfigDialogProps) => {
-  const [configs, setConfigs] = useState<string[]>([])
+  const [configs, setConfigs] = useState<ConfigEntry[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!open) {
-      return
-    }
+    if (!open) return
 
     setLoading(true)
     fetchExperimentConfigs()
-      .then(setConfigs)
+      .then(({ files, fullPaths }) => {
+        // pair files + fullPaths by index
+        const entries = files.map((file, idx) => ({
+          file,
+          fullPath: fullPaths[idx],
+        }))
+        setConfigs(entries)
+      })
       .finally(() => setLoading(false))
   }, [open])
 
   const filtered = configs.filter((config) =>
-    config.toLowerCase().includes(search.toLowerCase()),
+    config.file.toLowerCase().includes(search.toLowerCase()),
   )
 
   return (
@@ -61,15 +71,15 @@ const ExperimentConfigDialog = ({
           <div className="max-h-[50vh] space-y-2 overflow-y-auto pr-2">
             {filtered.map((config) => (
               <Button
-                key={config}
+                key={config.fullPath}
                 variant="ghost"
                 className="w-full justify-start border"
                 onClick={() => {
-                  onSelect(config)
+                  onSelect(config.fullPath, config.file) // return both
                   onClose()
                 }}
               >
-                {config}
+                {config.file}
               </Button>
             ))}
             {filtered.length === 0 && (

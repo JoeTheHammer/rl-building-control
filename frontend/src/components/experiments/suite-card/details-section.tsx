@@ -68,6 +68,12 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
         )}
       </div>
 
+      {experimentConfigFile && (
+        <span className="text-xs">
+          <strong>Experiment:</strong> {experimentConfigFile}
+        </span>
+      )}
+
       <div className="space-y-4">
         {experimentDetails.length > 0 ? (
           experimentDetails.map((experiment, index) => {
@@ -127,11 +133,7 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
                         <strong>Data folder:</strong> {dataFolderPath}
                       </span>
                     )}
-                    {experimentConfigFile && (
-                      <span>
-                        <strong>Experiment:</strong> {experimentConfigFile}
-                      </span>
-                    )}
+
                     {environmentPath && (
                       <span>
                         <strong>Environment:</strong> {environmentPath}

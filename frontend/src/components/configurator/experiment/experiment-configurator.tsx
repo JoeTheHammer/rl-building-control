@@ -93,9 +93,9 @@ const ExperimentConfigurator = () => {
   )
 
   useEffect(() => {
-    const state = location.state as
-      | { initialExperimentConfig?: ConfigDetailsSection }
-      | null
+    const state = location.state as {
+      initialExperimentConfig?: ConfigDetailsSection
+    } | null
     const initialConfig = state?.initialExperimentConfig
     if (!initialConfig) return
 
@@ -264,9 +264,12 @@ const ExperimentConfigurator = () => {
     setConfigDialogOpen(true)
   }
 
-  const handleSelectConfig = async (name: string) => {
+  const handleSelectConfig = async (fullPath: string, fileName: string) => {
     try {
-      const { content } = await fetchExperimentConfig(name)
+      console.log(fullPath)
+      console.log(fileName)
+
+      const { content } = await fetchExperimentConfig(fileName)
       const yamlStr = JSON.stringify(content, null, 2)
       const parsed = parseExperimentYaml(yamlStr)
       const normalized =
@@ -275,8 +278,8 @@ const ExperimentConfigurator = () => {
       if (devMode) {
         setEditorValue(buildExperimentYaml(normalized))
       }
-      setOpenedFile(name)
-      toast.success(`Loaded experiment configuration ${name}`)
+      setOpenedFile(fileName)
+      toast.success(`Loaded experiment configuration ${fileName}`)
     } catch (error) {
       console.error('Failed to load experiment config', error)
       toast.error('Failed to load experiment configuration')
