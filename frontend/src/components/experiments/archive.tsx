@@ -193,7 +193,6 @@ const Archive = () => {
                 Cancel
               </Button>
               <Button
-                variant="destructive"
                 disabled={deleting}
                 onClick={() => {
                   void handleDeleteSuite()
