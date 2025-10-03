@@ -7,126 +7,99 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type {
-  ConfigDetailsSection,
-  ExperimentConfigDetailsResponse,
-} from '@/services/experiment-service.ts'
+import type { ConfigDetailsSection } from '@/services/experiment-service.ts'
 
-interface ConfigDetailsDialogProps {
+interface ConfigSectionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  details: ExperimentConfigDetailsResponse | null
-  loading: boolean
-  error?: string | null
-  onEdit: (section: 'experiment' | 'environment' | 'controller') => void
-}
-
-interface ConfigSectionProps {
   title: string
   section: ConfigDetailsSection | null | undefined
-  onEdit: () => void
+  loading: boolean
+  error?: string | null
+  onEdit?: () => void
   editable?: boolean
 }
 
-const ConfigSection: React.FC<ConfigSectionProps> = ({
-  title,
-  section,
-  onEdit,
-  editable = true,
-}) => {
-  const content = useMemo(() => {
-    if (!section) return ''
-    try {
-      return yaml.dump(section.content ?? {}, { noRefs: true })
-    } catch (error) {
-      console.error('Failed to serialize config section', error)
-      return JSON.stringify(section.content ?? {}, null, 2)
-    }
-  }, [section])
-
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="text-primary text-base font-semibold">{title}</h3>
-          {section?.filename && (
-            <p className="text-muted-foreground text-xs">{section.filename}</p>
-          )}
-        </div>
-        {editable && (
-          <Button variant="outline" size="sm" onClick={onEdit} disabled={!section}>
-            Edit
-          </Button>
-        )}
-      </div>
-      <div className="border-muted/40 rounded-md border">
-        <CustomEditor
-          defaultLanguage="yaml"
-          height="250px"
-          value={content}
-          options={{ readOnly: true, minimap: { enabled: false } }}
-        />
-      </div>
-      {!section && (
-        <p className="text-muted-foreground text-sm">
-          This section could not be loaded from the configuration files.
-        </p>
-      )}
-    </div>
-  )
+const serializeSection = (
+  section: ConfigDetailsSection | null | undefined,
+): string => {
+  if (!section) return ''
+  try {
+    return yaml.dump(section.content ?? {}, { noRefs: true })
+  } catch (error) {
+    console.error('Failed to serialize config section', error)
+    return JSON.stringify(section.content ?? {}, null, 2)
+  }
 }
 
-const ConfigDetailsDialog: React.FC<ConfigDetailsDialogProps> = ({
+const ConfigSectionDialog: React.FC<ConfigSectionDialogProps> = ({
   open,
   onOpenChange,
-  details,
+  title,
+  section,
   loading,
   error,
   onEdit,
+  editable = true,
 }) => {
+  const content = useMemo(() => serializeSection(section), [section])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Configuration details</DialogTitle>
-          <DialogDescription>
-            Review the experiment, environment, and controller settings associated with
-            this suite.
-          </DialogDescription>
+      <DialogContent
+        className="max-h-[85vh] max-w-5xl sm:max-w-5xl"
+        aria-describedby={undefined}
+      >
+        <DialogHeader className="gap-1">
+          <DialogTitle>{title} configuration</DialogTitle>
+          {section?.filename ? (
+            <DialogDescription className="text-xs sm:text-sm">
+              File: {section.filename}
+            </DialogDescription>
+          ) : (
+            <DialogDescription>
+              Review the {title.toLowerCase()} settings associated with this suite.
+            </DialogDescription>
+          )}
         </DialogHeader>
-        <div className="space-y-6 overflow-y-auto">
+        <div className="max-h-[60vh] overflow-y-auto pr-1">
           {loading ? (
             <p className="text-muted-foreground text-sm">Loading configuration…</p>
           ) : error ? (
             <p className="text-destructive text-sm">{error}</p>
-          ) : (
-            <div className="space-y-6">
-              <ConfigSection
-                title="Experiment"
-                section={details?.experiment}
-                onEdit={() => onEdit('experiment')}
-              />
-              <div className="bg-border h-px w-full" />
-              <ConfigSection
-                title="Environment"
-                section={details?.environment ?? null}
-                onEdit={() => onEdit('environment')}
-              />
-              <div className="bg-border h-px w-full" />
-              <ConfigSection
-                title="Controller"
-                section={details?.controller ?? null}
-                onEdit={() => onEdit('controller')}
+          ) : section ? (
+            <div className="border-muted/40 rounded-md border">
+              <CustomEditor
+                defaultLanguage="yaml"
+                height="420px"
+                value={content}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                }}
               />
             </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              This section could not be loaded from the configuration files.
+            </p>
           )}
         </div>
+        {editable && onEdit && (
+          <DialogFooter>
+            <Button variant="outline" onClick={onEdit} disabled={!section}>
+              Edit {title.toLowerCase()}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   )
 }
 
-export default ConfigDetailsDialog
+export default ConfigSectionDialog

@@ -31,7 +31,7 @@ import {
 } from '@/services/experiment-service.ts'
 import type { LocalExperimentSuite } from '@/components/experiments/types.ts'
 
-import ConfigDetailsDialog from './config-details-dialog.tsx'
+import ConfigSectionDialog from './config-details-dialog.tsx'
 import ProgressSection from './progress-section.tsx'
 import LogViewer from './log-viewer.tsx'
 
@@ -92,7 +92,9 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
   const navigate = useNavigate()
   const isLocal = 'localId' in suite
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const [configDialogOpen, setConfigDialogOpen] = useState(false)
+  const [activeConfigSection, setActiveConfigSection] = useState<
+    'experiment' | 'environment' | 'controller' | null
+  >(null)
   const [configDetails, setConfigDetails] =
     useState<ExperimentConfigDetailsResponse | null>(null)
   const [configLoading, setConfigLoading] = useState(false)
@@ -280,7 +282,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
 
   const handleEdit = (section: 'experiment' | 'environment' | 'controller') => {
     if (!configDetails) {
-      setConfigDialogOpen(false)
+      setActiveConfigSection(null)
       return
     }
 
@@ -297,20 +299,47 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
         state: { initialControllerConfig: configDetails.controller },
       })
     }
-    setConfigDialogOpen(false)
+    setActiveConfigSection(null)
   }
 
   const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setActiveConfigSection(null)
+    }
+  }
+
+  const openSectionDialog = (
+    section: 'experiment' | 'environment' | 'controller',
+  ) => {
     if (!configName) {
       setConfigError('No configuration file associated with this suite')
-      setConfigDialogOpen(false)
+      setActiveConfigSection(null)
       return
     }
-    if (open) {
-      setConfigError(null)
-    }
-    setConfigDialogOpen(open)
+    setConfigError(null)
+    setActiveConfigSection(section)
   }
+
+  const activeSection = (() => {
+    if (!activeConfigSection || !configDetails) {
+      return null
+    }
+    if (activeConfigSection === 'experiment') {
+      return configDetails.experiment
+    }
+    if (activeConfigSection === 'environment') {
+      return configDetails.environment ?? null
+    }
+    return configDetails.controller ?? null
+  })()
+
+  const dialogTitle =
+    activeConfigSection !== null
+      ? `${
+          activeConfigSection.charAt(0).toUpperCase() +
+          activeConfigSection.slice(1)
+        }`
+      : ''
 
   return (
     <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen} className="w-full">
@@ -359,13 +388,27 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
 
         <CollapsibleContent>
           <CardContent className="bg-muted/20 border-t border-primary/10 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => setConfigDialogOpen(true)}
+                onClick={() => openSectionDialog('experiment')}
                 disabled={!configName}
               >
-                Show config details
+                Show experiment config
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => openSectionDialog('environment')}
+                disabled={!configName}
+              >
+                Show environment config
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => openSectionDialog('controller')}
+                disabled={!configName}
+              >
+                Show controller config
               </Button>
             </div>
 
@@ -388,13 +431,18 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
         </CollapsibleContent>
       </Card>
 
-      <ConfigDetailsDialog
-        open={configDialogOpen}
+      <ConfigSectionDialog
+        open={activeConfigSection !== null}
         onOpenChange={handleDialogOpenChange}
-        details={configDetails}
+        title={dialogTitle}
+        section={activeSection}
         loading={configLoading}
         error={configError}
-        onEdit={handleEdit}
+        onEdit={
+          activeConfigSection
+            ? () => handleEdit(activeConfigSection)
+            : undefined
+        }
       />
     </Collapsible>
   )
