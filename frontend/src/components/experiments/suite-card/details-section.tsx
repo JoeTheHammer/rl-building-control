@@ -130,7 +130,7 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
                   <div className="text-muted-foreground flex flex-col space-y-1 text-xs">
                     {dataFolderPath && (
                       <span>
-                        <strong>Data folder:</strong> {dataFolderPath}
+                        <strong>Data folder:</strong> {dataFolderPath + '/'}
                       </span>
                     )}
 
