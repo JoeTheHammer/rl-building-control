@@ -2,6 +2,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
+from decimal import Decimal
 
 from models.controller import SaveControllerRequest
 
@@ -10,13 +11,21 @@ yaml.default_flow_style = False
 yaml.indent(mapping=2, sequence=4, offset=2)
 yaml.preserve_quotes = True
 
+# Force float representation in fixed-point decimal notation
+def float_representer(dumper, value: float):
+    # "0.00001" instead of "1e-05"
+    text = format(Decimal(str(value)), 'f')
+    return dumper.represent_scalar('tag:yaml.org,2002:float', text)
+
+yaml.representer.add_representer(float, float_representer)
+
 
 def _convert_value(val):
     """Convert string to int/float if possible, else keep string quoted."""
-    # If already int or float
-    if isinstance(val, (int, float)):
+    if isinstance(val, int):
         return val
-    # Try to parse int
+    if isinstance(val, float):
+        return val
     if isinstance(val, str):
         if val.isdigit():
             return int(val)
