@@ -41,11 +41,21 @@ class ExperimentSuiteRepository:
                     status TEXT NOT NULL,
                     pid INTEGER,
                     path TEXT,
-                    config_filename TEXT
+                    config_filename TEXT,
+                    archived INTEGER NOT NULL DEFAULT 0
                 )
-                """
-            )
+            """
+        )
 
+
+            columns = connection.execute(
+                "PRAGMA table_info(experiment_suites)"
+            ).fetchall()
+            column_names = {str(row["name"]) for row in columns}
+            if "archived" not in column_names:
+                connection.execute(
+                    "ALTER TABLE experiment_suites ADD COLUMN archived INTEGER NOT NULL DEFAULT 0"
+                )
 
             connection.commit()
 
@@ -68,8 +78,8 @@ class ExperimentSuiteRepository:
     ) -> int:
         with self._lock, self.connect() as connection:
             cursor = connection.execute(
-                "INSERT INTO experiment_suites (name, status, pid, path, config_filename) VALUES (?, ?, ?, ?, ?)",
-                (name, status.value, pid, path, config_filename),
+                "INSERT INTO experiment_suites (name, status, pid, path, config_filename, archived) VALUES (?, ?, ?, ?, ?, ?)",
+                (name, status.value, pid, path, config_filename, 0),
             )
             connection.commit()
             return int(cursor.lastrowid)
@@ -93,7 +103,7 @@ class ExperimentSuiteRepository:
     def get(self, suite_id: int) -> Optional[ExperimentSuiteResponse]:
         with self.connect() as connection:
             row = connection.execute(
-                "SELECT id, name, status, pid, path, config_filename FROM experiment_suites WHERE id = ?",
+                "SELECT id, name, status, pid, path, config_filename, archived FROM experiment_suites WHERE id = ?",
                 (suite_id,),
             ).fetchone()
 
@@ -107,12 +117,13 @@ class ExperimentSuiteRepository:
             pid=row["pid"],
             path=row["path"],
             config_filename=row["config_filename"],
+            archived=bool(row["archived"]),
         )
 
     def list(self) -> Iterable[ExperimentSuiteResponse]:
         with self.connect() as connection:
             rows = connection.execute(
-                "SELECT id, name, status, pid, path, config_filename FROM experiment_suites ORDER BY id DESC"
+                "SELECT id, name, status, pid, path, config_filename, archived FROM experiment_suites ORDER BY id DESC"
             ).fetchall()
 
         for row in rows:
@@ -123,7 +134,16 @@ class ExperimentSuiteRepository:
                 pid=row["pid"],
                 path=row["path"],
                 config_filename=row["config_filename"],
+                archived=bool(row["archived"]),
             )
+
+    def set_archived(self, suite_id: int, archived: bool) -> None:
+        with self._lock, self.connect() as connection:
+            connection.execute(
+                "UPDATE experiment_suites SET archived = ? WHERE id = ?",
+                (1 if archived else 0, suite_id),
+            )
+            connection.commit()
 
 
 def resolve_config_path(config_name: str) -> Path:
@@ -220,6 +240,7 @@ class ExperimentSuiteManager:
             pid=process.pid,
             path=str(suite_dir),
             config_filename=config_filename,
+            archived=False,
         )
 
     def stop_suite(self, suite_id: int) -> ExperimentSuiteResponse:
@@ -253,7 +274,24 @@ class ExperimentSuiteManager:
             pid=None,
             path=suite.path,
             config_filename=suite.config_filename,
+            archived=suite.archived,
         )
+
+    def archive_suite(self, suite_id: int) -> ExperimentSuiteResponse:
+        suite = self._repository.get(suite_id)
+        if suite is None:
+            raise HTTPException(status_code=404, detail="Experiment suite not found")
+        if suite.status == ExperimentSuiteStatus.RUNNING:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot archive a running experiment suite",
+            )
+
+        self._repository.set_archived(suite_id, True)
+        updated = self._repository.get(suite_id)
+        if updated is None:  # pragma: no cover - defensive
+            raise HTTPException(status_code=500, detail="Failed to archive experiment suite")
+        return updated
 
     def _monitor_process(self, suite_id: int, process: subprocess.Popen, log_file) -> None:
         return_code = process.wait()

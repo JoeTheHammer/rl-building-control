@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 import Experiments from '../components/experiments/experiments.tsx'
+import Archive from '../components/experiments/archive.tsx'
 import Analytics from '../components/analytics/analytics.tsx'
 import ControllerConfigurator from '../components/configurator/controller/controller-configurator.tsx'
 import ExperimentConfigurator from '../components/configurator/experiment/experiment-configurator.tsx'
@@ -18,6 +19,12 @@ export const ROUTES: Route[] = [
     label: 'Experiments',
     description: 'Experiments dashboard',
     component: <Experiments />,
+  },
+  {
+    path: '/archive',
+    label: 'Archive',
+    description: 'Archived experiment suites',
+    component: <Archive />,
   },
   {
     path: '/environment-configurator',

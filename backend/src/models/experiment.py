@@ -45,6 +45,7 @@ class ExperimentSuiteResponse(BaseModel):
     pid: int | None = None
     path: str | None = None
     config_filename: str | None = None
+    archived: bool = False
 
 
 class StopExperimentSuiteResponse(BaseModel):

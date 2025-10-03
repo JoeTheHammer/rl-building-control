@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Info } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { AxiosError } from 'axios'
 
@@ -500,7 +500,11 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="gap-2">
-                <Info className="size-4" />
+                {detailsOpen ? (
+                  <ChevronUp className="size-4" />
+                ) : (
+                  <ChevronDown className="size-4" />
+                )}
                 {detailsOpen ? 'Hide details' : 'Show details'}
               </Button>
             </CollapsibleTrigger>

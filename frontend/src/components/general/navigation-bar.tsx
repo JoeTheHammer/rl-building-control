@@ -8,7 +8,7 @@ import {
 } from '../ui/navigation-menu.tsx'
 import { useLocation, Link } from 'react-router-dom'
 import { ROUTES } from '../../lib/routes.tsx'
-import { FlaskConical, ChartNoAxesCombined, Settings } from 'lucide-react'
+import { Archive, FlaskConical, ChartNoAxesCombined, Settings } from 'lucide-react'
 
 const configuratorRoutes = ROUTES.filter((r) => r.path.includes('configurator'))
 
@@ -44,6 +44,19 @@ const NavigationBar = () => {
               <Link to="/">
                 <FlaskConical className="size-4" />
                 <span>Experiments</span>
+              </Link>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <NavigationMenuLink
+              asChild
+              data-active={isActive('/archive') ? 'true' : undefined}
+              className={`${linkAndTriggerStyle} flex items-center gap-2`}
+            >
+              <Link to="/archive">
+                <Archive className="size-4" />
+                <span>Archive</span>
               </Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
