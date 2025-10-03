@@ -51,6 +51,10 @@ class Experiment:
             self._setup_reporting()
 
         for ep in range(1, self.episodes + 1):
+
+            if self.status_tracking:
+                increment_evaluation_episode()
+
             episode_reward = 0
             state, _ = self.env.reset()
             done = False
@@ -64,8 +68,7 @@ class Experiment:
                 total_rewards.append(reward)
 
             logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
-            if self.status_tracking:
-                increment_evaluation_episode()
+
             episode_rewards.append(episode_reward)
         if self.report:
             self._report()
