@@ -140,6 +140,12 @@ class ExperimentSuiteManager:
     def list_suites(self) -> list[ExperimentSuiteResponse]:
         return list(self._repository.list())
 
+    def get_suite(self, suite_id: int) -> ExperimentSuiteResponse:
+        suite = self._repository.get(suite_id)
+        if suite is None:
+            raise HTTPException(status_code=404, detail="Experiment suite not found")
+        return suite
+
     def run_suite(self, name: str, config_path: Path) -> ExperimentSuiteResponse:
         testbed_path = os.getenv("TESTBED_PATH")
         if not testbed_path:

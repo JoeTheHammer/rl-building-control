@@ -14,6 +14,7 @@ export interface FallbackEditorOptions {
   minimap?: { enabled?: boolean }
   fontSize?: number
   automaticLayout?: boolean
+  readOnly?: boolean
 }
 
 interface EditorProps
@@ -46,6 +47,7 @@ const CustomEditor = ({
       minimap: { enabled: options?.minimap?.enabled ?? false },
       fontSize: options?.fontSize ?? 14,
       automaticLayout: options?.automaticLayout ?? true,
+      readOnly: options?.readOnly ?? false,
     }),
     [options],
   )

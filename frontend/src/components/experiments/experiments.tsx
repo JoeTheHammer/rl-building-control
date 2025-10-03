@@ -18,14 +18,8 @@ import {
   stopExperimentSuite,
   type ExperimentSuiteApiResponse,
 } from '@/services/experiment-service.ts'
-import SuiteCard from '@/components/experiments/suite-card.tsx'
-
-// local suite type
-export interface LocalExperimentSuite {
-  localId: string
-  name: string
-  configName: string
-}
+import SuiteCard from '@/components/experiments/suite-card/suite-card.tsx'
+import type { LocalExperimentSuite } from '@/components/experiments/types.ts'
 
 const createLocalId = (): string =>
   typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'

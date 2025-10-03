@@ -11,6 +11,8 @@ from custom_loggers.setup_logger import logger
 from wrappers.manager import EnvWrapperManager
 from wrappers.reporting_wrapper import ReportingWrapper
 
+from experiment.status import calculate_total_training_episodes, set_training_status
+
 
 class IRLController(IController, ABC):
     """
@@ -105,6 +107,12 @@ class IRLControllerFactory(IControllerFactory, ABC):
             env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
 
         controller = self.build_controller(env, hp)
+
+        env_config_path = getattr(self.env_factory, "config_path", None) if self.env_factory else None
+        total_training_episodes = calculate_total_training_episodes(
+            training_conf.timesteps, env_config_path
+        )
+        set_training_status(total_training_episodes=total_training_episodes)
 
         # --- Training ---
         logger.info(f"Start training with {training_conf.timesteps} timesteps.")

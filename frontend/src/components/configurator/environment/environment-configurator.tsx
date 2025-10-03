@@ -9,7 +9,7 @@ import EnvRewardTab, {
   type EnvironmentRewardSettings,
 } from './env-reward-tab.tsx'
 import CustomPage from '../../shared/page.tsx'
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import EnvGeneralTab, {
   type EnvironmentGeneralSettings,
 } from './env-general-tab.tsx'
@@ -25,6 +25,8 @@ import EnvironmentSaveDialog from '@/components/configurator/environment/environ
 import { fetchEnvironmentConfig } from '@/services/environment-service.ts'
 import { Badge } from '@/components/ui/badge.tsx'
 import { toast } from 'sonner'
+import { useLocation, useNavigate } from 'react-router-dom'
+import type { ConfigDetailsSection } from '@/services/experiment-service.ts'
 
 const tabTriggerStyle =
   'text-md text-primary hover:text-primary-foreground hover:bg-primary/90 hover:cursor-pointer active:bg-primary ' +
@@ -113,6 +115,8 @@ const EnvironmentConfigurator = () => {
   ) => setRewardSettings((prev) => ({ ...prev, ...changes }))
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
@@ -210,6 +214,37 @@ const EnvironmentConfigurator = () => {
       console.error('Failed to load environment config', err)
     }
   }
+
+  useEffect(() => {
+    const state = location.state as
+      | { initialEnvironmentConfig?: ConfigDetailsSection }
+      | null
+    const initialConfig = state?.initialEnvironmentConfig
+    if (!initialConfig) return
+
+    try {
+      const yamlSource = JSON.stringify(initialConfig.content ?? {}, null, 2)
+      const parsed = parseEnvironmentYaml(yamlSource)
+      setGeneralSettings(parsed.generalSettings)
+      setStateSpaceSettings(parsed.stateSpaceSettings)
+      setActionSpaceSettings(parsed.actionSpaceSettings)
+      setRewardSettings(parsed.rewardSettings)
+      setEditorValue(
+        buildEnvironmentYaml(
+          parsed.generalSettings,
+          parsed.stateSpaceSettings,
+          parsed.actionSpaceSettings,
+          parsed.rewardSettings,
+        ),
+      )
+      setOpenedFile(initialConfig.filename ?? null)
+    } catch (error) {
+      console.error('Failed to prefill environment configurator', error)
+      toast.error('Unable to load environment configuration into the editor')
+    } finally {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [location.pathname, location.state, navigate])
 
   const currentConfig = useMemo(
     () => ({

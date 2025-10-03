@@ -9,6 +9,8 @@ from sinergym.envs import EplusEnv
 from spaces.custom_action_space import ActuatorActionSpace
 from utils.observation import build_info_dict
 
+from experiment.status import increment_training_episode
+
 
 class SinergymEnvironment(EplusEnv):
     def __init__(
@@ -100,6 +102,7 @@ class SinergymEnvironment(EplusEnv):
         Overwrites the reset function and adds time information as well if needed.
         """
         obs, info = super().reset(**kwargs)
+        increment_training_episode()
         state, time_info_dict = self._add_time_information_to_state(obs)
         return state, {**info, **time_info_dict}
 
