@@ -26,6 +26,8 @@ interface DetailsSectionProps {
   logLines: string[]
   logLoading: boolean
   logError: string | null
+  dataFolderPath?: string
+  experimentConfigFile?: string
 }
 
 const DetailsSection: React.FC<DetailsSectionProps> = ({
@@ -42,6 +44,8 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
   logLines,
   logLoading,
   logError,
+  dataFolderPath,
+  experimentConfigFile,
 }) => {
   const experimentDetails = configDetails?.experiments ?? []
 
@@ -69,11 +73,20 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
           experimentDetails.map((experiment, index) => {
             const progress = progressById.get(experiment.id)
             const showLoading =
-              status === 'Running' && statusLoading && !hasStatusEntries && !progress
-            const showError = status === 'Running' && index === 0 ? statusError : null
+              status === 'Running' &&
+              statusLoading &&
+              !hasStatusEntries &&
+              !progress
+            const showError =
+              status === 'Running' && index === 0 ? statusError : null
             const environmentPath = experiment.environment_path?.trim()
             const controllerPath = experiment.controller_path?.trim()
-            const hasPathInfo = Boolean(environmentPath || controllerPath)
+            const hasPathInfo = Boolean(
+              environmentPath ||
+                controllerPath ||
+                dataFolderPath ||
+                experimentConfigFile,
+            )
 
             return (
               <div
@@ -108,12 +121,26 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
                   </Button>
                 </div>
                 {hasPathInfo && (
-                  <div className="text-muted-foreground text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-6">
+                  <div className="text-muted-foreground flex flex-col space-y-1 text-xs">
+                    {dataFolderPath && (
+                      <span>
+                        <strong>Data folder:</strong> {dataFolderPath}
+                      </span>
+                    )}
+                    {experimentConfigFile && (
+                      <span>
+                        <strong>Experiment:</strong> {experimentConfigFile}
+                      </span>
+                    )}
                     {environmentPath && (
-                      <span className="block">Environment: {environmentPath}</span>
+                      <span>
+                        <strong>Environment:</strong> {environmentPath}
+                      </span>
                     )}
                     {controllerPath && (
-                      <span className="block">Controller: {controllerPath}</span>
+                      <span>
+                        <strong>Controller:</strong> {controllerPath}
+                      </span>
                     )}
                   </div>
                 )}
@@ -135,7 +162,12 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
       </div>
 
       {status === 'Running' && (
-        <LogViewer title="Logs" lines={logLines} loading={logLoading} error={logError} />
+        <LogViewer
+          title="Logs"
+          lines={logLines}
+          loading={logLoading}
+          error={logError}
+        />
       )}
     </CardContent>
   )

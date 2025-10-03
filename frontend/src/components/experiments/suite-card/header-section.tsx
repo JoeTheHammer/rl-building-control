@@ -15,7 +15,6 @@ interface HeaderSectionProps {
   suite: Suite
   status: ExperimentSuiteStatus
   fileName: string
-  fullPath?: string
   idLabel?: string
   actions: React.ReactNode
   detailsOpen: boolean
@@ -26,7 +25,6 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   suite,
   status,
   fileName,
-  fullPath,
   idLabel,
   actions,
   detailsOpen,
@@ -35,15 +33,15 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   const showTensorboardRow = Boolean(tensorboard)
   const isTensorboardRunning = tensorboard?.isRunning ?? false
 
-  const actionsRowRef = useRef<HTMLDivElement | null>(null)
-  const [actionsRowWidth, setActionsRowWidth] = useState<number | null>(null)
+  const topRowRef = useRef<HTMLDivElement | null>(null)
+  const [topRowWidth, setTopRowWidth] = useState<number | null>(null)
 
   useEffect(() => {
-    const node = actionsRowRef.current
+    const node = topRowRef.current
     if (!node) return
 
     const updateWidth = () => {
-      setActionsRowWidth(node.offsetWidth)
+      setTopRowWidth(node.offsetWidth)
     }
 
     updateWidth()
@@ -54,13 +52,9 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
       return () => observer.disconnect()
     }
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', updateWidth)
-      return () => window.removeEventListener('resize', updateWidth)
-    }
-
-    return undefined
-  }, [actions, detailsOpen])
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -81,12 +75,6 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
           File: {fileName}
         </CardDescription>
 
-        {fullPath && (
-          <CardDescription className="text-muted-foreground text-xs">
-            Path: {fullPath}
-          </CardDescription>
-        )}
-
         {idLabel && (
           <CardDescription className="text-muted-foreground text-sm font-medium">
             {idLabel}
@@ -94,10 +82,56 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
         )}
       </div>
 
-      <div className="flex w-full flex-col gap-2 md:w-auto md:items-end">
-        <div ref={actionsRowRef} className="flex flex-wrap justify-end gap-2">
+      {/* Actions column */}
+      <div className="flex w-full flex-col items-end gap-2">
+        {/* Top row: main action buttons */}
+        <div
+          ref={topRowRef}
+          className="flex flex-nowrap items-center justify-end gap-2"
+        >
+          {actions}
+
+          {showTensorboardRow && !isTensorboardRunning && (
+            <Button
+              onClick={tensorboard?.onOpen}
+              disabled={tensorboard?.disabled ?? true}
+              aria-busy={tensorboard?.isLoading}
+              className="gap-2"
+            >
+              <BarChart3 className="size-4" /> Open TensorBoard
+            </Button>
+          )}
+
+          {showTensorboardRow && isTensorboardRunning && (
+            <>
+              <Button
+                onClick={tensorboard?.onStop}
+                disabled={tensorboard?.isStopping}
+                aria-busy={tensorboard?.isStopping}
+                className="gap-2"
+              >
+                <Power className="size-4" /> Stop TensorBoard
+              </Button>
+
+              <Button
+                onClick={tensorboard?.onOpen}
+                disabled={tensorboard?.disabled ?? true}
+                aria-busy={tensorboard?.isLoading}
+                className="gap-2"
+              >
+                <BarChart3 className="size-4" /> Open TensorBoard
+              </Button>
+            </>
+          )}
+        </div>
+
+        {/* Bottom row: details toggle button matches width of top row */}
+        <div
+          className="flex justify-end"
+          style={topRowWidth ? { width: `${topRowWidth}px` } : undefined}
+        >
           <CollapsibleTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="w-full gap-2">
               {detailsOpen ? (
                 <ChevronUp className="size-4" />
               ) : (
@@ -106,42 +140,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
               {detailsOpen ? 'Hide details' : 'Show details'}
             </Button>
           </CollapsibleTrigger>
-          {actions}
         </div>
-
-        {showTensorboardRow && (
-          <div
-            className="flex flex-wrap justify-end gap-2"
-            style={
-              actionsRowWidth ? { width: `${actionsRowWidth}px` } : undefined
-            }
-          >
-            {isTensorboardRunning ? (
-              <Button
-                onClick={tensorboard?.onStop}
-                disabled={tensorboard?.isStopping}
-                aria-busy={tensorboard?.isStopping}
-                className={cn(
-                  'justify-center gap-2',
-                  actionsRowWidth ? 'flex-1' : '',
-                )}
-              >
-                <Power className="size-4" /> Stop TensorBoard
-              </Button>
-            ) : null}
-            <Button
-              onClick={tensorboard?.onOpen}
-              disabled={tensorboard?.disabled ?? true}
-              aria-busy={tensorboard?.isLoading}
-              className={cn(
-                'justify-center gap-2',
-                actionsRowWidth && isTensorboardRunning ? 'flex-1' : '',
-              )}
-            >
-              <BarChart3 className="size-4" /> Open TensorBoard
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )

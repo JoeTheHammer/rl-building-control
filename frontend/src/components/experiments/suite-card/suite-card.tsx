@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 
 import { Card, CardContent } from '@/components/ui/card.tsx'
 import {
@@ -65,6 +65,23 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     if (isLocal) return undefined
     return persistedSuite?.path ?? undefined
   }, [isLocal, persistedSuite])
+
+  const [experimentConfigFile, setExperimentConfigFile] = useState<
+    string | undefined
+  >(() => {
+    if (isLocal) return suite.configName
+    return persistedSuite?.config_filename ?? undefined
+  })
+
+  useEffect(() => {
+    if (!experimentConfigFile) {
+      if (isLocal && suite.configName) {
+        setExperimentConfigFile(suite.configName)
+      } else if (persistedSuite?.config_filename) {
+        setExperimentConfigFile(persistedSuite.config_filename)
+      }
+    }
+  }, [isLocal, suite, persistedSuite, experimentConfigFile])
 
   const initialTensorboardStatus = useMemo(() => {
     if (!persistedSuite) {
@@ -167,7 +184,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
             suite={suite}
             status={status}
             fileName={fileName}
-            fullPath={fullPath}
             idLabel={idLabel}
             actions={actions}
             detailsOpen={detailsOpen}
@@ -190,6 +206,8 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
             logLines={logLines}
             logLoading={logLoading}
             logError={logError}
+            dataFolderPath={fullPath}
+            experimentConfigFile={experimentConfigFile}
           />
         </CollapsibleContent>
       </Card>

@@ -240,7 +240,7 @@ const Experiments = () => {
                     disabled={pendingStops.includes(suite.id)}
                   >
                     <div className="flex gap-2">
-                      <Square className="size-4" /> Stop
+                      <Square className="size-4" /> Stop Experiment Suite
                     </div>
                   </Button>
                 }
