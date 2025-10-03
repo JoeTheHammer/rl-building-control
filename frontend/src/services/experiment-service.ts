@@ -187,6 +187,10 @@ export const archiveExperimentSuite = async (
   return response.data
 }
 
+export const deleteExperimentSuite = async (suiteId: number): Promise<void> => {
+  await axios.delete(`${API_BASE}/suites/${suiteId}`)
+}
+
 export const fetchExperimentConfigDetails = async (
   configName: string,
 ): Promise<ExperimentConfigDetailsResponse> => {

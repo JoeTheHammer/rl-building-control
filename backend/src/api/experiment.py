@@ -192,6 +192,12 @@ def archive_experiment_suite(suite_id: int):
     return tensorboard_manager.enrich_suite(suite)
 
 
+@router.delete("/suites/{suite_id}")
+def delete_experiment_suite(suite_id: int):
+    suite_manager.delete_suite(suite_id)
+    return {"deleted": True}
+
+
 @router.get(
     "/suites/{suite_id}/tensorboard",
     response_model=TensorBoardStatusResponse,

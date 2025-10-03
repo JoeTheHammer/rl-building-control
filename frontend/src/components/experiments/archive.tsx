@@ -1,11 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChartNoAxesCombined } from 'lucide-react'
+import { ChartNoAxesCombined, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import CustomPage from '@/components/shared/page.tsx'
 import SuiteCard from '@/components/experiments/suite-card/suite-card.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import { Input } from '@/components/ui/input.tsx'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog.tsx'
+import {
+  deleteExperimentSuite,
   fetchExperimentSuites,
   type ExperimentSuiteApiResponse,
   type TensorBoardStatusResponse,
@@ -16,6 +26,35 @@ const Archive = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [suitePendingDeletion, setSuitePendingDeletion] =
+    useState<ExperimentSuiteApiResponse | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteDialogClose = useCallback(() => {
+    if (!deleting) {
+      setSuitePendingDeletion(null)
+    }
+  }, [deleting, setSuitePendingDeletion])
+
+  const handleDeleteSuite = useCallback(async () => {
+    if (!suitePendingDeletion) {
+      return
+    }
+
+    const targetSuite = suitePendingDeletion
+    setDeleting(true)
+    try {
+      await deleteExperimentSuite(targetSuite.id)
+      setSuites((prev) => prev.filter((item) => item.id !== targetSuite.id))
+      toast.success(`Deleted "${targetSuite.name}"`)
+      setSuitePendingDeletion(null)
+    } catch (err) {
+      console.error('Failed to delete experiment suite', err)
+      toast.error('Failed to delete experiment suite')
+    } finally {
+      setDeleting(false)
+    }
+  }, [setSuites, suitePendingDeletion])
 
   const handleTensorboardStatusChange = useCallback(
     (suiteId: number, status: TensorBoardStatusResponse) => {
@@ -105,11 +144,18 @@ const Archive = () => {
                 status={suite.status}
                 idLabel={`ID: ${suite.id}`}
                 actions={
-                  <Button onClick={() => console.log('Handle show results')}>
-                    <div className="flex gap-2">
-                      <ChartNoAxesCombined className="size-4" /> Show Results
-                    </div>
-                  </Button>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button onClick={() => console.log('Handle show results')}>
+                      <div className="flex gap-2">
+                        <ChartNoAxesCombined className="size-4" /> Show Results
+                      </div>
+                    </Button>
+                    <Button onClick={() => setSuitePendingDeletion(suite)}>
+                      <div className="flex gap-2">
+                        <Trash2 className="size-4" /> Delete
+                      </div>
+                    </Button>
+                  </div>
                 }
                 onTensorboardStatusChange={(status) =>
                   handleTensorboardStatusChange(suite.id, status)
@@ -118,6 +164,46 @@ const Archive = () => {
             ))
           )}
         </Section>
+        <Dialog
+          open={suitePendingDeletion !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleDeleteDialogClose()
+            }
+          }}
+        >
+          <DialogContent showCloseButton={!deleting}>
+            <DialogHeader>
+              <DialogTitle>Delete experiment data</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this experiment suite? All data
+                will be deleted.
+              </DialogDescription>
+            </DialogHeader>
+            <span className="text-sm font-bold">
+              {'Folder: ' + suitePendingDeletion?.path + '/'}
+            </span>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={handleDeleteDialogClose}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={deleting}
+                onClick={() => {
+                  void handleDeleteSuite()
+                }}
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </CustomPage>
   )

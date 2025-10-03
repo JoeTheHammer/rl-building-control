@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import signal
 import sqlite3
 import subprocess
@@ -70,6 +71,7 @@ class ExperimentSuiteRepository:
     def connect(self):
         connection = sqlite3.connect(DB_PATH)
         connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
         try:
             yield connection
         finally:
@@ -196,6 +198,15 @@ class ExperimentSuiteRepository:
                 (1 if enabled else 0, suite_id),
             )
             connection.commit()
+
+    def delete(self, suite_id: int) -> bool:
+        with self._lock, self.connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM experiment_suites WHERE id = ?",
+                (suite_id,),
+            )
+            connection.commit()
+            return cursor.rowcount > 0
 
 
 def resolve_config_path(config_name: str) -> Path:
@@ -416,6 +427,63 @@ class ExperimentSuiteManager:
         if updated is None:  # pragma: no cover - defensive
             raise HTTPException(status_code=500, detail="Failed to archive experiment suite")
         return updated
+
+    def delete_suite(self, suite_id: int) -> None:
+        suite = self._repository.get(suite_id)
+        if suite is None:
+            raise HTTPException(status_code=404, detail="Experiment suite not found")
+
+        if suite.status == ExperimentSuiteStatus.RUNNING:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot delete a running experiment suite",
+            )
+
+        if not suite.archived:
+            raise HTTPException(
+                status_code=400,
+                detail="Only archived experiment suites can be deleted",
+            )
+
+        suite_path = suite.path
+        directory_to_remove: Optional[Path] = None
+        if suite_path:
+            try:
+                resolved = Path(suite_path).resolve()
+            except (TypeError, ValueError):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid experiment suite path",
+                )
+
+            try:
+                resolved.relative_to(DATA_DIR)
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Experiment suite path is outside the allowed directory",
+                ) from exc
+
+            if resolved.exists():
+                directory_to_remove = resolved
+
+        if directory_to_remove is not None:
+            try:
+                if directory_to_remove.is_dir():
+                    shutil.rmtree(directory_to_remove)
+                else:
+                    directory_to_remove.unlink(missing_ok=True)
+            except FileNotFoundError:
+                pass
+            except Exception as exc:  # pragma: no cover - defensive
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to delete experiment suite data: {exc}",
+                ) from exc
+
+        deleted = self._repository.delete(suite_id)
+        if not deleted:  # pragma: no cover - defensive
+            raise HTTPException(status_code=404, detail="Experiment suite not found")
 
     def _monitor_process(self, suite_id: int, process: subprocess.Popen, log_file) -> None:
         return_code = process.wait()
