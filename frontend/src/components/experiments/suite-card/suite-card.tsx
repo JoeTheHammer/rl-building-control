@@ -516,7 +516,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
           <CardContent className="bg-muted/20 border-primary/10 space-y-4 border-t pt-4">
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                variant="outline"
                 onClick={() => openConfigDialog({ type: 'experiment' })}
                 disabled={!configName}
               >
@@ -524,7 +523,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
               </Button>
               {(status === 'Finished' || status === 'Aborted') && (
                 <Button
-                  variant="outline"
                   onClick={() => handleCompletedLogsOpenChange(true)}
                   disabled={typeof suiteId !== 'number'}
                 >
@@ -559,7 +557,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
                           {experiment.name ?? `Experiment ${experiment.id}`}
                         </span>
                         <Button
-                          variant="outline"
                           onClick={() =>
                             openConfigDialog({
                               type: 'environment',
@@ -571,7 +568,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
                           Show environment config
                         </Button>
                         <Button
-                          variant="outline"
                           onClick={() =>
                             openConfigDialog({
                               type: 'controller',
