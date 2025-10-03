@@ -8,7 +8,7 @@ import subprocess
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock, Thread
 from typing import Any, Dict, Iterable, Optional
@@ -25,7 +25,28 @@ from services.experiment_suite import DB_PATH, ExperimentSuiteRepository
 
 
 def _utcnow() -> datetime:
-    return datetime.utcnow()
+    return datetime.now(timezone.utc)
+
+
+def _safe_model_copy(instance, update: dict):
+    """
+    Return a copy of `instance` with `update` applied, supporting both
+    Pydantic v2 (model_copy) and v1 (copy). Falls back to rebuilding
+    the model from dumped data when neither method is available.
+    """
+    # Pydantic v2
+    if hasattr(instance, "model_copy"):
+        return instance.model_copy(update=update)
+
+    # Pydantic v1
+    if hasattr(instance, "copy"):
+        return instance.copy(update=update)
+
+    data = _model_dump(instance, mode="json") if hasattr(_model_dump, "__call__") else _model_dump(instance)
+    if not isinstance(data, dict):
+        data = _model_dump(instance)
+    merged = {**data, **(update or {})}
+    return type(instance)(**merged)
 
 
 def _model_dump(model, **kwargs):
@@ -177,6 +198,16 @@ class TensorBoardRepository:
             )
 
 
+def _is_process_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
 class TensorBoardManager:
     HOST = "127.0.0.1"
     DEFAULT_TTL = timedelta(hours=1)
@@ -197,7 +228,7 @@ class TensorBoardManager:
         for record in self._repository.list():
             if record.status != "running":
                 continue
-            if not record.pid or not self._is_process_alive(record.pid):
+            if not record.pid or not _is_process_alive(record.pid):
                 self._repository.mark_stopped(record.suite_id, expected_pid=record.pid)
 
     def _reaper_loop(self) -> None:
@@ -206,7 +237,7 @@ class TensorBoardManager:
             for record in self._repository.list():
                 if record.status != "running":
                     continue
-                if not record.pid or not self._is_process_alive(record.pid):
+                if not record.pid or not _is_process_alive(record.pid):
                     self._repository.mark_stopped(record.suite_id, expected_pid=record.pid)
                     continue
                 if record.expires_at and record.expires_at <= _utcnow():
@@ -214,15 +245,6 @@ class TensorBoardManager:
                         self.stop(record.suite_id)
                     except HTTPException:
                         pass
-
-    def _is_process_alive(self, pid: int) -> bool:
-        try:
-            os.kill(pid, 0)
-            return True
-        except ProcessLookupError:
-            return False
-        except PermissionError:
-            return True
 
     def _allocate_port(self) -> int:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -270,7 +292,7 @@ class TensorBoardManager:
         expires_at: Optional[datetime] = None
 
         if suite.tensorboard_enabled and record:
-            if record.status == "running" and record.pid and self._is_process_alive(record.pid):
+            if record.status == "running" and record.pid and _is_process_alive(record.pid):
                 running = True
                 url = record.url
                 port = record.port
@@ -298,9 +320,7 @@ class TensorBoardManager:
         status_payload = _model_dump(status, exclude={"suite_id"})
         tensorboard = TensorBoardStatus(**status_payload)
         update = {"tensorboard": tensorboard}
-        if hasattr(suite, "model_copy"):
-            return suite.model_copy(update=update)
-        return suite.copy(update=update)
+        return _safe_model_copy(suite, update)
 
     def status(self, suite_id: int) -> TensorBoardStatusResponse:
         suite = self._ensure_suite_available(suite_id)
@@ -319,7 +339,7 @@ class TensorBoardManager:
             raise HTTPException(status_code=400, detail="Experiment suite path not available")
 
         record = self._repository.get(suite_id)
-        if record and record.status == "running" and record.pid and self._is_process_alive(record.pid):
+        if record and record.status == "running" and record.pid and _is_process_alive(record.pid):
             return self._build_status(suite, record)
 
         if record and record.status == "running":
@@ -417,7 +437,7 @@ class TensorBoardManager:
                 os.kill(record.pid, signal.SIGTERM)
                 end_time = time.time() + self.STOP_TIMEOUT
                 while time.time() < end_time:
-                    if not self._is_process_alive(record.pid):
+                    if not _is_process_alive(record.pid):
                         break
                     time.sleep(0.2)
                 else:
