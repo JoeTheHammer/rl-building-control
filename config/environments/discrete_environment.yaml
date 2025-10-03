@@ -1,5 +1,5 @@
-building_model: "ASHRAE901_HotelSmall_STD2019_Denver.epJSON"
-weather_data: "USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"
+building_model: "/home/johannes/workspace/rl-building-control/data/environment/buildings/ASHRAE901_HotelSmall_STD2019_Denver.epJSON"
+weather_data: "/home/johannes/workspace/rl-building-control/data/environment/weather/chicago-ohare/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"
 
 state_space:
   variables:
