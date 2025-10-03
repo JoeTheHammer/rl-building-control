@@ -56,10 +56,10 @@ export interface ExperimentProgressResponse {
   id: number
   name?: string | null
   status?: string | null
-  total_training_episodes?: number | null
-  current_training_episode?: number | null
-  total_evaluation_episodes?: number | null
-  current_evaluation_episode?: number | null
+  total_training_episodes?: number | undefined
+  current_training_episode?: number | undefined
+  total_evaluation_episodes?: number | undefined
+  current_evaluation_episode?: number | undefined
 }
 
 export interface ExperimentRunStatusResponse {
@@ -169,6 +169,5 @@ export const fetchExperimentSuiteLogs = async (
   return response.data
 }
 
-export const createExperimentLogEventSource = (
-  suiteId: number,
-): EventSource => new EventSource(`${API_BASE}/suites/${suiteId}/logs/stream`)
+export const createExperimentLogEventSource = (suiteId: number): EventSource =>
+  new EventSource(`${API_BASE}/suites/${suiteId}/logs/stream`)

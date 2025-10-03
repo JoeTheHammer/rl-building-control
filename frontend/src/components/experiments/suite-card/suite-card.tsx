@@ -151,7 +151,10 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   const experimentDetails = configDetails?.experiments ?? []
 
   const progressById = useMemo(() => {
-    const map = new Map<number, ExperimentRunStatusResponse['experiments'][number]>()
+    const map = new Map<
+      number,
+      ExperimentRunStatusResponse['experiments'][number]
+    >()
     const experiments = statusInfo?.experiments ?? []
     for (const entry of experiments) {
       map.set(entry.id, entry)
@@ -531,7 +534,10 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
                 experimentDetails.map((experiment, index) => {
                   const progress = progressById.get(experiment.id)
                   const showLoading =
-                    status === 'Running' && statusLoading && !hasStatusEntries && !progress
+                    status === 'Running' &&
+                    statusLoading &&
+                    !hasStatusEntries &&
+                    !progress
                   const showError =
                     status === 'Running' && index === 0 ? statusError : null
                   const environmentPath = experiment.environment_path?.trim()
@@ -545,7 +551,8 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold md:text-base">
-                          Name: {experiment.name ?? `Experiment ${experiment.id}`}
+                          Name:{' '}
+                          {experiment.name ?? `Experiment ${experiment.id}`}
                         </span>
                         <Button
                           variant="outline"
@@ -575,10 +582,14 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
                       {hasPathInfo && (
                         <div className="text-muted-foreground text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-6">
                           {environmentPath && (
-                            <span className="block">Environment: {environmentPath}</span>
+                            <span className="block">
+                              Environment: {environmentPath}
+                            </span>
                           )}
                           {controllerPath && (
-                            <span className="block">Controller: {controllerPath}</span>
+                            <span className="block">
+                              Controller: {controllerPath}
+                            </span>
                           )}
                         </div>
                       )}
@@ -601,7 +612,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
 
             {status === 'Running' && (
               <LogViewer
-                title="Logs (optional)"
+                title="Logs"
                 lines={logLines}
                 loading={logLoading}
                 error={logError}

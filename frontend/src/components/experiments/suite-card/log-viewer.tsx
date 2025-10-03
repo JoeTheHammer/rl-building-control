@@ -18,7 +18,13 @@ const LogViewer: React.FC<LogViewerProps> = ({
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
-    container.scrollTop = container.scrollHeight
+
+    const isAtBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight < 20 // 20px tolerance
+
+    if (isAtBottom) {
+      container.scrollTop = container.scrollHeight
+    }
   }, [lines])
 
   return (
@@ -27,16 +33,21 @@ const LogViewer: React.FC<LogViewerProps> = ({
         <h3 className="text-primary text-base font-semibold">{title}</h3>
       </div>
       <div className="border-muted/40 bg-muted/40 relative max-h-64 overflow-hidden rounded-md border">
-        <div ref={containerRef} className="max-h-64 space-y-2 overflow-y-auto p-3">
+        <div
+          ref={containerRef}
+          className="max-h-64 space-y-2 overflow-y-auto p-3"
+        >
           {loading ? (
             <p className="text-muted-foreground text-sm">Loading logs…</p>
           ) : (
             <>
               {error && <p className="text-destructive text-sm">{error}</p>}
               {lines.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No logs available yet.</p>
+                <p className="text-muted-foreground text-sm">
+                  No logs available yet.
+                </p>
               ) : (
-                <pre className="text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                <pre className="text-muted-foreground text-xs leading-relaxed whitespace-pre-wrap">
                   {lines.join('\n')}
                 </pre>
               )}
