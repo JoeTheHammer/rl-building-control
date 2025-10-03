@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import CustomEditor from '../../shared/custom-editor.tsx'
 import { Button } from '../../ui/button.tsx'
@@ -28,6 +29,7 @@ import {
   type ExperimentFormState,
 } from '@/services/yaml-service.ts'
 import { fetchExperimentConfig } from '@/services/experiment-service.ts'
+import type { ConfigDetailsSection } from '@/services/experiment-service.ts'
 
 interface ControllerOption {
   key: string
@@ -82,11 +84,36 @@ const ExperimentConfigurator = () => {
   >(null)
   const [openedFile, setOpenedFile] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const resolvedYaml = useMemo(
     () => (devMode ? editorValue : buildExperimentYaml(experiments)),
     [devMode, editorValue, experiments],
   )
+
+  useEffect(() => {
+    const state = location.state as
+      | { initialExperimentConfig?: ConfigDetailsSection }
+      | null
+    const initialConfig = state?.initialExperimentConfig
+    if (!initialConfig) return
+
+    try {
+      const yamlSource = JSON.stringify(initialConfig.content ?? {}, null, 2)
+      const parsed = parseExperimentYaml(yamlSource)
+      const normalized =
+        parsed.length > 0 ? parsed : [createDefaultExperiment()]
+      setExperiments(normalized)
+      setOpenedFile(initialConfig.filename ?? null)
+      setEditorValue(buildExperimentYaml(normalized))
+    } catch (error) {
+      console.error('Failed to prefill experiment configurator', error)
+      toast.error('Unable to load experiment configuration into the editor')
+    } finally {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [location.pathname, location.state, navigate])
 
   const updateExperiment = <Field extends keyof ExperimentFormState>(
     index: number,

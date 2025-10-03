@@ -31,6 +31,29 @@ export interface ExperimentSuiteApiResponse {
   config_filename?: string
 }
 
+export interface ConfigDetailsSection {
+  filename: string
+  content: Record<string, unknown>
+}
+
+export interface ExperimentConfigDetailsResponse {
+  experiment: ConfigDetailsSection
+  environment?: ConfigDetailsSection | null
+  controller?: ConfigDetailsSection | null
+}
+
+export interface ExperimentRunStatusResponse {
+  status?: string
+  total_training_episodes?: number
+  current_training_episode?: number
+  total_evaluation_episodes?: number
+  current_evaluation_episode?: number
+}
+
+export interface ExperimentLogResponse {
+  content: string
+}
+
 export interface RunExperimentSuitePayload {
   configName: string
   suiteName: string
@@ -102,3 +125,34 @@ export const stopExperimentSuite = async (
   )
   return response.data
 }
+
+export const fetchExperimentConfigDetails = async (
+  configName: string,
+): Promise<ExperimentConfigDetailsResponse> => {
+  const response = await axios.get<ExperimentConfigDetailsResponse>(
+    `${API_BASE}/config-details/${configName}`,
+  )
+  return response.data
+}
+
+export const fetchExperimentSuiteStatus = async (
+  suiteId: number,
+): Promise<ExperimentRunStatusResponse> => {
+  const response = await axios.get<ExperimentRunStatusResponse>(
+    `${API_BASE}/suites/${suiteId}/status`,
+  )
+  return response.data
+}
+
+export const fetchExperimentSuiteLogs = async (
+  suiteId: number,
+): Promise<ExperimentLogResponse> => {
+  const response = await axios.get<ExperimentLogResponse>(
+    `${API_BASE}/suites/${suiteId}/logs`,
+  )
+  return response.data
+}
+
+export const createExperimentLogEventSource = (
+  suiteId: number,
+): EventSource => new EventSource(`${API_BASE}/suites/${suiteId}/logs/stream`)

@@ -7,6 +7,7 @@ from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
 from controllers.config import HyperparameterTuning
 from custom_loggers.setup_logger import logger
 from experiment.experiment import Experiment
+from experiment.status import set_hyperparameter_tuning_status
 from wrappers.manager import EnvWrapperManager
 
 
@@ -50,10 +51,12 @@ def tune_hp(
             env=env_t,
             controller=ctrl,
             episodes=hp_tuning_config.num_episodes,
+            status_tracking=False,
         ).run()
         env_t.close()
         return float(np.mean(rewards))
 
+    set_hyperparameter_tuning_status()
     study = optuna.create_study(direction="maximize")
     logger.info("Starting hyperparameter tuning.")
     study.optimize(objective, n_trials=hp_tuning_config.num_trials)

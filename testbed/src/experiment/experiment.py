@@ -6,6 +6,8 @@ from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
 from wrappers.reporting_wrapper import ReportingWrapper
 
+from experiment.status import increment_evaluation_episode, set_evaluation_status
+
 
 class Experiment:
     def __init__(
@@ -17,6 +19,7 @@ class Experiment:
         denorm_state: bool = False,
         plots: bool = False,
         export: bool = False,
+        status_tracking: bool = True,
     ):
         self.name = name
         self.env = env
@@ -26,11 +29,14 @@ class Experiment:
         self.plots = plots
         self.export = export
         self.report = self.plots or self.export
+        self.status_tracking = status_tracking
 
     def run(self) -> List[float]:
         """Run `num_episodes` in this environment and return a list of total episode_rewards."""
 
         logger.info(f"Experiment {self.name} started for {self.episodes} episodes.")
+        if self.status_tracking:
+            set_evaluation_status(self.episodes)
         episode_rewards = []
         total_rewards = []
 
@@ -51,6 +57,8 @@ class Experiment:
                 total_rewards.append(reward)
 
             logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
+            if self.status_tracking:
+                increment_evaluation_episode()
             episode_rewards.append(episode_reward)
         if self.report:
             self._report()

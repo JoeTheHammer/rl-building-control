@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Select,
   SelectContent,
@@ -27,6 +27,8 @@ import { fetchControllerConfig } from '@/services/controller-service.ts'
 import { Badge } from '@/components/ui/badge'
 import ControllerSaveDialog from './controller-save-dialog.tsx'
 import { toast } from 'sonner'
+import { useLocation, useNavigate } from 'react-router-dom'
+import type { ConfigDetailsSection } from '@/services/experiment-service.ts'
 
 const controllerTypes: ControllerType[] = [
   'reinforcement learning',
@@ -61,6 +63,8 @@ const ControllerConfigurator = () => {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [openedFile, setOpenedFile] = useState<string | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const updateSettings = <Field extends keyof ControllerSettings>(
     field: Field,
@@ -225,6 +229,27 @@ const ControllerConfigurator = () => {
       console.error('Failed to load controller config', err)
     }
   }
+
+  useEffect(() => {
+    const state = location.state as
+      | { initialControllerConfig?: ConfigDetailsSection }
+      | null
+    const initialConfig = state?.initialControllerConfig
+    if (!initialConfig) return
+
+    try {
+      const yamlSource = JSON.stringify(initialConfig.content ?? {}, null, 2)
+      const parsed = parseControllerYaml(yamlSource)
+      setSettings(parsed)
+      setEditorValue(buildControllerYaml(parsed))
+      setOpenedFile(initialConfig.filename ?? null)
+    } catch (error) {
+      console.error('Failed to prefill controller configurator', error)
+      toast.error('Unable to load controller configuration into the editor')
+    } finally {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [location.pathname, location.state, navigate])
 
   return (
     <>
