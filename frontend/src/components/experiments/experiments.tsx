@@ -70,29 +70,39 @@ const Experiments = () => {
     [persistedSuites],
   )
 
-  const handleScheduleSuite = useCallback(async (configName: string) => {
-    try {
-      const config = await fetchExperimentConfig(configName)
-      const content = config.content as {
-        experiments?: Array<{ name?: string }>
-      }
-      const experiments = Array.isArray(content?.experiments)
-        ? content.experiments
-        : []
-      const derivedName =
-        experiments.length === 1 && experiments[0]?.name
-          ? experiments[0].name
-          : configName
+  const handleScheduleSuite = useCallback(
+    async (fullPath: string, fileName: string) => {
+      try {
+        // API expects only the filename
+        const config = await fetchExperimentConfig(fileName)
 
-      setLocalSuites((prev) => [
-        { localId: createLocalId(), name: derivedName, configName },
-        ...prev,
-      ])
-    } catch (error) {
-      console.error('Failed to schedule experiment suite', error)
-      toast.error('Unable to schedule experiment suite')
-    }
-  }, [])
+        const content = config.content as {
+          experiments?: Array<{ name?: string }>
+        }
+        const experiments = Array.isArray(content?.experiments)
+          ? content.experiments
+          : []
+        const derivedName =
+          experiments.length === 1 && experiments[0]?.name
+            ? experiments[0].name
+            : fileName
+
+        setLocalSuites((prev) => [
+          {
+            localId: createLocalId(),
+            name: derivedName,
+            configName: fileName, // for API calls
+            fullPath, // store full path for display/logging
+          },
+          ...prev,
+        ])
+      } catch (error) {
+        console.error('Failed to schedule experiment suite', error)
+        toast.error('Unable to schedule experiment suite')
+      }
+    },
+    [],
+  )
 
   const handleRunSuite = useCallback(
     async (localId: string) => {
@@ -240,7 +250,7 @@ const Experiments = () => {
                     disabled={pendingStops.includes(suite.id)}
                   >
                     <div className="flex gap-2">
-                      <Square className="size-4" /> Stop
+                      <Square className="size-4" /> Stop Experiment Suite
                     </div>
                   </Button>
                 }

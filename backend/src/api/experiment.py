@@ -155,7 +155,8 @@ def get_all_experiment_configs():
             )
 
         files = [f.name for f in EXPERIMENTS_DIR.glob("*.yaml")]
-        return {"files": files}
+        full_paths = EXPERIMENTS_DIR.glob("*.yaml")
+        return {"files": files, "fullPaths": full_paths}
     except HTTPException:
         raise
     except Exception as exc:
