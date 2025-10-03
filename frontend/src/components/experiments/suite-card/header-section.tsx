@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { BarChart3, ChevronDown, ChevronUp, Power } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge.tsx'
@@ -33,6 +33,34 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   tensorboard,
 }) => {
   const showTensorboardRow = Boolean(tensorboard)
+  const isTensorboardRunning = tensorboard?.isRunning ?? false
+
+  const actionsRowRef = useRef<HTMLDivElement | null>(null)
+  const [actionsRowWidth, setActionsRowWidth] = useState<number | null>(null)
+
+  useEffect(() => {
+    const node = actionsRowRef.current
+    if (!node) return
+
+    const updateWidth = () => {
+      setActionsRowWidth(node.offsetWidth)
+    }
+
+    updateWidth()
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => updateWidth())
+      observer.observe(node)
+      return () => observer.disconnect()
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', updateWidth)
+      return () => window.removeEventListener('resize', updateWidth)
+    }
+
+    return undefined
+  }, [actions, detailsOpen])
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -67,7 +95,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
       </div>
 
       <div className="flex w-full flex-col gap-2 md:w-auto md:items-end">
-        <div className="flex flex-wrap justify-end gap-2">
+        <div ref={actionsRowRef} className="flex flex-wrap justify-end gap-2">
           <CollapsibleTrigger asChild>
             <Button variant="outline" className="gap-2">
               {detailsOpen ? (
@@ -82,21 +110,34 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
         </div>
 
         {showTensorboardRow && (
-          <div className="flex flex-wrap justify-end gap-2">
+          <div
+            className="flex flex-wrap justify-end gap-2"
+            style={
+              actionsRowWidth
+                ? { width: `${actionsRowWidth}px` }
+                : undefined
+            }
+          >
             <Button
               onClick={tensorboard?.onOpen}
               disabled={tensorboard?.disabled ?? true}
               aria-busy={tensorboard?.isLoading}
-              className="gap-2"
+              className={cn(
+                'gap-2 justify-center',
+                actionsRowWidth && isTensorboardRunning ? 'flex-1' : '',
+              )}
             >
               <BarChart3 className="size-4" /> Open TensorBoard
             </Button>
-            {tensorboard?.isRunning ? (
+            {isTensorboardRunning ? (
               <Button
                 onClick={tensorboard.onStop}
                 disabled={tensorboard.isStopping}
                 aria-busy={tensorboard.isStopping}
-                className="gap-2"
+                className={cn(
+                  'gap-2 justify-center',
+                  actionsRowWidth ? 'flex-1' : '',
+                )}
               >
                 <Power className="size-4" /> Stop TensorBoard
               </Button>
