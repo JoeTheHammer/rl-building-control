@@ -170,7 +170,8 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   }, [persistedSuite])
 
   const tensorboardEnabled = persistedSuite?.tensorboard_enabled ?? false
-  const canAccessTensorboard = tensorboardEnabled || tensorboardStatus?.enabled === true
+  const canAccessTensorboard =
+    tensorboardEnabled || tensorboardStatus?.enabled === true
 
   const fileName = useMemo(() => {
     if (isLocal) {
@@ -638,7 +639,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
               <Button
                 onClick={handleOpenTensorboard}
                 disabled={tensorboardLoading || !canAccessTensorboard}
-                variant="outline"
                 className="gap-2"
               >
                 <BarChart3 className="size-4" /> Open TensorBoard
@@ -648,7 +648,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
               <Button
                 onClick={handleStopTensorboard}
                 disabled={tensorboardStopping}
-                variant="secondary"
                 className="gap-2"
               >
                 <Power className="size-4" /> Stop TensorBoard
