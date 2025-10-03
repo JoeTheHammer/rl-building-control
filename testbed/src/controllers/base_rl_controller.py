@@ -85,14 +85,18 @@ class IRLControllerFactory(IControllerFactory, ABC):
 
     def create_rl_controller_setup(
         self,
-        hp: Dict[str, Any],
+        hp: Optional[Dict[str, Any]],
         env_wrap_manager: EnvWrapperManager,
         is_env_adapter: bool = False,
     ) -> ControllerSetup:
         """
         Builds, trains, and sets up a reinforcement learning controller.
         """
-        logger.info(f"\033[92mCreate controller with hyperparameters: {hp}\033[0m")
+        hp_map = dict(hp) if hp else {}
+
+        logger.info(
+            f"\033[92mCreate controller with hyperparameters: {hp_map}\033[0m"
+        )
 
         # --- Environment Setup: Wrap everything BEFORE building the controller ---
         env = self.env_factory.create_environment()
@@ -100,13 +104,16 @@ class IRLControllerFactory(IControllerFactory, ABC):
 
         training_conf = load_rl_controller_config(self.config_path).training
 
-        if bool(hp.get("tensorboard_log")):
+        if training_conf.tensorboard_logs and not hp_map.get("tensorboard_log"):
+            hp_map["tensorboard_log"] = "logs/"
+
+        if bool(hp_map.get("tensorboard_log")):
             env = Monitor(env)
 
         if training_conf.report_training:
             env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
 
-        controller = self.build_controller(env, hp)
+        controller = self.build_controller(env, hp_map)
 
         env_config_path = getattr(self.env_factory, "config_path", None) if self.env_factory else None
         total_training_episodes = calculate_total_training_episodes(

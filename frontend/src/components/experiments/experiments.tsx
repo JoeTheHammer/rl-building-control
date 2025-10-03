@@ -19,6 +19,7 @@ import {
   runExperimentSuite,
   stopExperimentSuite,
   type ExperimentSuiteApiResponse,
+  type TensorBoardStatusResponse,
 } from '@/services/experiment-service.ts'
 import SuiteCard from '@/components/experiments/suite-card/suite-card.tsx'
 import type { LocalExperimentSuite } from '@/components/experiments/types.ts'
@@ -116,6 +117,23 @@ const Experiments = () => {
       }
     },
     [localSuites, refreshPersistedSuites],
+  )
+
+  const handleTensorboardStatusChange = useCallback(
+    (suiteId: number, status: TensorBoardStatusResponse) => {
+      setPersistedSuites((prev) =>
+        prev.map((suite) =>
+          suite.id === suiteId
+            ? {
+                ...suite,
+                tensorboard: status,
+                tensorboard_enabled: status.enabled,
+              }
+            : suite,
+        ),
+      )
+    },
+    [],
   )
 
   const handleDeleteSuite = (localId: string) =>
@@ -226,6 +244,9 @@ const Experiments = () => {
                     </div>
                   </Button>
                 }
+                onTensorboardStatusChange={(status) =>
+                  handleTensorboardStatusChange(suite.id, status)
+                }
               />
             ))
           )}
@@ -262,6 +283,9 @@ const Experiments = () => {
                       </div>
                     </Button>
                   </div>
+                }
+                onTensorboardStatusChange={(status) =>
+                  handleTensorboardStatusChange(suite.id, status)
                 }
               />
             ))

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { BarChart3, ChevronDown, ChevronUp, Power } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { AxiosError } from 'axios'
+import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge.tsx'
 import { Button } from '@/components/ui/button.tsx'
@@ -24,10 +25,16 @@ import type {
   ExperimentSuiteStatus,
 } from '@/services/experiment-service.ts'
 import {
+  EXPERIMENT_API_BASE,
   createExperimentLogEventSource,
   fetchExperimentConfigDetails,
   fetchExperimentSuiteLogs,
   fetchExperimentSuiteStatus,
+  fetchTensorBoardStatus,
+  startTensorBoard,
+  stopTensorBoard,
+  type TensorBoardStatusResponse,
+  type StopTensorBoardResponse,
 } from '@/services/experiment-service.ts'
 import type { LocalExperimentSuite } from '@/components/experiments/types.ts'
 
@@ -97,6 +104,7 @@ interface SuiteCardProps {
   status: ExperimentSuiteStatus
   idLabel?: string
   actions: React.ReactNode
+  onTensorboardStatusChange?: (status: TensorBoardStatusResponse) => void
 }
 
 const SuiteCard: React.FC<SuiteCardProps> = ({
@@ -104,9 +112,11 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   status,
   idLabel,
   actions,
+  onTensorboardStatusChange,
 }) => {
   const navigate = useNavigate()
   const isLocal = 'localId' in suite
+  const persistedSuite = isLocal ? null : (suite as ExperimentSuiteApiResponse)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [activeConfig, setActiveConfig] = useState<ActiveConfigState>(null)
   const [configDetails, setConfigDetails] =
@@ -126,27 +136,59 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   const [completedLogsError, setCompletedLogsError] = useState<string | null>(
     null,
   )
+  const [tensorboardStatus, setTensorboardStatus] =
+    useState<TensorBoardStatusResponse | null>(null)
+  const [tensorboardLoading, setTensorboardLoading] = useState(false)
+  const [tensorboardStopping, setTensorboardStopping] = useState(false)
   const eventSourceRef = useRef<EventSource | null>(null)
 
   const configName = useMemo(() => {
-    if (isLocal) return suite.configName
-    return suite.config_filename ?? undefined
-  }, [isLocal, suite])
+    if (isLocal) return (suite as LocalExperimentSuite).configName
+    return persistedSuite?.config_filename ?? undefined
+  }, [isLocal, persistedSuite, suite])
 
-  const suiteId = !isLocal ? suite.id : undefined
+  const suiteId = persistedSuite?.id
+
+  const initialTensorboardStatus = useMemo(() => {
+    if (!persistedSuite) {
+      return null
+    }
+    const info = persistedSuite.tensorboard ?? {
+      enabled: persistedSuite.tensorboard_enabled ?? false,
+      running: false,
+    }
+    return {
+      suite_id: persistedSuite.id,
+      enabled: info.enabled ?? false,
+      running: info.running ?? false,
+      url: info.url ?? null,
+      port: info.port ?? null,
+      pid: info.pid ?? null,
+      owner: info.owner ?? null,
+      started_at: info.started_at ?? null,
+      expires_at: info.expires_at ?? null,
+    }
+  }, [persistedSuite])
+
+  const tensorboardEnabled = persistedSuite?.tensorboard_enabled ?? false
+  const canAccessTensorboard = tensorboardEnabled || tensorboardStatus?.enabled === true
 
   const fileName = useMemo(() => {
     if (isLocal) {
-      return getFileName(suite.configName)
+      return getFileName((suite as LocalExperimentSuite).configName)
     }
-    const persisted = suite as ExperimentSuiteApiResponse
-    return getFileName(persisted.config_filename ?? persisted.name)
-  }, [isLocal, suite])
+    if (!persistedSuite) return 'Unknown'
+    return getFileName(persistedSuite.config_filename ?? persistedSuite.name)
+  }, [isLocal, persistedSuite, suite])
 
   const fullPath = useMemo(() => {
     if (isLocal) return undefined
-    return (suite as ExperimentSuiteApiResponse).path ?? undefined
-  }, [isLocal, suite])
+    return persistedSuite?.path ?? undefined
+  }, [isLocal, persistedSuite])
+
+  useEffect(() => {
+    setTensorboardStatus(initialTensorboardStatus)
+  }, [initialTensorboardStatus])
 
   const experimentDetails = configDetails?.experiments ?? []
 
@@ -197,6 +239,59 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
       ignore = true
     }
   }, [configName, detailsOpen])
+
+  useEffect(() => {
+    if (!detailsOpen || typeof suiteId !== 'number' || !tensorboardEnabled) {
+      return
+    }
+
+    let ignore = false
+
+    fetchTensorBoardStatus(suiteId)
+      .then((status) => {
+        if (ignore) return
+        setTensorboardStatus(status)
+        onTensorboardStatusChange?.(status)
+      })
+      .catch((error: unknown) => {
+        if (ignore) return
+        const responseStatus = (error as AxiosError)?.response?.status
+        if (responseStatus && responseStatus !== 404) {
+          console.error('Failed to fetch TensorBoard status', error)
+          toast.error('Unable to load TensorBoard status')
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [detailsOpen, suiteId, tensorboardEnabled, onTensorboardStatusChange])
+
+  useEffect(() => {
+    if (
+      typeof window === 'undefined' ||
+      typeof navigator === 'undefined' ||
+      typeof suiteId !== 'number' ||
+      !tensorboardStatus?.running
+    ) {
+      return
+    }
+
+    const endpoint = `${EXPERIMENT_API_BASE}/suites/${suiteId}/tensorboard/stop`
+
+    const handleBeforeUnload = () => {
+      try {
+        const payload = JSON.stringify({ reason: 'window-unload' })
+        const blob = new Blob([payload], { type: 'application/json' })
+        navigator.sendBeacon(endpoint, blob)
+      } catch (error) {
+        console.debug('TensorBoard shutdown beacon failed', error)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [suiteId, tensorboardStatus?.running])
 
   const shouldLoadStatus =
     detailsOpen && status === 'Running' && typeof suiteId === 'number'
@@ -317,6 +412,77 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
       }
     }
   }, [shouldStreamLogs, suiteId])
+
+  const updateTensorboardStatus = (status: TensorBoardStatusResponse) => {
+    setTensorboardStatus(status)
+    onTensorboardStatusChange?.(status)
+  }
+
+  const handleOpenTensorboard = async () => {
+    if (typeof suiteId !== 'number') {
+      return
+    }
+    if (!canAccessTensorboard) {
+      toast.error('TensorBoard is not enabled for this suite')
+      return
+    }
+
+    setTensorboardLoading(true)
+    try {
+      const wasRunning = tensorboardStatus?.running === true
+      const status = wasRunning
+        ? await fetchTensorBoardStatus(suiteId)
+        : await startTensorBoard(suiteId, 'ui')
+
+      updateTensorboardStatus(status)
+
+      if (!status.enabled) {
+        toast.error('TensorBoard is disabled for this suite')
+        return
+      }
+
+      if (!wasRunning) {
+        toast.success('TensorBoard started')
+      }
+
+      if (status.url) {
+        window.open(status.url, '_blank', 'noopener,noreferrer')
+      } else {
+        toast.info('TensorBoard is starting, please try again in a few seconds')
+      }
+    } catch (error) {
+      console.error('Failed to open TensorBoard', error)
+      toast.error('Unable to open TensorBoard')
+    } finally {
+      setTensorboardLoading(false)
+    }
+  }
+
+  const handleStopTensorboard = async () => {
+    if (typeof suiteId !== 'number') {
+      return
+    }
+
+    setTensorboardStopping(true)
+    try {
+      const response: StopTensorBoardResponse = await stopTensorBoard(
+        suiteId,
+        'user-request',
+      )
+      updateTensorboardStatus(response)
+
+      if (response.stopped) {
+        toast.success('TensorBoard stopped')
+      } else {
+        toast.info('TensorBoard was not running')
+      }
+    } catch (error) {
+      console.error('Failed to stop TensorBoard', error)
+      toast.error('Unable to stop TensorBoard')
+    } finally {
+      setTensorboardStopping(false)
+    }
+  }
 
   const handleEdit = () => {
     if (!activeConfig || !configDetails) {
@@ -498,6 +664,26 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {persistedSuite ? (
+              <Button
+                onClick={handleOpenTensorboard}
+                disabled={tensorboardLoading || !canAccessTensorboard}
+                variant="outline"
+                className="gap-2"
+              >
+                <BarChart3 className="size-4" /> Open TensorBoard
+              </Button>
+            ) : null}
+            {persistedSuite && tensorboardStatus?.running ? (
+              <Button
+                onClick={handleStopTensorboard}
+                disabled={tensorboardStopping}
+                variant="secondary"
+                className="gap-2"
+              >
+                <Power className="size-4" /> Stop TensorBoard
+              </Button>
+            ) : null}
             <CollapsibleTrigger asChild>
               <Button variant="outline" className="gap-2">
                 {detailsOpen ? (

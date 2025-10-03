@@ -7,6 +7,7 @@ class Training(BaseModel):
     timesteps: int
     report_training: Optional[bool] = False
     report_denormalized_state: Optional[bool] = False
+    tensorboard_logs: Optional[bool] = False
 
 
 class HyperparameterTuning(BaseModel):
