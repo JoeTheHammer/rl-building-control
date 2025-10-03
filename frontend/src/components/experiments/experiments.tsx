@@ -62,7 +62,10 @@ const Experiments = () => {
     [persistedSuites],
   )
   const completedSuites = useMemo(
-    () => persistedSuites.filter((s) => s.status !== 'Running'),
+    () =>
+      persistedSuites.filter(
+        (suite) => suite.status !== 'Running' && !suite.archived,
+      ),
     [persistedSuites],
   )
 
