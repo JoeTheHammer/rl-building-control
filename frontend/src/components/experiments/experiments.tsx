@@ -18,7 +18,7 @@ import {
   stopExperimentSuite,
   type ExperimentSuiteApiResponse,
 } from '@/services/experiment-service.ts'
-import SuiteCard from '@/components/experiments/suite-card'
+import SuiteCard from '@/components/experiments/suite-card/suite-card.tsx'
 import type { LocalExperimentSuite } from '@/components/experiments/types.ts'
 
 const createLocalId = (): string =>

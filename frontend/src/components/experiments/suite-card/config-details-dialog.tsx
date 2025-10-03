@@ -48,6 +48,10 @@ const ConfigSectionDialog: React.FC<ConfigSectionDialogProps> = ({
 }) => {
   const content = useMemo(() => serializeSection(section), [section])
 
+  const onClose = () => {
+    onOpenChange(false)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -62,25 +66,27 @@ const ConfigSectionDialog: React.FC<ConfigSectionDialogProps> = ({
             </DialogDescription>
           ) : (
             <DialogDescription>
-              Review the {title.toLowerCase()} settings associated with this suite.
+              Review the {title.toLowerCase()} settings associated with this
+              suite.
             </DialogDescription>
           )}
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto pr-1">
           {loading ? (
-            <p className="text-muted-foreground text-sm">Loading configuration…</p>
+            <p className="text-muted-foreground text-sm">
+              Loading configuration…
+            </p>
           ) : error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : section ? (
             <div className="border-muted/40 rounded-md border">
               <CustomEditor
                 defaultLanguage="yaml"
-                height="420px"
+                height="820px"
                 value={content}
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
                 }}
               />
             </div>
@@ -92,8 +98,11 @@ const ConfigSectionDialog: React.FC<ConfigSectionDialogProps> = ({
         </div>
         {editable && onEdit && (
           <DialogFooter>
-            <Button variant="outline" onClick={onEdit} disabled={!section}>
+            <Button onClick={onEdit} disabled={!section}>
               Edit {title.toLowerCase()}
+            </Button>
+            <Button variant="outline" onClick={onClose} disabled={!section}>
+              Close
             </Button>
           </DialogFooter>
         )}

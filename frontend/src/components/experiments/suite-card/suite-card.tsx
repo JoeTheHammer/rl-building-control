@@ -71,7 +71,11 @@ const mergeLogLines = (current: string[], incoming: string[]): string[] => {
     if (line === '' && next.length === 0) {
       continue
     }
-    if (isProgressLine(line) && next.length > 0 && isProgressLine(next[next.length - 1])) {
+    if (
+      isProgressLine(line) &&
+      next.length > 0 &&
+      isProgressLine(next[next.length - 1])
+    ) {
       next[next.length - 1] = line
     } else {
       next.push(line)
@@ -89,7 +93,12 @@ interface SuiteCardProps {
   actions: React.ReactNode
 }
 
-const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }) => {
+const SuiteCard: React.FC<SuiteCardProps> = ({
+  suite,
+  status,
+  idLabel,
+  actions,
+}) => {
   const navigate = useNavigate()
   const isLocal = 'localId' in suite
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -100,7 +109,8 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
     useState<ExperimentConfigDetailsResponse | null>(null)
   const [configLoading, setConfigLoading] = useState(false)
   const [configError, setConfigError] = useState<string | null>(null)
-  const [statusInfo, setStatusInfo] = useState<ExperimentRunStatusResponse | null>(null)
+  const [statusInfo, setStatusInfo] =
+    useState<ExperimentRunStatusResponse | null>(null)
   const [statusLoading, setStatusLoading] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
   const [logLines, setLogLines] = useState<string[]>([])
@@ -109,7 +119,9 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
   const [completedLogsOpen, setCompletedLogsOpen] = useState(false)
   const [completedLogLines, setCompletedLogLines] = useState<string[]>([])
   const [completedLogsLoading, setCompletedLogsLoading] = useState(false)
-  const [completedLogsError, setCompletedLogsError] = useState<string | null>(null)
+  const [completedLogsError, setCompletedLogsError] = useState<string | null>(
+    null,
+  )
   const eventSourceRef = useRef<EventSource | null>(null)
 
   const configName = useMemo(() => {
@@ -166,7 +178,8 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
     }
   }, [configName, detailsOpen])
 
-  const shouldLoadStatus = detailsOpen && status === 'Running' && typeof suiteId === 'number'
+  const shouldLoadStatus =
+    detailsOpen && status === 'Running' && typeof suiteId === 'number'
 
   useEffect(() => {
     if (!shouldLoadStatus || typeof suiteId !== 'number') {
@@ -332,7 +345,9 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
 
     if (typeof suiteId !== 'number') {
       setCompletedLogLines([])
-      setCompletedLogsError('Logs are only available for saved experiment suites')
+      setCompletedLogsError(
+        'Logs are only available for saved experiment suites',
+      )
       setCompletedLogsLoading(false)
       return
     }
@@ -397,12 +412,18 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
       : ''
 
   return (
-    <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen} className="w-full">
+    <Collapsible
+      open={detailsOpen}
+      onOpenChange={setDetailsOpen}
+      className="w-full"
+    >
       <Card className="border-primary/20">
         <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-3">
-              <CardTitle className="text-primary text-lg">{suite.name}</CardTitle>
+              <CardTitle className="text-primary text-lg">
+                {suite.name}
+              </CardTitle>
               <Badge
                 className={cn(
                   'px-3 py-1 text-xs font-semibold uppercase',
@@ -442,7 +463,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({ suite, status, idLabel, actions }
         </CardContent>
 
         <CollapsibleContent>
-          <CardContent className="bg-muted/20 border-t border-primary/10 space-y-4">
+          <CardContent className="bg-muted/20 border-primary/10 space-y-4 border-t pt-4">
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
