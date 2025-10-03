@@ -1,8 +1,12 @@
 import React, { useMemo, useState } from 'react'
 
 import { Card, CardContent } from '@/components/ui/card.tsx'
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible.tsx'
+import {
+  Collapsible,
+  CollapsibleContent,
+} from '@/components/ui/collapsible.tsx'
 import type {
+  ConfigDetailsSection,
   ExperimentSuiteApiResponse,
   ExperimentSuiteStatus,
   TensorBoardStatusResponse,
@@ -39,7 +43,9 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   const [detailsOpen, setDetailsOpen] = useState(false)
 
   const isLocal = 'localId' in suite
-  const persistedSuite = (isLocal ? null : suite) as ExperimentSuiteApiResponse | null
+  const persistedSuite = (
+    isLocal ? null : suite
+  ) as ExperimentSuiteApiResponse | null
   const suiteId = persistedSuite?.id
 
   const configName = useMemo(() => {
@@ -81,12 +87,8 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     }
   }, [persistedSuite])
 
-  const {
-    configDetails,
-    configLoading,
-    configError,
-    setConfigError,
-  } = useSuiteConfig({ configName, detailsOpen })
+  const { configDetails, configLoading, configError, setConfigError } =
+    useSuiteConfig({ configName, detailsOpen })
 
   const {
     shouldLoadStatus,
@@ -154,7 +156,11 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     : null
 
   return (
-    <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen} className="w-full">
+    <Collapsible
+      open={detailsOpen}
+      onOpenChange={setDetailsOpen}
+      className="w-full"
+    >
       <Card className="border-primary/20">
         <CardContent className="flex flex-col gap-4">
           <HeaderSection
@@ -192,7 +198,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
         open={activeConfig !== null}
         onOpenChange={handleDialogOpenChange}
         title={dialogTitle}
-        section={activeSection}
+        section={activeSection as ConfigDetailsSection | undefined}
         loading={configLoading}
         error={configError}
         onEdit={activeConfig ? handleEdit : undefined}

@@ -113,35 +113,33 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
           <div
             className="flex flex-wrap justify-end gap-2"
             style={
-              actionsRowWidth
-                ? { width: `${actionsRowWidth}px` }
-                : undefined
+              actionsRowWidth ? { width: `${actionsRowWidth}px` } : undefined
             }
           >
-            <Button
-              onClick={tensorboard?.onOpen}
-              disabled={tensorboard?.disabled ?? true}
-              aria-busy={tensorboard?.isLoading}
-              className={cn(
-                'gap-2 justify-center',
-                actionsRowWidth && isTensorboardRunning ? 'flex-1' : '',
-              )}
-            >
-              <BarChart3 className="size-4" /> Open TensorBoard
-            </Button>
             {isTensorboardRunning ? (
               <Button
-                onClick={tensorboard.onStop}
-                disabled={tensorboard.isStopping}
-                aria-busy={tensorboard.isStopping}
+                onClick={tensorboard?.onStop}
+                disabled={tensorboard?.isStopping}
+                aria-busy={tensorboard?.isStopping}
                 className={cn(
-                  'gap-2 justify-center',
+                  'justify-center gap-2',
                   actionsRowWidth ? 'flex-1' : '',
                 )}
               >
                 <Power className="size-4" /> Stop TensorBoard
               </Button>
             ) : null}
+            <Button
+              onClick={tensorboard?.onOpen}
+              disabled={tensorboard?.disabled ?? true}
+              aria-busy={tensorboard?.isLoading}
+              className={cn(
+                'justify-center gap-2',
+                actionsRowWidth && isTensorboardRunning ? 'flex-1' : '',
+              )}
+            >
+              <BarChart3 className="size-4" /> Open TensorBoard
+            </Button>
           </div>
         )}
       </div>
