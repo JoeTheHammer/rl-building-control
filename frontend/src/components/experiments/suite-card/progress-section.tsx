@@ -19,7 +19,7 @@ const formatEpisodes = (current?: number, total?: number): string => {
   if (safeTotal === 0) {
     return `${safeCurrent}`
   }
-  return `${safeCurrent} / ${safeTotal}`
+  return `Currently running episode: ${safeCurrent} / ${safeTotal}`
 }
 
 const computePercentage = (current?: number, total?: number): number => {
@@ -29,17 +29,28 @@ const computePercentage = (current?: number, total?: number): number => {
   return Math.min(100, Math.max(0, (current / total) * 100))
 }
 
-const ProgressSection: React.FC<ProgressSectionProps> = ({ progress, loading, error }) => {
+const ProgressSection: React.FC<ProgressSectionProps> = ({
+  progress,
+  loading,
+  error,
+}) => {
   const normalizedStatus = progress?.status?.toLowerCase()
 
   const trainingPercent = useMemo(
-    () => computePercentage(progress?.current_training_episode, progress?.total_training_episodes),
+    () =>
+      computePercentage(
+        progress?.current_training_episode,
+        progress?.total_training_episodes,
+      ),
     [progress?.current_training_episode, progress?.total_training_episodes],
   )
 
   const evaluationPercent = useMemo(
     () =>
-      computePercentage(progress?.current_evaluation_episode, progress?.total_evaluation_episodes),
+      computePercentage(
+        progress?.current_evaluation_episode,
+        progress?.total_evaluation_episodes,
+      ),
     [progress?.current_evaluation_episode, progress?.total_evaluation_episodes],
   )
 
@@ -52,14 +63,24 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ progress, loading, er
   }
 
   if (!progress) {
-    return <p className="text-muted-foreground text-sm">Progress information is not available yet.</p>
+    return (
+      <p className="text-muted-foreground text-sm">
+        Progress information is not available yet.
+      </p>
+    )
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant={normalizedStatus === 'training' ? 'default' : 'secondary'}>Training</Badge>
-        <Badge variant={normalizedStatus === 'evaluation' ? 'default' : 'secondary'}>
+        <Badge
+          variant={normalizedStatus === 'training' ? 'default' : 'secondary'}
+        >
+          Training
+        </Badge>
+        <Badge
+          variant={normalizedStatus === 'evaluation' ? 'default' : 'secondary'}
+        >
           Evaluation
         </Badge>
         {normalizedStatus === 'hyperparameter_tuning' && (
@@ -71,7 +92,10 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ progress, loading, er
         <div className="flex items-center justify-between text-sm font-medium">
           <span>Training progress</span>
           <span>
-            {formatEpisodes(progress.current_training_episode, progress.total_training_episodes)}
+            {formatEpisodes(
+              progress.current_training_episode,
+              progress.total_training_episodes,
+            )}
           </span>
         </div>
         <Progress value={trainingPercent} />
@@ -81,7 +105,10 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({ progress, loading, er
         <div className="flex items-center justify-between text-sm font-medium">
           <span>Evaluation progress</span>
           <span>
-            {formatEpisodes(progress.current_evaluation_episode, progress.total_evaluation_episodes)}
+            {formatEpisodes(
+              progress.current_evaluation_episode,
+              progress.total_evaluation_episodes,
+            )}
           </span>
         </div>
         <Progress value={evaluationPercent} />
