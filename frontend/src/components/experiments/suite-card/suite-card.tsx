@@ -30,7 +30,6 @@ import {
   fetchExperimentConfigDetails,
   fetchExperimentSuiteLogs,
   fetchExperimentSuiteStatus,
-  fetchTensorBoardStatus,
   startTensorBoard,
   stopTensorBoard,
   type TensorBoardStatusResponse,
@@ -241,33 +240,6 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   }, [configName, detailsOpen])
 
   useEffect(() => {
-    if (!detailsOpen || typeof suiteId !== 'number' || !tensorboardEnabled) {
-      return
-    }
-
-    let ignore = false
-
-    fetchTensorBoardStatus(suiteId)
-      .then((status) => {
-        if (ignore) return
-        setTensorboardStatus(status)
-        onTensorboardStatusChange?.(status)
-      })
-      .catch((error: unknown) => {
-        if (ignore) return
-        const responseStatus = (error as AxiosError)?.response?.status
-        if (responseStatus && responseStatus !== 404) {
-          console.error('Failed to fetch TensorBoard status', error)
-          toast.error('Unable to load TensorBoard status')
-        }
-      })
-
-    return () => {
-      ignore = true
-    }
-  }, [detailsOpen, suiteId, tensorboardEnabled, onTensorboardStatusChange])
-
-  useEffect(() => {
     if (
       typeof window === 'undefined' ||
       typeof navigator === 'undefined' ||
@@ -430,9 +402,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     setTensorboardLoading(true)
     try {
       const wasRunning = tensorboardStatus?.running === true
-      const status = wasRunning
-        ? await fetchTensorBoardStatus(suiteId)
-        : await startTensorBoard(suiteId, 'ui')
+      const status = await startTensorBoard(suiteId, 'ui')
 
       updateTensorboardStatus(status)
 

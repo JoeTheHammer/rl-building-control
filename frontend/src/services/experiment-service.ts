@@ -205,15 +205,6 @@ export const fetchExperimentSuiteLogs = async (
 export const createExperimentLogEventSource = (suiteId: number): EventSource =>
   new EventSource(`${API_BASE}/suites/${suiteId}/logs/stream`)
 
-export const fetchTensorBoardStatus = async (
-  suiteId: number,
-): Promise<TensorBoardStatusResponse> => {
-  const response = await axios.get<TensorBoardStatusResponse>(
-    `${API_BASE}/suites/${suiteId}/tensorboard`,
-  )
-  return response.data
-}
-
 export const startTensorBoard = async (
   suiteId: number,
   owner?: string,
