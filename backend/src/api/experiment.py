@@ -174,6 +174,11 @@ def stop_experiment_suite(suite_id: int):
     return StopExperimentSuiteResponse(id=suite.id, status=suite.status)
 
 
+@router.post("/suites/{suite_id}/archive", response_model=ExperimentSuiteResponse)
+def archive_experiment_suite(suite_id: int):
+    return suite_manager.archive_suite(suite_id)
+
+
 @router.get(
     "/config-details/{config_name}",
     response_model=ExperimentConfigDetailsResponse,

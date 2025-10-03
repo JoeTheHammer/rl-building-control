@@ -29,6 +29,7 @@ export interface ExperimentSuiteApiResponse {
   pid?: number | null
   path?: string
   config_filename?: string
+  archived: boolean
 }
 
 export interface ConfigDetailsSection {
@@ -138,6 +139,15 @@ export const stopExperimentSuite = async (
 ): Promise<StopExperimentSuiteResponse> => {
   const response = await axios.post<StopExperimentSuiteResponse>(
     `${API_BASE}/suites/${suiteId}/stop`,
+  )
+  return response.data
+}
+
+export const archiveExperimentSuite = async (
+  suiteId: number,
+): Promise<ExperimentSuiteApiResponse> => {
+  const response = await axios.post<ExperimentSuiteApiResponse>(
+    `${API_BASE}/suites/${suiteId}/archive`,
   )
   return response.data
 }

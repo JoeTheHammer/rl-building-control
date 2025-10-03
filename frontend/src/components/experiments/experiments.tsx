@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  Archive,
   CalendarPlus,
   ChartNoAxesCombined,
   Play,
@@ -12,6 +13,7 @@ import CustomPage from '@/components/shared/page.tsx'
 import ExperimentConfigDialog from '@/components/configurator/experiment/experiment-config-dialog.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import {
+  archiveExperimentSuite,
   fetchExperimentConfig,
   fetchExperimentSuites,
   runExperimentSuite,
@@ -34,6 +36,7 @@ const Experiments = () => {
   >([])
   const [pendingRuns, setPendingRuns] = useState<string[]>([])
   const [pendingStops, setPendingStops] = useState<number[]>([])
+  const [pendingArchives, setPendingArchives] = useState<number[]>([])
 
   const refreshPersistedSuites = useCallback(async () => {
     try {
@@ -136,6 +139,25 @@ const Experiments = () => {
     [refreshPersistedSuites],
   )
 
+  const handleArchiveSuite = useCallback(
+    async (suiteId: number) => {
+      setPendingArchives((p) => [...p, suiteId])
+      try {
+        const response = await archiveExperimentSuite(suiteId)
+        setPersistedSuites((prev) =>
+          prev.map((suite) => (suite.id === suiteId ? response : suite)),
+        )
+        toast.success(`Archived "${response.name}"`)
+      } catch {
+        toast.error('Unable to archive experiment suite')
+      } finally {
+        setPendingArchives((p) => p.filter((id) => id !== suiteId))
+        await refreshPersistedSuites()
+      }
+    },
+    [refreshPersistedSuites],
+  )
+
   return (
     <CustomPage>
       <div className="flex flex-col gap-6 pt-4">
@@ -218,14 +240,25 @@ const Experiments = () => {
                 status={suite.status}
                 idLabel={`ID: ${suite.id}`}
                 actions={
-                  <Button
-                    onClick={() => console.log('Handle show results')}
-                    disabled={pendingStops.includes(suite.id)}
-                  >
-                    <div className="flex gap-2">
-                      <ChartNoAxesCombined className="size-4" /> Show Results
-                    </div>
-                  </Button>
+                  <div className="flex gap-2">
+                    {!suite.archived && (
+                      <Button
+                        onClick={() => handleArchiveSuite(suite.id)}
+                        disabled={pendingArchives.includes(suite.id)}
+                        className="gap-2"
+                      >
+                        <Archive className="size-4" /> Archive
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => console.log('Handle show results')}
+                      disabled={pendingStops.includes(suite.id)}
+                    >
+                      <div className="flex gap-2">
+                        <ChartNoAxesCombined className="size-4" /> Show Results
+                      </div>
+                    </Button>
+                  </div>
                 }
               />
             ))
