@@ -49,8 +49,8 @@ export const SuiteCard: React.FC<SuiteCardProps> = ({
 }) => {
   const isLocal = 'localId' in suite
   const fileName = isLocal
-    ? getFileName(suite.configName) + '.yaml'
-    : getFileName((suite as ExperimentSuiteApiResponse).name) + '.yaml'
+    ? getFileName(suite.configName)
+    : getFileName((suite as ExperimentSuiteApiResponse).name)
 
   const fullPath =
     !isLocal && (suite as ExperimentSuiteApiResponse).path

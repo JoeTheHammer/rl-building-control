@@ -81,7 +81,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
         """
         pass
 
-    def create_rl_controller_setup_new(
+    def create_rl_controller_setup(
         self,
         hp: Dict[str, Any],
         env_wrap_manager: EnvWrapperManager,

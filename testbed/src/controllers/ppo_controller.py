@@ -38,4 +38,4 @@ class PPOFactory(IRLControllerFactory):
         )
         hp = rl_config.hyperparameters
 
-        return super().create_rl_controller_setup_new(hp, env_wrap_manager, is_env_adapter=True)
+        return super().create_rl_controller_setup(hp, env_wrap_manager, is_env_adapter=True)

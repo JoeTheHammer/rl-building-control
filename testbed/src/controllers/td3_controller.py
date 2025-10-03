@@ -69,4 +69,4 @@ class TD3Factory(IRLControllerFactory):
             [NormalizeObservation, ContinuousActionWrapper], config.environment_wrapper
         )
 
-        return super().create_rl_controller_setup_new(config.hyperparameters, env_wrap_manager)
+        return super().create_rl_controller_setup(config.hyperparameters, env_wrap_manager)
