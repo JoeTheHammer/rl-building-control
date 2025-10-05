@@ -60,9 +60,8 @@ const Analytics: React.FC = () => {
   const [csvDialogOpen, setCsvDialogOpen] = useState(false)
   const [suites, setSuites] = useState<AnalyticsSuiteSummary[]>([])
   const [suitesLoading, setSuitesLoading] = useState(false)
-  const [selectedSuite, setSelectedSuite] = useState<AnalyticsSuiteSummary | null>(
-    null,
-  )
+  const [selectedSuite, setSelectedSuite] =
+    useState<AnalyticsSuiteSummary | null>(null)
   const [suiteData, setSuiteData] = useState<AnalyticsDataResponse | null>(null)
   const [loadingData, setLoadingData] = useState(false)
   const [selectedCsvOptions, setSelectedCsvOptions] = useState<string[]>([])
@@ -250,7 +249,9 @@ const Analytics: React.FC = () => {
       return
     }
 
-    const maxLength = Math.max(...selectedSeries.map((item) => item.values.length))
+    const maxLength = Math.max(
+      ...selectedSeries.map((item) => item.values.length),
+    )
     const header = ['Step', ...selectedSeries.map((item) => item.label)]
     const rows = [header]
 
@@ -284,7 +285,9 @@ const Analytics: React.FC = () => {
     }
 
     try {
-      const { blob, fileName } = await downloadAnalyticsSuiteFile(selectedSuite.id)
+      const { blob, fileName } = await downloadAnalyticsSuiteFile(
+        selectedSuite.id,
+      )
       const url = window.URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
@@ -305,26 +308,27 @@ const Analytics: React.FC = () => {
     return (
       <section
         key={experiment.key}
-        className="flex flex-col gap-6 rounded-xl border bg-card/40 p-6 shadow-sm"
+        className="bg-card/40 flex flex-col gap-6 rounded-xl border p-6 shadow-sm"
       >
         <div className="flex flex-col gap-1">
           <h2 className="text-xl font-semibold">
             Experiment {index + 1}: {experimentName}
           </h2>
-          {experiment.metadata && Object.keys(experiment.metadata).length > 0 && (
-            <p className="text-sm text-muted-foreground">
-              {Object.entries(experiment.metadata)
-                .map(([key, value]) => `${key}: ${String(value)}`)
-                .join(' • ')}
-            </p>
-          )}
+          {experiment.metadata &&
+            Object.keys(experiment.metadata).length > 0 && (
+              <p className="text-muted-foreground text-sm">
+                {Object.entries(experiment.metadata)
+                  .map(([key, value]) => `${key}: ${String(value)}`)
+                  .join(' • ')}
+              </p>
+            )}
         </div>
 
         {evaluation && (
           <div className="flex flex-col gap-4">
             <h3 className="text-lg font-semibold">Evaluation</h3>
             {evaluation.episodes.length === 0 && (
-              <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+              <div className="text-muted-foreground rounded-md border border-dashed p-4 text-sm">
                 No evaluation episodes were recorded for this experiment.
               </div>
             )}
@@ -367,13 +371,11 @@ const Analytics: React.FC = () => {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Experiment Analytics</h1>
-            <p className="text-sm text-muted-foreground">
-              Visualise training and evaluation metrics exported from the testbed.
-            </p>
             {selectedSuite && (
               <p className="mt-2 text-sm">
-                Loaded suite: <span className="font-semibold">{selectedSuite.name}</span>{' '}
-                (ID {selectedSuite.id})
+                Loaded suite:{' '}
+                <span className="font-semibold">{selectedSuite.name}</span> (ID{' '}
+                {selectedSuite.id})
               </p>
             )}
           </div>
@@ -402,20 +404,21 @@ const Analytics: React.FC = () => {
         </div>
 
         {loadingData && (
-          <div className="flex items-center gap-3 rounded-lg border border-dashed p-6 text-muted-foreground">
-            <Loader2 className="size-5 animate-spin" /> Loading analytics data...
+          <div className="text-muted-foreground flex items-center gap-3 rounded-lg border border-dashed p-6">
+            <Loader2 className="size-5 animate-spin" /> Loading analytics
+            data...
           </div>
         )}
 
         {!loadingData && !suiteData && (
-          <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-            Load experiment analytics to explore the recorded training and evaluation
-            metrics. Use the “Load Data” button above to get started.
+          <div className="text-muted-foreground rounded-lg border border-dashed p-6 text-sm">
+            Load experiment analytics to explore the recorded training and
+            evaluation metrics. Use the “Load Data” button above to get started.
           </div>
         )}
 
         {!loadingData && suiteData && suiteData.experiments.length === 0 && (
-          <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+          <div className="text-muted-foreground rounded-lg border border-dashed p-6 text-sm">
             No experiments were found in the exported analytics data.
           </div>
         )}
