@@ -12,7 +12,6 @@ import {
 } from 'recharts'
 import { Info } from 'lucide-react'
 
-import { Button } from '@/components/ui/button.tsx'
 import {
   Select,
   SelectContent,
@@ -47,6 +46,16 @@ const viewModeOptions: { value: ViewMode; label: string }[] = [
   { value: 'table', label: 'Table view' },
 ]
 
+// Averaging window options
+const avgOptions = [
+  { value: '1', label: 'No averaging (all points)' },
+  { value: '5', label: 'Average every 5 points' },
+  { value: '10', label: 'Average every 10 points' },
+  { value: '20', label: 'Average every 20 points' },
+  { value: '50', label: 'Average every 50 points' },
+  { value: '100', label: 'Average every 100 points' },
+]
+
 const DatasetViewer: React.FC<DatasetViewerProps> = ({
   title,
   reward,
@@ -57,11 +66,13 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
 }) => {
   const hasReward = Array.isArray(reward) && reward.length > 0
   const availableActions = useMemo(
-    () => Object.entries(actions ?? {}).filter(([, values]) => values.length > 0),
+    () =>
+      Object.entries(actions ?? {}).filter(([, values]) => values.length > 0),
     [actions],
   )
   const availableStates = useMemo(
-    () => Object.entries(states ?? {}).filter(([, values]) => values.length > 0),
+    () =>
+      Object.entries(states ?? {}).filter(([, values]) => values.length > 0),
     [states],
   )
 
@@ -75,13 +86,17 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   const [datasetType, setDatasetType] = useState<DatasetType>('reward')
   const [seriesKey, setSeriesKey] = useState<string>('')
   const [viewMode, setViewMode] = useState<ViewMode>('line')
+  const [avgWindow, setAvgWindow] = useState<number>(10) // Default: average every 10 points
 
   useEffect(() => {
     if (firstAvailableType) {
       setDatasetType(firstAvailableType)
       if (firstAvailableType === 'actions' && availableActions.length > 0) {
         setSeriesKey(availableActions[0][0])
-      } else if (firstAvailableType === 'states' && availableStates.length > 0) {
+      } else if (
+        firstAvailableType === 'states' &&
+        availableStates.length > 0
+      ) {
         setSeriesKey(availableStates[0][0])
       } else {
         setSeriesKey('')
@@ -107,41 +122,60 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
 
   const dataValues: number[] | null = useMemo(() => {
     if (datasetType === 'reward') {
-      return hasReward ? reward ?? [] : null
+      return hasReward ? (reward ?? []) : null
     }
     if (datasetType === 'actions') {
       const entry = availableActions.find(([key]) => key === seriesKey)
-      return entry ? entry[1] : availableActions[0]?.[1] ?? null
+      return entry ? entry[1] : (availableActions[0]?.[1] ?? null)
     }
     if (datasetType === 'states') {
       const entry = availableStates.find(([key]) => key === seriesKey)
-      return entry ? entry[1] : availableStates[0]?.[1] ?? null
+      return entry ? entry[1] : (availableStates[0]?.[1] ?? null)
     }
     return null
-  }, [datasetType, reward, hasReward, availableActions, availableStates, seriesKey])
+  }, [
+    datasetType,
+    reward,
+    hasReward,
+    availableActions,
+    availableStates,
+    seriesKey,
+  ])
 
-  const chartData = useMemo(
-    () =>
-      dataValues?.map((value, index) => ({
-        index: index + 1,
-        value,
-      })) ?? [],
-    [dataValues],
-  )
+  // Averaged chart data
+  const chartData = useMemo(() => {
+    if (!dataValues) return []
+
+    if (avgWindow <= 1) {
+      return dataValues.map((v, i) => ({ index: i + 1, value: Number(v) }))
+    }
+
+    const averaged: { index: number; value: number }[] = []
+    for (let i = 0; i < dataValues.length; i += avgWindow) {
+      const chunk = dataValues.slice(i, i + avgWindow)
+      const avg = chunk.reduce((a, b) => a + b, 0) / chunk.length
+      averaged.push({ index: i + 1, value: avg })
+    }
+    return averaged
+  }, [dataValues, avgWindow])
 
   const handleDatasetTypeChange = (value: string) => {
-    setDatasetType((value as DatasetType) ?? 'reward')
+    setDatasetType(value as DatasetType)
   }
 
   const handleSeriesChange = (value: string) => {
     setSeriesKey(value)
   }
 
+  const handleAvgChange = (value: string) => {
+    setAvgWindow(parseInt(value))
+  }
+
   const renderChart = () => {
     if (!dataValues || dataValues.length === 0) {
       return (
         <div className="flex min-h-40 items-center justify-center rounded-md border border-dashed">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {emptyMessage ?? 'No data available for the selected series.'}
           </span>
         </div>
@@ -159,10 +193,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dataValues.map((value, index) => (
+              {chartData.map((d, index) => (
                 <TableRow key={index}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{value}</TableCell>
+                  <TableCell>{d.index}</TableCell>
+                  <TableCell>{d.value.toFixed(4)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -171,61 +205,53 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       )
     }
 
-    if (viewMode === 'bar') {
-      return (
-        <div className="h-80 w-full">
-          <ResponsiveContainer>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="index" tickLine={false} />
-              <YAxis tickLine={false} />
-              <Tooltip />
-              <Bar dataKey="value" fill="hsl(var(--primary))" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )
-    }
+    const ChartComponent = viewMode === 'bar' ? BarChart : LineChart
 
     return (
-      <div className="h-80 w-full">
-        <ResponsiveContainer>
-          <LineChart data={chartData}>
+      <div className="relative h-80 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ChartComponent data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="index" tickLine={false} />
-            <YAxis tickLine={false} />
+            <YAxis tickLine={false} domain={['auto', 'auto']} />
             <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
-              dot={false}
-              isAnimationActive={false}
-            />
-          </LineChart>
+            {viewMode === 'bar' ? (
+              <Bar dataKey="value" fill="hsl(var(--primary))" />
+            ) : (
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#49474C"
+                strokeWidth={1}
+                dot={false}
+                isAnimationActive={false}
+              />
+            )}
+          </ChartComponent>
         </ResponsiveContainer>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
+    <div className="bg-card space-y-4 rounded-lg border p-4 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1">
           <h3 className="text-lg font-semibold">{title}</h3>
           {metadata && Object.keys(metadata).length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
               <Info className="size-3" />
               {Object.entries(metadata).map(([key, value]) => (
-                <span key={key} className="rounded-full bg-muted px-2 py-0.5">
+                <span key={key} className="bg-muted rounded-full px-2 py-0.5">
                   {key}: {String(value)}
                 </span>
               ))}
             </div>
           )}
         </div>
+
         <div className="flex flex-wrap items-center gap-3">
+          {/* dataset type */}
           <Select value={datasetType} onValueChange={handleDatasetTypeChange}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Select data" />
@@ -234,54 +260,70 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
               <SelectItem value="reward" disabled={!hasReward}>
                 Reward
               </SelectItem>
-              <SelectItem value="actions" disabled={availableActions.length === 0}>
+              <SelectItem
+                value="actions"
+                disabled={availableActions.length === 0}
+              >
                 Actions
               </SelectItem>
-              <SelectItem value="states" disabled={availableStates.length === 0}>
+              <SelectItem
+                value="states"
+                disabled={availableStates.length === 0}
+              >
                 States
               </SelectItem>
             </SelectContent>
           </Select>
 
+          {/* series */}
           {(datasetType === 'actions' || datasetType === 'states') && (
             <Select value={seriesKey} onValueChange={handleSeriesChange}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select series" />
               </SelectTrigger>
               <SelectContent className="bg-background">
-                {(datasetType === 'actions' ? availableActions : availableStates).map(
-                  ([key]) => (
-                    <SelectItem key={key} value={key}>
-                      {key}
-                    </SelectItem>
-                  ),
-                )}
+                {(datasetType === 'actions'
+                  ? availableActions
+                  : availableStates
+                ).map(([key]) => (
+                  <SelectItem key={key} value={key}>
+                    {key}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
 
-          <Select value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="View mode" />
+          {/* averaging filter */}
+          <Select value={avgWindow.toString()} onValueChange={handleAvgChange}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="Averaging window" />
             </SelectTrigger>
             <SelectContent className="bg-background">
-              {viewModeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+              {avgOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          {viewMode !== 'table' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setViewMode(viewMode === 'line' ? 'bar' : 'line')}
-            >
-              Switch to {viewMode === 'line' ? 'Bar chart' : 'Line chart'}
-            </Button>
-          )}
+          {/* view mode */}
+          <Select
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as ViewMode)}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="View mode" />
+            </SelectTrigger>
+            <SelectContent className="bg-background">
+              {viewModeOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
