@@ -17,6 +17,7 @@ optuna = "*"
 matplotlib = "*"
 sb3-contrib = "*"
 tensorboard = "*"
+h5py = "*"
 
 [dev-packages]
 black = "*"
