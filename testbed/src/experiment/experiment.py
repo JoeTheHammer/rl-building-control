@@ -4,6 +4,7 @@ import gymnasium as gym
 
 from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
+from reporting.hdf5_storage import ExperimentStorage
 from wrappers.reporting_wrapper import ReportingWrapper
 
 from experiment.status import (
@@ -20,11 +21,13 @@ class Experiment:
         env: gym.Env,
         controller: IController,
         experiment_id: int,
+        experiment_storage: ExperimentStorage | None = None,
         episodes: int = 1,
         denorm_state: bool = False,
         plots: bool = False,
         export: bool = False,
         status_tracking: bool = True,
+        flush_interval: int = 1024,
     ):
         self.name = name
         self.env = env
@@ -36,6 +39,8 @@ class Experiment:
         self.export = export
         self.report = self.plots or self.export
         self.status_tracking = status_tracking
+        self.experiment_storage = experiment_storage
+        self.flush_interval = flush_interval
 
     def run(self) -> List[float]:
         """Run `num_episodes` in this environment and return a list of total episode_rewards."""
@@ -55,6 +60,9 @@ class Experiment:
             if self.status_tracking:
                 increment_evaluation_episode()
 
+            if self.report and isinstance(self.env, ReportingWrapper):
+                self.env.begin_episode(ep)
+
             episode_reward = 0
             state, _ = self.env.reset()
             done = False
@@ -70,16 +78,33 @@ class Experiment:
             logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
 
             episode_rewards.append(episode_reward)
+            if self.report and isinstance(self.env, ReportingWrapper):
+                self.env.finalize_episode({"episode_reward": float(episode_reward)})
         if self.report:
             self._report()
 
         self.env.close()
         logger.info(f"Experiment {self.name} complete.")
 
+        if self.experiment_storage:
+            self.experiment_storage.update_metadata(
+                total_evaluation_reward=float(sum(episode_rewards)),
+                evaluation_episodes=self.episodes,
+            )
+
         return episode_rewards
 
     def _setup_reporting(self):
         self.env = ReportingWrapper(self.env, denorm_state=self.denorm_state)
+        if self.experiment_storage:
+            evaluation_handler = self.experiment_storage.create_evaluation_handler()
+            evaluation_handler.set_metadata(
+                {
+                    "phase": "evaluation",
+                    "denormalized": self.denorm_state,
+                }
+            )
+            self.env.configure_storage(evaluation_handler, flush_interval=self.flush_interval)
         self.env.start_recording()
 
     def _report(self):
@@ -92,5 +117,5 @@ class Experiment:
 
         self.env.end_recording()
         logger.info("Writing data to HDF5...")
-        self.env.export_to_hdf5(file_path=f"./evaluation-{self.name}.h5")
+        self.env.export_to_hdf5()
         self.env.reset_recordings()
