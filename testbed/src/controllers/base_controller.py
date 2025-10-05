@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Any, NamedTuple, TYPE_CHECKING
+from typing import Any, NamedTuple
 
 import gymnasium as gym
 
 from environments.base_factory import IEnvironmentFactory
 
-if TYPE_CHECKING:
-    from reporting.hdf5_storage import ExperimentStorage
+from reporting.hdf5_storage import ExperimentStorage
 
 
 class IController(ABC):
@@ -53,7 +52,7 @@ class IControllerFactory(ABC):
     def __init__(self):
         self.config_path: str = ""
         self.env_factory: IEnvironmentFactory | None = None
-        self.experiment_storage: "ExperimentStorage" | None = None
+        self.experiment_storage: ExperimentStorage | None = None
         self.storage_flush_interval: int = 1024
 
     def set_config_path(self, config_path: str):
@@ -64,7 +63,7 @@ class IControllerFactory(ABC):
 
     def set_experiment_storage(
         self,
-        experiment_storage: "ExperimentStorage" | None,
+        experiment_storage: ExperimentStorage | None,
         flush_interval: int = 1024,
     ) -> None:
         self.experiment_storage = experiment_storage

@@ -1,5 +1,4 @@
-from datetime import datetime
-from pathlib import Path
+from datetime import datetime, UTC
 from typing import Dict
 
 from controllers.base_controller import ControllerSetup, IControllerFactory
@@ -16,8 +15,8 @@ class ExperimentManager:
     def __init__(self, storage_path: str | None = None, flush_interval: int = 1024):
         self._env_factories: Dict[str, IEnvironmentFactory] = {}
         self._controller_factories: Dict[str, IControllerFactory] = {}
-        timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
-        default_storage = Path("logs") / f"experiments-{timestamp}.h5"
+        timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+        default_storage = f"data-{timestamp}.h5"
         self._storage_path = storage_path or str(default_storage)
         self._flush_interval = flush_interval
         self._storage_manager: HDF5StorageManager | None = None
