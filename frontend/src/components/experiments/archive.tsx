@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ChartNoAxesCombined, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 
 import CustomPage from '@/components/shared/page.tsx'
 import SuiteCard from '@/components/experiments/suite-card/suite-card.tsx'
@@ -22,6 +23,7 @@ import {
 } from '@/services/experiment-service.ts'
 
 const Archive = () => {
+  const navigate = useNavigate()
   const [suites, setSuites] = useState<ExperimentSuiteApiResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,6 +31,15 @@ const Archive = () => {
   const [suitePendingDeletion, setSuitePendingDeletion] =
     useState<ExperimentSuiteApiResponse | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const handleShowResults = useCallback(
+    (suiteId: number) => {
+      navigate(`/data-analytics?suiteId=${suiteId}`, {
+        state: { suiteId },
+      })
+    },
+    [navigate],
+  )
 
   const handleDeleteDialogClose = useCallback(() => {
     if (!deleting) {
@@ -145,7 +156,7 @@ const Archive = () => {
                 idLabel={`ID: ${suite.id}`}
                 actions={
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <Button onClick={() => console.log('Handle show results')}>
+                    <Button onClick={() => handleShowResults(suite.id)}>
                       <div className="flex gap-2">
                         <ChartNoAxesCombined className="size-4" /> Show Results
                       </div>

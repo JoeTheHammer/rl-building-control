@@ -8,6 +8,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 
 import CustomPage from '@/components/shared/page.tsx'
 import ExperimentConfigDialog from '@/components/configurator/experiment/experiment-config-dialog.tsx'
@@ -30,6 +31,7 @@ const createLocalId = (): string =>
     : Math.random().toString(36).slice(2)
 
 const Experiments = () => {
+  const navigate = useNavigate()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [localSuites, setLocalSuites] = useState<LocalExperimentSuite[]>([])
   const [persistedSuites, setPersistedSuites] = useState<
@@ -68,6 +70,15 @@ const Experiments = () => {
         (suite) => suite.status !== 'Running' && !suite.archived,
       ),
     [persistedSuites],
+  )
+
+  const handleShowResults = useCallback(
+    (suiteId: number) => {
+      navigate(`/data-analytics?suiteId=${suiteId}`, {
+        state: { suiteId },
+      })
+    },
+    [navigate],
   )
 
   const handleScheduleSuite = useCallback(
@@ -285,7 +296,7 @@ const Experiments = () => {
                       </Button>
                     )}
                     <Button
-                      onClick={() => console.log('Handle show results')}
+                      onClick={() => handleShowResults(suite.id)}
                       disabled={pendingStops.includes(suite.id)}
                     >
                       <div className="flex gap-2">

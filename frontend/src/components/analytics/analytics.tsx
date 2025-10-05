@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FileDown, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { useLocation, useSearchParams } from 'react-router-dom'
 
 import CustomPage from '@/components/shared/page.tsx'
 import { Button } from '@/components/ui/button.tsx'
@@ -33,7 +34,28 @@ const escapeCsvValue = (value: string | number | undefined): string => {
     : stringValue
 }
 
+const parseSuiteId = (value: unknown): number | null => {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value)
+  }
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number.parseInt(value, 10)
+    if (!Number.isNaN(parsed)) {
+      return parsed
+    }
+  }
+
+  return null
+}
+
 const Analytics: React.FC = () => {
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [loadDialogOpen, setLoadDialogOpen] = useState(false)
   const [csvDialogOpen, setCsvDialogOpen] = useState(false)
   const [suites, setSuites] = useState<AnalyticsSuiteSummary[]>([])
@@ -44,6 +66,18 @@ const Analytics: React.FC = () => {
   const [suiteData, setSuiteData] = useState<AnalyticsDataResponse | null>(null)
   const [loadingData, setLoadingData] = useState(false)
   const [selectedCsvOptions, setSelectedCsvOptions] = useState<string[]>([])
+  const [autoLoadSuiteId, setAutoLoadSuiteId] = useState<number | null>(null)
+  const requestedSuiteIdRef = useRef<number | null>(null)
+
+  const requestedSuiteId = useMemo(() => {
+    const state = location.state as { suiteId?: unknown } | null
+    const stateSuiteId = parseSuiteId(state?.suiteId)
+    if (stateSuiteId !== null) {
+      return stateSuiteId
+    }
+
+    return parseSuiteId(searchParams.get('suiteId'))
+  }, [location.state, searchParams])
 
   const loadSuites = useCallback(async () => {
     setSuitesLoading(true)
@@ -62,6 +96,19 @@ const Analytics: React.FC = () => {
     loadSuites()
   }, [loadSuites])
 
+  useEffect(() => {
+    if (requestedSuiteId === null) {
+      requestedSuiteIdRef.current = null
+      setAutoLoadSuiteId(null)
+      return
+    }
+
+    if (requestedSuiteIdRef.current !== requestedSuiteId) {
+      requestedSuiteIdRef.current = requestedSuiteId
+      setAutoLoadSuiteId(requestedSuiteId)
+    }
+  }, [requestedSuiteId])
+
   const handleSelectSuite = useCallback(
     async (suiteId: number) => {
       const suite = suites.find((item) => item.id === suiteId)
@@ -77,6 +124,7 @@ const Analytics: React.FC = () => {
         setSelectedSuite(suite)
         setSuiteData(response)
         setSelectedCsvOptions([])
+        setSearchParams({ suiteId: String(suiteId) }, { replace: true })
         toast.success(`Loaded analytics for "${suite.name}"`)
       } catch (error) {
         console.error('Failed to fetch analytics data', error)
@@ -85,8 +133,26 @@ const Analytics: React.FC = () => {
         setLoadingData(false)
       }
     },
-    [suites],
+    [setSearchParams, suites],
   )
+
+  useEffect(() => {
+    if (autoLoadSuiteId === null) {
+      return
+    }
+
+    const targetSuite = suites.find((item) => item.id === autoLoadSuiteId)
+    if (!targetSuite) {
+      if (!suitesLoading) {
+        toast.error('Selected suite could not be found')
+        setAutoLoadSuiteId(null)
+      }
+      return
+    }
+
+    void handleSelectSuite(autoLoadSuiteId)
+    setAutoLoadSuiteId(null)
+  }, [autoLoadSuiteId, handleSelectSuite, suites, suitesLoading])
 
   const exportSeries = useMemo<ExportSeriesDefinition[]>(() => {
     if (!suiteData) return []
