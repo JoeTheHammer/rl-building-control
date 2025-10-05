@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Dict, Optional
 
 import gymnasium as gym
 import numpy as np
@@ -6,6 +7,7 @@ import copy
 import h5py
 
 from wrappers.normalization_utils import denormalize_state, get_original_action
+from reporting.hdf5_storage import BaseStorageHandler, EvaluationStorageHandler
 
 
 def _flatten(values):
@@ -33,20 +35,51 @@ class ReportingWrapper(gym.Wrapper):
         self.denorm_state = denorm_state
         self.state_names = None
         self.action_names = None
+        self.storage_handler: Optional[BaseStorageHandler] = None
+        self.flush_interval: int = 0
+        self._state_names_sent = False
+        self._action_names_sent = False
         self.reset_recordings()
 
-    def reset_recordings(self):
+    def configure_storage(
+        self, handler: BaseStorageHandler, flush_interval: int = 1024
+    ) -> None:
+        self.storage_handler = handler
+        self.flush_interval = max(1, flush_interval)
+        handler.set_metadata({"denormalized": self.denorm_state})
+        self._state_names_sent = False
+        self._action_names_sent = False
+
+    def begin_episode(self, episode_index: int, metadata: Optional[Dict[str, object]] = None):
+        if isinstance(self.storage_handler, EvaluationStorageHandler):
+            self.storage_handler.start_episode(episode_index, metadata)
+        self.reset_recordings(keep_names=True)
+
+    def finalize_episode(self, metadata: Optional[Dict[str, object]] = None):
+        if not self.is_recording:
+            return
+        self._flush_buffer(force=True, keep_last_state=False)
+        if isinstance(self.storage_handler, EvaluationStorageHandler):
+            self.storage_handler.finalize_episode(metadata)
+        self.reset_recordings(keep_names=True)
+
+    def reset_recordings(self, keep_names: bool = False):
         """Reset all collected logs (states, actions, rewards)."""
         self.states = []
         self.actions = []
         self.rewards = []
-        self.state_names = None
-        self.action_names = None
+        if not keep_names:
+            self.state_names = None
+            self.action_names = None
+            self._state_names_sent = False
+            self._action_names_sent = False
 
     def start_recording(self):
         """Begin logging states, actions, and rewards."""
         self.is_recording = True
         self.reset_recordings()
+        if self.storage_handler:
+            self.storage_handler.on_start()
 
     def end_recording(self):
         """Stop logging states, actions, and rewards."""
@@ -78,6 +111,8 @@ class ReportingWrapper(gym.Wrapper):
                 if len(self.action_names) != act_dim:
                     self.action_names = None
 
+        self._update_storage_names()
+
     def reset(self, **kwargs):
         """
         Reset the environment and optionally log the initial state.
@@ -99,13 +134,68 @@ class ReportingWrapper(gym.Wrapper):
             self.states.append(obs if not self.denorm_state else denormalize_state(obs, self.env))
             self.actions.append(get_original_action(action_copy, self.env))
             self.rewards.append(reward)
+            self._maybe_flush()
         return obs, reward, terminated, truncated, info
 
 
-    def export_to_hdf5(self, file_path: str):
+    def _update_storage_names(self):
+        if not self.storage_handler:
+            return
+        if self.state_names and not self._state_names_sent:
+            self.storage_handler.set_state_names(self.state_names)
+            self._state_names_sent = True
+        if self.action_names and not self._action_names_sent:
+            self.storage_handler.set_action_names(self.action_names)
+            self._action_names_sent = True
+
+    def _maybe_flush(self):
+        if not self.storage_handler or not self.flush_interval:
+            return
+        if len(self.rewards) >= self.flush_interval:
+            self._flush_buffer()
+
+    def _flush_buffer(self, force: bool = False, keep_last_state: bool = True):
+        if not self.storage_handler or not self.rewards:
+            return
+        if not force and len(self.rewards) < self.flush_interval:
+            return
+
+        self._update_storage_names()
+
+        states_arr = _flatten(self.states)
+        actions_arr = _flatten(self.actions) if self.actions else np.empty((0,))
+        rewards_arr = np.array(self.rewards)
+
+        if rewards_arr.size == 0:
+            return
+
+        if keep_last_state and len(states_arr) > 1:
+            states_to_store = states_arr[:-1]
+        else:
+            states_to_store = states_arr
+
+        if len(states_to_store) == 0:
+            return
+
+        self.storage_handler.record_chunk(states_to_store, actions_arr, rewards_arr)
+
+        if keep_last_state and len(states_arr) > 0:
+            last_state = states_arr[-1]
+            self.states = [last_state]
+        else:
+            self.states = []
+        self.actions = []
+        self.rewards = []
+
+    def export_to_hdf5(self, file_path: str | None = None):
         """
         Dump the entire current recording to an HDF5 file.
         """
+        if self.storage_handler:
+            self._flush_buffer(force=True, keep_last_state=False)
+            self.storage_handler.finalize()
+            return
+
         if not self.rewards:
             print("No data recorded — nothing to export.")
             return
@@ -113,6 +203,9 @@ class ReportingWrapper(gym.Wrapper):
         actions_arr = _flatten(self.actions)
         states_arr = _flatten(self.states)
         rewards_arr = np.array(self.rewards)
+
+        if not file_path:
+            raise ValueError("A file path must be provided when no storage handler is configured.")
 
         # Create or overwrite file
         with h5py.File(file_path, "w") as f:

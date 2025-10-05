@@ -109,8 +109,16 @@ class IRLControllerFactory(IControllerFactory, ABC):
         if bool(hp_map.get("tensorboard_log")):
             env = Monitor(env)
 
+        training_handler = None
         if training_conf.report_training:
             env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
+            if self.experiment_storage:
+                training_handler = self.experiment_storage.create_training_handler()
+                training_handler.set_metadata({
+                    "phase": "training",
+                    "denormalized": training_conf.report_denormalized_state,
+                })
+                env.configure_storage(training_handler, flush_interval=self.storage_flush_interval)
 
         controller = self.build_controller(env, hp_map)
 
