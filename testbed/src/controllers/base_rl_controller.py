@@ -98,7 +98,6 @@ class IRLControllerFactory(IControllerFactory, ABC):
             f"\033[92mCreate controller with hyperparameters: {hp_map}\033[0m"
         )
 
-        # --- Environment Setup: Wrap everything BEFORE building the controller ---
         env = self.env_factory.create_environment()
         env = env_wrap_manager.apply_wrappers(env)
 
@@ -133,8 +132,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
             if reporting_wrapper:
                 logger.info("Training finished. Ending recording and generating reports...")
                 reporting_wrapper.end_recording()
-                reporting_wrapper.create_plots(output_dir="./plots-training")
-                reporting_wrapper.export_to_csv(output_dir="./csv-training")
+                reporting_wrapper.export_to_hdf5(file_path="./training_data.h5")
 
         if is_env_adapter:
             if isinstance(controller, gym.Env) and isinstance(controller, IController):

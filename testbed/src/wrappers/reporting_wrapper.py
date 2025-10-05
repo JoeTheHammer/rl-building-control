@@ -1,11 +1,10 @@
-from pathlib import Path
+from datetime import datetime
 
 import gymnasium as gym
 import numpy as np
-import pandas as pd
 import copy
+import h5py
 
-from reporting.plotter import plot_timeseries
 from wrappers.normalization_utils import denormalize_state, get_original_action
 
 
@@ -102,88 +101,35 @@ class ReportingWrapper(gym.Wrapper):
             self.rewards.append(reward)
         return obs, reward, terminated, truncated, info
 
-    def create_plots(self, output_dir="./plots", file_format="png"):
-        """Generate and save plots for the collected rewards, actions, and states."""
-        if len(self.rewards) > 0:
-            plot_timeseries("reward", self.rewards, output_dir, file_format)
+
+    def export_to_hdf5(self, file_path: str):
+        """
+        Dump the entire current recording to an HDF5 file.
+        """
+        if not self.rewards:
+            print("No data recorded — nothing to export.")
+            return
 
         actions_arr = _flatten(self.actions)
         states_arr = _flatten(self.states)
+        rewards_arr = np.array(self.rewards)
 
-        action_dir = output_dir + "/actions"
-        state_dir = output_dir + "/states"
+        # Create or overwrite file
+        with h5py.File(file_path, "w") as f:
+            # Store main data arrays
+            f.create_dataset("states", data=states_arr, compression="gzip")
+            f.create_dataset("actions", data=actions_arr, compression="gzip")
+            f.create_dataset("rewards", data=rewards_arr, compression="gzip")
 
-        # Actions plotting
-        if (
-            self.action_names is not None
-            and actions_arr.ndim == 2
-            and len(self.action_names) == actions_arr.shape[1]
-        ):
-            for i, name in enumerate(self.action_names):
-                plot_timeseries(str(name), actions_arr[:, i], action_dir, file_format)
-        elif (
-            actions_arr.ndim == 1 and self.action_names is not None and len(self.action_names) == 1
-        ):
-            plot_timeseries(str(self.action_names[0]), actions_arr, action_dir, file_format)
-        else:
-            if actions_arr.ndim == 1:
-                plot_timeseries("action_0", actions_arr, action_dir, file_format)
-            elif actions_arr.ndim == 2:
-                for i in range(actions_arr.shape[1]):
-                    plot_timeseries(f"action_{i}", actions_arr[:, i], action_dir, file_format)
+            # Optional names
+            if self.state_names:
+                f.create_dataset("state_names", data=np.array(self.state_names, dtype=h5py.string_dtype()))
+            if self.action_names:
+                f.create_dataset("action_names", data=np.array(self.action_names, dtype=h5py.string_dtype()))
 
-        # States plotting
-        if (
-            self.state_names is not None
-            and states_arr.ndim == 2
-            and len(self.state_names) == states_arr.shape[1]
-        ):
-            for i, name in enumerate(self.state_names):
-                plot_timeseries(str(name), states_arr[:, i], state_dir, file_format)
-        elif states_arr.ndim == 1 and self.state_names is not None and len(self.state_names) == 1:
-            plot_timeseries(str(self.state_names[0]), states_arr, state_dir, file_format)
-        else:
-            if states_arr.ndim == 1:
-                plot_timeseries("state_0", states_arr, state_dir, file_format)
-            elif states_arr.ndim == 2:
-                for i in range(states_arr.shape[1]):
-                    plot_timeseries(f"state_{i}", states_arr[:, i], state_dir, file_format)
+            # Metadata
+            f.attrs["export_time"] = datetime.now().isoformat()
+            f.attrs["denormalized"] = self.denorm_state
+            f.attrs["num_steps"] = len(rewards_arr)
 
-    def export_to_csv(self, output_dir="./export"):
-        """
-        Export the collected rewards, actions, and states to separate CSV files.
-        """
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
-
-        # Export Rewards
-        if self.rewards:
-            pd.DataFrame({"reward": self.rewards}).to_csv(output_path / "rewards.csv", index=False)
-
-        # Flatten collected data
-        actions_arr = _flatten(self.actions)
-        states_arr = _flatten(self.states)
-
-        # Export Actions
-        if actions_arr.size > 0:
-            num_actions = actions_arr.shape[1] if actions_arr.ndim > 1 else 1
-            if self.action_names and len(self.action_names) == num_actions:
-                action_headers = self.action_names
-            else:
-                action_headers = [f"action_{i}" for i in range(num_actions)]
-
-            pd.DataFrame(actions_arr, columns=action_headers).to_csv(
-                output_path / "actions.csv", index=False
-            )
-
-        # Export States (includes the initial state)
-        if states_arr.size > 0:
-            num_states = states_arr.shape[1] if states_arr.ndim > 1 else 1
-            if self.state_names and len(self.state_names) == num_states:
-                state_headers = self.state_names
-            else:
-                state_headers = [f"state_{i}" for i in range(num_states)]
-
-            pd.DataFrame(states_arr, columns=state_headers).to_csv(
-                output_path / "states.csv", index=False
-            )
+        print(f"Recording exported to {file_path}")

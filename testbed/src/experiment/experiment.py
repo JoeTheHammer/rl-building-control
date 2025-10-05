@@ -91,11 +91,6 @@ class Experiment:
             return
 
         self.env.end_recording()
-
-        if self.plots:
-            logger.info("Creating plots...")
-            self.env.create_plots(output_dir=f"Experiment_{self.name}")
-        if self.export:
-            logger.info("Exporting data...")
-            self.env.export_to_csv(output_dir=f"Experiment_{self.name}")
+        logger.info("Writing data to HDF5...")
+        self.env.export_to_hdf5(file_path=f"./evaluation-{self.name}.h5")
         self.env.reset_recordings()
