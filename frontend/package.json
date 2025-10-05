@@ -23,6 +23,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.544.0",
     "monaco-editor": "^0.53.0",
+    "recharts": "^2.15.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.1",

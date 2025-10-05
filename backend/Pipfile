@@ -7,6 +7,8 @@ name = "pypi"
 fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 "ruamel.yaml" = "*"
+h5py = "*"
+numpy = "*"
 
 [dev-packages]
 
