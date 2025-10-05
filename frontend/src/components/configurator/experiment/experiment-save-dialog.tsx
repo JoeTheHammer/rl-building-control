@@ -58,7 +58,15 @@ const ExperimentSaveDialog = ({
     setFilename(initialValue)
 
     fetchExperimentConfigs()
-      .then(setExistingFiles)
+      .then((result) => {
+        let files: string[] = []
+        if (Array.isArray(result)) {
+          files = result.flatMap((r) => r.files ?? [])
+        } else if (result && Array.isArray(result.files)) {
+          files = result.files
+        }
+        setExistingFiles(files)
+      })
       .catch((error) => {
         console.error('Failed to load experiment configs', error)
         toast.error('Unable to load existing experiment configs')
@@ -69,7 +77,7 @@ const ExperimentSaveDialog = ({
   const normalizedExisting = useMemo(
     () =>
       new Set(
-        existingFiles.map((file) =>
+        (Array.isArray(existingFiles) ? existingFiles : []).map((file) =>
           normalizeExperimentFilename(stripExperimentExtension(file)),
         ),
       ),
@@ -150,7 +158,7 @@ const ExperimentSaveDialog = ({
             disabled={loading || saving}
           />
           {loading && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Loading existing configurations...
             </p>
           )}
@@ -164,7 +172,11 @@ const ExperimentSaveDialog = ({
           >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave} disabled={saving || loading}>
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || loading}
+          >
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
