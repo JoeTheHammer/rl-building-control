@@ -19,6 +19,10 @@ class SinergymEnvironment(EplusEnv):
         weather_data_path: str,
         variables: dict[str, tuple[str, str]],
         meters: dict[str, str],
+        state_variable_keys: List[str],
+        state_meter_keys: List[str],
+        non_state_variable_keys: List[str],
+        non_state_meter_keys: List[str],
         actuators: dict[str, tuple[str, str, str]],
         reward_variables: List[str],
         reward_function_cls: Type[BaseReward],
@@ -30,6 +34,11 @@ class SinergymEnvironment(EplusEnv):
 
         self.variables = variables
         self.meters = meters
+        self.state_variable_keys = list(state_variable_keys)
+        self.state_meter_keys = list(state_meter_keys)
+        self.non_state_variable_keys = list(non_state_variable_keys)
+        self.non_state_meter_keys = list(non_state_meter_keys)
+        self.non_state_metric_keys = self.non_state_variable_keys + self.non_state_meter_keys
         self.time_info = time_info
         self.reward_variables = reward_variables
         self.custom_action_space = action_space
@@ -37,6 +46,13 @@ class SinergymEnvironment(EplusEnv):
         self.expect_raw_actions = False
         self.continuous_action_space = False
         self.box_action_space = action_space.get_box_space()
+
+        self._all_metric_keys = list(self.variables.keys()) + list(self.meters.keys())
+        self._state_order = self.state_variable_keys + self.state_meter_keys
+        self._metric_index_map = {
+            key: idx for idx, key in enumerate(self._all_metric_keys)
+        }
+        self._state_indices = [self._metric_index_map[key] for key in self._state_order]
 
         super().__init__(
             building_file=building_model_path,
@@ -52,7 +68,7 @@ class SinergymEnvironment(EplusEnv):
 
     @property
     def observation_space(self):
-        base_dim = len(self.variables) + len(self.meters)
+        base_dim = len(self._state_order)
 
         time_dim = 0
         if self.time_info is not None:
@@ -80,16 +96,20 @@ class SinergymEnvironment(EplusEnv):
         action = self.custom_action_space.to_eplus_action(action)
 
         # We ignore reward as we calculate it later in this method.
-        obs, _, terminated, truncated, _ = super().step(action)
-        state, time_info_dict = self._add_time_information_to_state(obs)
+        raw_obs, _, terminated, truncated, _ = super().step(action)
+        raw_obs = np.asarray(raw_obs, dtype=np.float32)
+        state_core = self._extract_state_values(raw_obs)
+        state, time_info_dict = self._add_time_information_to_state(state_core)
 
         info_dict = build_info_dict(
-            obs=obs,
+            obs=raw_obs,
             action=action,
             time_info=time_info_dict,
             variables=self.variables,
             meters=self.meters,
             actuators=self.actuators,
+            state_keys=self._state_order,
+            non_state_metric_keys=self.non_state_metric_keys,
         )
 
         # Communicate to reward function that actual reward should be calculated.
@@ -101,10 +121,24 @@ class SinergymEnvironment(EplusEnv):
         """
         Overwrites the reset function and adds time information as well if needed.
         """
-        obs, info = super().reset(**kwargs)
+        raw_obs, info = super().reset(**kwargs)
         increment_training_episode()
-        state, time_info_dict = self._add_time_information_to_state(obs)
-        return state, {**info, **time_info_dict}
+        raw_obs = np.asarray(raw_obs, dtype=np.float32)
+        state_core = self._extract_state_values(raw_obs)
+        state, time_info_dict = self._add_time_information_to_state(state_core)
+
+        metrics = self._map_metrics(raw_obs)
+        merged_info = {**metrics, **info, **time_info_dict}
+        merged_info["state_keys"] = self._state_order + list(time_info_dict.keys())
+        merged_info["action_keys"] = list(self.actuators.keys())
+
+        if self.non_state_metric_keys:
+            merged_info["non_state_metric_keys"] = self.non_state_metric_keys
+            merged_info["non_state_metrics"] = {
+                key: metrics[key] for key in self.non_state_metric_keys
+            }
+
+        return state, merged_info
 
 
     def _add_time_information_to_state(
@@ -155,3 +189,11 @@ class SinergymEnvironment(EplusEnv):
                     time_info_dict[time_key] = value
 
         return np.array(state, dtype=np.float32), time_info_dict
+
+    def _extract_state_values(self, obs: np.ndarray) -> np.ndarray:
+        if not self._state_indices:
+            return np.array([], dtype=np.float32)
+        return obs[self._state_indices]
+
+    def _map_metrics(self, obs: np.ndarray) -> Dict[str, float]:
+        return {key: float(value) for key, value in zip(self._all_metric_keys, obs)}

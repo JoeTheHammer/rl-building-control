@@ -29,12 +29,14 @@ export interface VariableSetting {
   variableType: 'variable'
   energyPlusType: string
   zone: string
+  excludeFromState: boolean
 }
 
 export interface MeterSetting {
   name: string
   variableType: 'meter'
   meterName: string
+  excludeFromState: boolean
 }
 
 export type EnvironmentStateSpaceVariableSettings =
@@ -87,12 +89,14 @@ const EnvStateSpaceTab = ({
   const handleVariableFieldChange = (
     index: number,
     field: keyof (VariableSetting & MeterSetting),
-    value: string,
+    value: string | boolean,
   ) => {
     const updatedVariables = settings.variables.map(
       (variable, variableIndex) =>
-        variableIndex === index ? { ...variable, [field]: value } : variable,
-    )
+        variableIndex === index
+          ? ({ ...variable, [field]: value } as EnvironmentStateSpaceVariableSettings)
+          : variable,
+    ) as EnvironmentStateSpaceVariableSettings[]
     onSettingsChange({ variables: updatedVariables })
   }
 
@@ -106,7 +110,13 @@ const EnvStateSpaceTab = ({
   const handleAddVariable = () => {
     const updatedVariables = [
       ...settings.variables,
-      { name: '', variableType: 'variable', energyPlusType: '', zone: '' },
+      {
+        name: '',
+        variableType: 'variable' as const,
+        energyPlusType: '',
+        zone: '',
+        excludeFromState: false,
+      },
     ]
 
     onSettingsChange({
@@ -288,6 +298,22 @@ const EnvStateSpaceTab = ({
                       />
                     </div>
                   )}
+                  <div className={cn(fieldContainerStyles, 'md:col-span-1')}>
+                    <label className={fieldLabelStyles}>Agent State</label>
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={!variable.excludeFromState}
+                        onCheckedChange={(checked) =>
+                          handleVariableFieldChange(
+                            index,
+                            'excludeFromState',
+                            !(checked === true),
+                          )
+                        }
+                      />
+                      <span>Include in state</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex justify-end">

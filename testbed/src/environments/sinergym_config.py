@@ -1,11 +1,17 @@
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class VariableConfig(BaseModel):
     type: str
     zone: str
+    exclude_from_state: bool = False
+
+
+class MeterConfig(BaseModel):
+    name: str
+    exclude_from_state: bool = False
 
 
 class TimeFeatureConfig(BaseModel):
@@ -14,8 +20,22 @@ class TimeFeatureConfig(BaseModel):
 
 class StateSpaceConfig(BaseModel):
     variables: Dict[str, VariableConfig]
-    meters: Optional[Dict[str, str]] = {}
+    meters: Optional[Dict[str, MeterConfig]] = {}
     time_info: Optional[Dict[str, TimeFeatureConfig]] = None
+
+    @field_validator("meters", mode="before")
+    @classmethod
+    def _normalize_meters(cls, value: Optional[Dict[str, object]]):
+        if value is None:
+            return {}
+
+        normalized: Dict[str, object] = {}
+        for key, meter in value.items():
+            if isinstance(meter, str):
+                normalized[key] = {"name": meter}
+            else:
+                normalized[key] = meter
+        return normalized
 
 
 class ActuatorConfig(BaseModel):

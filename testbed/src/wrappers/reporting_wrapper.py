@@ -32,13 +32,16 @@ class ReportingWrapper(gym.Wrapper):
         self.states = []
         self.actions = []
         self.rewards = []
+        self.non_state_metrics = []
         self.denorm_state = denorm_state
         self.state_names = None
         self.action_names = None
+        self.non_state_metric_names = None
         self.storage_handler: Optional[BaseStorageHandler] = None
         self.flush_interval: int = 0
         self._state_names_sent = False
         self._action_names_sent = False
+        self._non_state_names_sent = False
         self.reset_recordings()
 
     def configure_storage(
@@ -49,6 +52,7 @@ class ReportingWrapper(gym.Wrapper):
         handler.set_metadata({"denormalized": self.denorm_state})
         self._state_names_sent = False
         self._action_names_sent = False
+        self._non_state_names_sent = False
 
     def begin_episode(self, episode_index: int, metadata: Optional[Dict[str, object]] = None):
         if isinstance(self.storage_handler, EvaluationStorageHandler):
@@ -68,11 +72,14 @@ class ReportingWrapper(gym.Wrapper):
         self.states = []
         self.actions = []
         self.rewards = []
+        self.non_state_metrics = []
         if not keep_names:
             self.state_names = None
             self.action_names = None
+            self.non_state_metric_names = None
             self._state_names_sent = False
             self._action_names_sent = False
+            self._non_state_names_sent = False
 
     def start_recording(self):
         """Begin logging states, actions, and rewards."""
@@ -98,6 +105,9 @@ class ReportingWrapper(gym.Wrapper):
         keys = info.get("action_keys", None)
         if self.action_names is None and isinstance(keys, (list, tuple)):
             self.action_names = list(keys)
+        metric_keys = info.get("non_state_metric_keys", None)
+        if self.non_state_metric_names is None and isinstance(metric_keys, (list, tuple)):
+            self.non_state_metric_names = list(metric_keys)
         # Optionally, fallback for state/action length mismatch
         if obs is not None and self.state_names is not None:
             # If obs is 1D, treat as single variable
@@ -134,6 +144,15 @@ class ReportingWrapper(gym.Wrapper):
             self.states.append(obs if not self.denorm_state else denormalize_state(obs, self.env))
             self.actions.append(get_original_action(action_copy, self.env))
             self.rewards.append(reward)
+            metrics = info.get("non_state_metrics")
+            if metrics is not None:
+                if isinstance(metrics, dict):
+                    metric_names = self.non_state_metric_names or list(metrics.keys())
+                    self.non_state_metrics.append(
+                        [float(metrics.get(name, float("nan"))) for name in metric_names]
+                    )
+                else:
+                    self.non_state_metrics.append(list(np.asarray(metrics).flatten()))
             self._maybe_flush()
         return obs, reward, terminated, truncated, info
 
@@ -147,6 +166,9 @@ class ReportingWrapper(gym.Wrapper):
         if self.action_names and not self._action_names_sent:
             self.storage_handler.set_action_names(self.action_names)
             self._action_names_sent = True
+        if self.non_state_metric_names and not self._non_state_names_sent:
+            self.storage_handler.set_non_state_metric_names(self.non_state_metric_names)
+            self._non_state_names_sent = True
 
     def _maybe_flush(self):
         if not self.storage_handler or not self.flush_interval:
@@ -165,6 +187,11 @@ class ReportingWrapper(gym.Wrapper):
         states_arr = _flatten(self.states)
         actions_arr = _flatten(self.actions) if self.actions else np.empty((0,))
         rewards_arr = np.array(self.rewards)
+        metrics_arr = (
+            _flatten(self.non_state_metrics)
+            if self.non_state_metrics
+            else np.empty((0,))
+        )
 
         if rewards_arr.size == 0:
             return
@@ -177,7 +204,12 @@ class ReportingWrapper(gym.Wrapper):
         if len(states_to_store) == 0:
             return
 
-        self.storage_handler.record_chunk(states_to_store, actions_arr, rewards_arr)
+        self.storage_handler.record_chunk(
+            states_to_store,
+            actions_arr,
+            rewards_arr,
+            metrics_arr,
+        )
 
         if keep_last_state and len(states_arr) > 0:
             last_state = states_arr[-1]
@@ -186,6 +218,7 @@ class ReportingWrapper(gym.Wrapper):
             self.states = []
         self.actions = []
         self.rewards = []
+        self.non_state_metrics = []
 
     def export_to_hdf5(self, file_path: str | None = None):
         """
@@ -203,6 +236,7 @@ class ReportingWrapper(gym.Wrapper):
         actions_arr = _flatten(self.actions)
         states_arr = _flatten(self.states)
         rewards_arr = np.array(self.rewards)
+        metrics_arr = _flatten(self.non_state_metrics)
 
         if not file_path:
             raise ValueError("A file path must be provided when no storage handler is configured.")
@@ -213,12 +247,19 @@ class ReportingWrapper(gym.Wrapper):
             f.create_dataset("states", data=states_arr, compression="gzip")
             f.create_dataset("actions", data=actions_arr, compression="gzip")
             f.create_dataset("rewards", data=rewards_arr, compression="gzip")
+            if metrics_arr.size:
+                f.create_dataset("non_state_metrics", data=metrics_arr, compression="gzip")
 
             # Optional names
             if self.state_names:
                 f.create_dataset("state_names", data=np.array(self.state_names, dtype=h5py.string_dtype()))
             if self.action_names:
                 f.create_dataset("action_names", data=np.array(self.action_names, dtype=h5py.string_dtype()))
+            if self.non_state_metric_names:
+                f.create_dataset(
+                    "non_state_metric_names",
+                    data=np.array(self.non_state_metric_names, dtype=h5py.string_dtype()),
+                )
 
             # Metadata
             f.attrs["export_time"] = datetime.now().isoformat()

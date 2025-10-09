@@ -19,6 +19,7 @@ class EnvVariable(BaseModel):
     energyPlusType: str | None = None
     zone: str | None = None
     meterName: str | None = None
+    excludeFromState: bool = False
 
 class EnvStateSpaceSettings(BaseModel):
     addTimeInfo: bool = False

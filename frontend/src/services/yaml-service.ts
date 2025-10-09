@@ -39,16 +39,24 @@ export const buildEnvironmentYaml = (
   action: EnvActionSpaceSettings,
   reward: EnvironmentRewardSettings,
 ): string => {
-  const variables: Record<string, { type: string; zone: string }> = {}
-  const meters: Record<string, string> = {}
+  const variables: Record<string, { type: string; zone: string; exclude_from_state?: boolean }> = {}
+  const meters: Record<string, string | { name: string; exclude_from_state?: boolean }> = {}
 
   state.variables.forEach((v) => {
     if (v.variableType === 'meter') {
-      meters[v.name] = v.meterName
+      if (v.excludeFromState) {
+        meters[v.name] = {
+          name: v.meterName,
+          exclude_from_state: true,
+        }
+      } else {
+        meters[v.name] = v.meterName
+      }
     } else {
       variables[v.name] = {
         type: v.energyPlusType,
         zone: v.zone,
+        ...(v.excludeFromState ? { exclude_from_state: true } : {}),
       }
     }
   })
@@ -140,8 +148,8 @@ interface ParsedDoc {
   building_model?: string
   weather_data?: string
   state_space?: {
-    variables?: Record<string, { type: string; zone: string }>
-    meters?: Record<string, string>
+    variables?: Record<string, { type: string; zone: string; exclude_from_state?: boolean }>
+    meters?: Record<string, string | { name: string; exclude_from_state?: boolean }>
     time_info?: {
       day_of_month?: { cyclic: boolean }
       month?: { cyclic: boolean }
@@ -212,14 +220,27 @@ export const parseEnvironmentYaml = (yamlStr: string): EnvironmentConfig => {
       variableType: 'variable' as const,
       energyPlusType: v.type,
       zone: v.zone,
+      excludeFromState: !!v.exclude_from_state,
     })) ?? []
 
   const meters =
-    Object.entries(doc.state_space?.meters ?? {}).map(([name, meterName]) => ({
-      name,
-      variableType: 'meter' as const,
-      meterName,
-    })) ?? []
+    Object.entries(doc.state_space?.meters ?? {}).map(([name, meterValue]) => {
+      if (typeof meterValue === 'string') {
+        return {
+          name,
+          variableType: 'meter' as const,
+          meterName: meterValue,
+          excludeFromState: false,
+        }
+      }
+
+      return {
+        name,
+        variableType: 'meter' as const,
+        meterName: meterValue.name,
+        excludeFromState: !!meterValue.exclude_from_state,
+      }
+    }) ?? []
 
   const stateSpaceSettings: EnvironmentStateSpaceSettings = {
     addTimeInfo: !!doc.state_space?.time_info,
