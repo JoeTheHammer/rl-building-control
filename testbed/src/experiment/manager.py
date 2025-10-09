@@ -5,7 +5,7 @@ from controllers.base_controller import ControllerSetup, IControllerFactory
 from custom_loggers.setup_logger import logger as setup_logger
 from environments.base_factory import IEnvironmentFactory
 from experiment.experiment import Experiment
-from experiment.experiment_config import ExperimentConfig
+from experiment.experiment_config import ExperimentConfig, ReportingConfig
 from experiment.status import initialize_status, set_current_experiment
 from reporting.hdf5_storage import ExperimentStorage, HDF5StorageManager
 from parser.config_parser import parse_experiment_list
@@ -103,16 +103,16 @@ class ExperimentManager:
             return None
         setup_logger.info(f"Controller for algorithm {experiment_config.controller} created.")
 
+        reporting = experiment_config.reporting or ReportingConfig()
+
         return Experiment(
             experiment_config.name,
             controller_setup.environment,
             controller_setup.controller,
             experiment_id=experiment_id,
             experiment_storage=experiment_storage,
-            denorm_state=experiment_config.reporting.denormalize_state,
+            denorm_state=reporting.denormalize_state,
             episodes=experiment_config.episodes,
-            plots=experiment_config.reporting.plots,
-            export=experiment_config.reporting.export,
             flush_interval=self._flush_interval,
         )
 

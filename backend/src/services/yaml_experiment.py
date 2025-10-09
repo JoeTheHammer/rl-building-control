@@ -37,11 +37,9 @@ def build_experiment_yaml(configs: Iterable[ExperimentConfig]) -> str:
         experiment_map["episodes"] = config.episodes or 0
 
         reporting_map = CommentedMap()
-        reporting_map["plots"] = bool(config.reporting.plots)
         reporting_map["denormalize_state"] = bool(
             config.reporting.denormalizeState
         )
-        reporting_map["export"] = bool(config.reporting.export)
         experiment_map["reporting"] = reporting_map
 
         experiments_seq.append(experiment_map)

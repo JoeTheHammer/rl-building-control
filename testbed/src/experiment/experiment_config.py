@@ -1,15 +1,15 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ReportingConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     denormalize_state: bool = False
-    plots: bool = False
-    export: bool = False
 
 
 class ExperimentConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str
     engine: str
     environment_config: str
@@ -20,4 +20,5 @@ class ExperimentConfig(BaseModel):
 
 
 class ExperimentList(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     experiments: List[ExperimentConfig]

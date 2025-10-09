@@ -2,16 +2,16 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExperimentReporting(BaseModel):
-    plots: bool = False
+    model_config = ConfigDict(extra="forbid")
     denormalizeState: bool = False
-    export: bool = False
 
 
 class ExperimentConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str = ""
     engine: str = ""
     environmentConfig: str = ""

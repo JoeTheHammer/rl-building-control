@@ -56,11 +56,8 @@ const createDefaultExperiment = (): ExperimentFormState => ({
   controllerConfig: '',
   episodes: 1,
   reporting: {
-    plots: false,
     denormalizeState: false,
-    export: false,
   },
-  reportingEnabled: false,
 })
 
 // helper to extract only file name from path
@@ -151,27 +148,7 @@ const ExperimentConfigurator = () => {
     )
   }
 
-  const handleReportingToggle = (index: number, enabled: boolean) => {
-    setExperiments((previous) =>
-      previous.map((experiment, experimentIndex) =>
-        experimentIndex === index
-          ? {
-              ...experiment,
-              reportingEnabled: enabled,
-              reporting: enabled
-                ? experiment.reporting
-                : { plots: false, denormalizeState: false, export: false },
-            }
-          : experiment,
-      ),
-    )
-  }
-
-  const handleReportingOptionChange = (
-    index: number,
-    option: keyof ExperimentFormState['reporting'],
-    value: boolean,
-  ) => {
+  const handleDenormalizeStateChange = (index: number, value: boolean) => {
     setExperiments((previous) =>
       previous.map((experiment, experimentIndex) =>
         experimentIndex === index
@@ -179,7 +156,7 @@ const ExperimentConfigurator = () => {
               ...experiment,
               reporting: {
                 ...experiment.reporting,
-                [option]: value,
+                denormalizeState: value,
               },
             }
           : experiment,
@@ -444,57 +421,13 @@ const ExperimentConfigurator = () => {
                   <div className="flex flex-col gap-2">
                     <label className="text-primary flex items-center gap-2 text-sm font-semibold">
                       <Checkbox
-                        checked={experiment.reportingEnabled}
+                        checked={experiment.reporting.denormalizeState}
                         onCheckedChange={(checked) =>
-                          handleReportingToggle(index, !!checked)
+                          handleDenormalizeStateChange(index, !!checked)
                         }
                       />
-                      Reporting
+                      Denormalize state in collected data
                     </label>
-
-                    {experiment.reportingEnabled && (
-                      <div className="ml-6 flex flex-col gap-2 text-sm">
-                        <label className="flex items-center gap-2">
-                          <Checkbox
-                            checked={experiment.reporting.plots}
-                            onCheckedChange={(checked) =>
-                              handleReportingOptionChange(
-                                index,
-                                'plots',
-                                !!checked,
-                              )
-                            }
-                          />
-                          Plots
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <Checkbox
-                            checked={experiment.reporting.denormalizeState}
-                            onCheckedChange={(checked) =>
-                              handleReportingOptionChange(
-                                index,
-                                'denormalizeState',
-                                !!checked,
-                              )
-                            }
-                          />
-                          Denormalize state
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <Checkbox
-                            checked={experiment.reporting.export}
-                            onCheckedChange={(checked) =>
-                              handleReportingOptionChange(
-                                index,
-                                'export',
-                                !!checked,
-                              )
-                            }
-                          />
-                          Export
-                        </label>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
