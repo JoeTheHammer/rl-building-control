@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table.tsx'
-import { Slider } from '@/components/ui/slider' // ✅ use styled shadcn slider
+import { Slider } from '@/components/ui/slider'
 
 type DatasetType = 'reward' | 'actions' | 'states' | 'measurements'
 type ViewMode = 'line' | 'bar' | 'table'
@@ -255,19 +255,26 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     return (
       <div className="relative w-full space-y-3">
         {/* --- Y-Range Controls --- */}
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="border-border/50 flex items-center justify-end gap-4 border-t py-2">
           <button
             onClick={() => setManualYRange((prev) => !prev)}
-            className="bg-primary text-primary-foreground cursor-pointer rounded px-2 py-1 text-xs"
+            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+              manualYRange
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background text-muted-foreground hover:bg-accent'
+            } `}
           >
             {manualYRange ? 'Auto Y-range' : 'Manual Y-range'}
           </button>
 
           {manualYRange && (
-            <div className="text-muted-foreground flex items-center gap-6 text-xs">
+            <div className="text-muted-foreground flex flex-wrap items-center gap-5 text-xs">
               <div className="flex w-48 flex-col">
-                <label className="pb-2">Y-min ({yRange[0].toFixed(1)})</label>
+                <label className="mb-1 font-medium">
+                  Y-min ({yRange[0].toFixed(2)})
+                </label>
                 <Slider
+                  className="cursor-pointer"
                   min={globalMin}
                   max={globalMax}
                   step={(globalMax - globalMin) / 100}
@@ -279,8 +286,11 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
               </div>
 
               <div className="flex w-48 flex-col">
-                <label className="pb-2">Y-max ({yRange[1].toFixed(1)})</label>
+                <label className="mb-1 font-medium">
+                  Y-max ({yRange[1].toFixed(2)})
+                </label>
                 <Slider
+                  className="cursor-pointer"
                   min={globalMin}
                   max={globalMax}
                   step={(globalMax - globalMin) / 100}
@@ -346,12 +356,12 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         </div>
 
         {/* --- Top controls --- */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid w-full max-w-lg grid-cols-2 gap-3">
           <Select
             value={datasetType}
             onValueChange={(v) => setDatasetType(v as DatasetType)}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select data" />
             </SelectTrigger>
             <SelectContent className="bg-background">
@@ -383,7 +393,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             datasetType === 'states' ||
             datasetType === 'measurements') && (
             <Select value={seriesKey} onValueChange={setSeriesKey}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select series" />
               </SelectTrigger>
               <SelectContent className="bg-background">
@@ -405,7 +415,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             value={avgWindow.toString()}
             onValueChange={(v) => setAvgWindow(Number(v))}
           >
-            <SelectTrigger className="w-52">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Averaging window" />
             </SelectTrigger>
             <SelectContent className="bg-background">
@@ -421,7 +431,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             value={viewMode}
             onValueChange={(v) => setViewMode(v as ViewMode)}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="View mode" />
             </SelectTrigger>
             <SelectContent className="bg-background">
