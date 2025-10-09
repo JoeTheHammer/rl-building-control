@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
+  Brush,
   CartesianGrid,
   Line,
   LineChart,
@@ -27,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table.tsx'
+import { Slider } from '@/components/ui/slider' // ✅ use styled shadcn slider
 
 type DatasetType = 'reward' | 'actions' | 'states' | 'measurements'
 type ViewMode = 'line' | 'bar' | 'table'
@@ -47,7 +49,6 @@ const viewModeOptions: { value: ViewMode; label: string }[] = [
   { value: 'table', label: 'Table view' },
 ]
 
-// Averaging window options
 const avgOptions = [
   { value: '1', label: 'No averaging (all points)' },
   { value: '5', label: 'Average every 5 points' },
@@ -55,6 +56,8 @@ const avgOptions = [
   { value: '20', label: 'Average every 20 points' },
   { value: '50', label: 'Average every 50 points' },
   { value: '100', label: 'Average every 100 points' },
+  { value: '200', label: 'Average every 200 points' },
+  { value: '500', label: 'Average every 500 points' },
 ]
 
 const DatasetViewer: React.FC<DatasetViewerProps> = ({
@@ -68,18 +71,15 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
 }) => {
   const hasReward = Array.isArray(reward) && reward.length > 0
   const availableActions = useMemo(
-    () =>
-      Object.entries(actions ?? {}).filter(([, values]) => values.length > 0),
+    () => Object.entries(actions ?? {}).filter(([, v]) => v.length > 0),
     [actions],
   )
   const availableStates = useMemo(
-    () =>
-      Object.entries(states ?? {}).filter(([, values]) => values.length > 0),
+    () => Object.entries(states ?? {}).filter(([, v]) => v.length > 0),
     [states],
   )
   const availableMeasurements = useMemo(
-    () =>
-      Object.entries(measurements ?? {}).filter(([, values]) => values.length > 0),
+    () => Object.entries(measurements ?? {}).filter(([, v]) => v.length > 0),
     [measurements],
   )
 
@@ -94,7 +94,11 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   const [datasetType, setDatasetType] = useState<DatasetType>('reward')
   const [seriesKey, setSeriesKey] = useState<string>('')
   const [viewMode, setViewMode] = useState<ViewMode>('line')
-  const [avgWindow, setAvgWindow] = useState<number>(10) // Default: average every 10 points
+  const [avgWindow, setAvgWindow] = useState<number>(10)
+
+  // ---- Manual Y-axis range state ----
+  const [manualYRange, setManualYRange] = useState(false)
+  const [yRange, setYRange] = useState<[number, number]>([0, 0])
 
   useEffect(() => {
     if (firstAvailableType) {
@@ -115,7 +119,12 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         setSeriesKey('')
       }
     }
-  }, [firstAvailableType, availableActions, availableStates, availableMeasurements])
+  }, [
+    firstAvailableType,
+    availableActions,
+    availableStates,
+    availableMeasurements,
+  ])
 
   useEffect(() => {
     if (datasetType === 'actions' && availableActions.length > 0) {
@@ -136,24 +145,34 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     if (datasetType === 'reward') {
       setSeriesKey('')
     }
-  }, [datasetType, seriesKey, availableActions, availableStates, availableMeasurements])
+  }, [
+    datasetType,
+    seriesKey,
+    availableActions,
+    availableStates,
+    availableMeasurements,
+  ])
 
   const dataValues: number[] | null = useMemo(() => {
-    if (datasetType === 'reward') {
-      return hasReward ? (reward ?? []) : null
-    }
-    if (datasetType === 'actions') {
-      const entry = availableActions.find(([key]) => key === seriesKey)
-      return entry ? entry[1] : (availableActions[0]?.[1] ?? null)
-    }
-    if (datasetType === 'states') {
-      const entry = availableStates.find(([key]) => key === seriesKey)
-      return entry ? entry[1] : (availableStates[0]?.[1] ?? null)
-    }
-    if (datasetType === 'measurements') {
-      const entry = availableMeasurements.find(([key]) => key === seriesKey)
-      return entry ? entry[1] : (availableMeasurements[0]?.[1] ?? null)
-    }
+    if (datasetType === 'reward') return hasReward ? (reward ?? []) : null
+    if (datasetType === 'actions')
+      return (
+        availableActions.find(([k]) => k === seriesKey)?.[1] ??
+        availableActions[0]?.[1] ??
+        null
+      )
+    if (datasetType === 'states')
+      return (
+        availableStates.find(([k]) => k === seriesKey)?.[1] ??
+        availableStates[0]?.[1] ??
+        null
+      )
+    if (datasetType === 'measurements')
+      return (
+        availableMeasurements.find(([k]) => k === seriesKey)?.[1] ??
+        availableMeasurements[0]?.[1] ??
+        null
+      )
     return null
   }, [
     datasetType,
@@ -165,14 +184,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     seriesKey,
   ])
 
-  // Averaged chart data
   const chartData = useMemo(() => {
     if (!dataValues) return []
-
-    if (avgWindow <= 1) {
+    if (avgWindow <= 1)
       return dataValues.map((v, i) => ({ index: i + 1, value: Number(v) }))
-    }
-
     const averaged: { index: number; value: number }[] = []
     for (let i = 0; i < dataValues.length; i += avgWindow) {
       const chunk = dataValues.slice(i, i + avgWindow)
@@ -182,20 +197,25 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     return averaged
   }, [dataValues, avgWindow])
 
-  const handleDatasetTypeChange = (value: string) => {
-    setDatasetType(value as DatasetType)
-  }
+  // Initialize Y range when chartData changes
+  useEffect(() => {
+    if (chartData.length > 0) {
+      const minVal = Math.min(...chartData.map((d) => d.value))
+      const maxVal = Math.max(...chartData.map((d) => d.value))
+      const min = Math.min(minVal, 0)
+      const max = Math.max(maxVal, 0) * 1.2 // add 20% buffer
+      setYRange([min, max])
+    }
+  }, [chartData])
 
-  const handleSeriesChange = (value: string) => {
-    setSeriesKey(value)
-  }
-
-  const handleAvgChange = (value: string) => {
-    setAvgWindow(parseInt(value))
-  }
+  const visibleData = useMemo(() => {
+    if (!manualYRange) return chartData
+    const [min, max] = yRange
+    return chartData.filter((d) => d.value >= min && d.value <= max)
+  }, [chartData, manualYRange, yRange])
 
   const renderChart = () => {
-    if (!dataValues || dataValues.length === 0) {
+    if (!chartData.length)
       return (
         <div className="flex min-h-40 items-center justify-center rounded-md border border-dashed">
           <span className="text-muted-foreground text-sm">
@@ -203,9 +223,8 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           </span>
         </div>
       )
-    }
 
-    if (viewMode === 'table') {
+    if (viewMode === 'table')
       return (
         <div className="max-h-80 overflow-auto">
           <Table>
@@ -216,8 +235,8 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {chartData.map((d, index) => (
-                <TableRow key={index}>
+              {visibleData.map((d, i) => (
+                <TableRow key={i}>
                   <TableCell>{d.index}</TableCell>
                   <TableCell>{d.value.toFixed(4)}</TableCell>
                 </TableRow>
@@ -226,32 +245,85 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           </Table>
         </div>
       )
-    }
 
     const ChartComponent = viewMode === 'bar' ? BarChart : LineChart
+    const minVal = Math.min(...chartData.map((d) => d.value))
+    const maxVal = Math.max(...chartData.map((d) => d.value))
+    const globalMin = Math.min(minVal, 0)
+    const globalMax = Math.max(maxVal, 0) * 1.2
 
     return (
-      <div className="relative h-80 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <ChartComponent data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="index" tickLine={false} />
-            <YAxis tickLine={false} domain={['auto', 'auto']} />
-            <Tooltip />
-            {viewMode === 'bar' ? (
-              <Bar dataKey="value" fill="hsl(var(--primary))" />
-            ) : (
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#49474C"
-                strokeWidth={1}
-                dot={false}
-                isAnimationActive={false}
+      <div className="relative w-full space-y-3">
+        {/* --- Y-Range Controls --- */}
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <button
+            onClick={() => setManualYRange((prev) => !prev)}
+            className="bg-primary text-primary-foreground cursor-pointer rounded px-2 py-1 text-xs"
+          >
+            {manualYRange ? 'Auto Y-range' : 'Manual Y-range'}
+          </button>
+
+          {manualYRange && (
+            <div className="text-muted-foreground flex items-center gap-6 text-xs">
+              <div className="flex w-48 flex-col">
+                <label className="pb-2">Y-min ({yRange[0].toFixed(1)})</label>
+                <Slider
+                  min={globalMin}
+                  max={globalMax}
+                  step={(globalMax - globalMin) / 100}
+                  value={[yRange[0]]}
+                  onValueChange={([val]) =>
+                    setYRange([Math.min(val, yRange[1] - 0.01), yRange[1]])
+                  }
+                />
+              </div>
+
+              <div className="flex w-48 flex-col">
+                <label className="pb-2">Y-max ({yRange[1].toFixed(1)})</label>
+                <Slider
+                  min={globalMin}
+                  max={globalMax}
+                  step={(globalMax - globalMin) / 100}
+                  value={[yRange[1]]}
+                  onValueChange={([val]) =>
+                    setYRange([yRange[0], Math.max(val, yRange[0] + 0.01)])
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* --- Chart --- */}
+        <div className="h-96 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <ChartComponent data={visibleData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="index" tickLine={false} />
+              <YAxis
+                domain={
+                  manualYRange ? [yRange[0], yRange[1]] : ['auto', 'auto']
+                }
+                tickLine={false}
+                tickFormatter={(v) => v.toFixed(1)}
               />
-            )}
-          </ChartComponent>
-        </ResponsiveContainer>
+              <Tooltip formatter={(v) => Number(v).toFixed(2)} />
+              <Brush dataKey="index" height={20} stroke="hsl(var(--primary))" />
+              {viewMode === 'bar' ? (
+                <Bar dataKey="value" fill="hsl(var(--primary))" />
+              ) : (
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#49474C"
+                  strokeWidth={1}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              )}
+            </ChartComponent>
+          </ResponsiveContainer>
+        </div>
       </div>
     )
   }
@@ -264,18 +336,21 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           {metadata && Object.keys(metadata).length > 0 && (
             <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
               <Info className="size-3" />
-              {Object.entries(metadata).map(([key, value]) => (
-                <span key={key} className="bg-muted rounded-full px-2 py-0.5">
-                  {key}: {String(value)}
+              {Object.entries(metadata).map(([k, v]) => (
+                <span key={k} className="bg-muted rounded-full px-2 py-0.5">
+                  {k}: {String(v)}
                 </span>
               ))}
             </div>
           )}
         </div>
 
+        {/* --- Top controls --- */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* dataset type */}
-          <Select value={datasetType} onValueChange={handleDatasetTypeChange}>
+          <Select
+            value={datasetType}
+            onValueChange={(v) => setDatasetType(v as DatasetType)}
+          >
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Select data" />
             </SelectTrigger>
@@ -304,11 +379,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             </SelectContent>
           </Select>
 
-          {/* series */}
           {(datasetType === 'actions' ||
             datasetType === 'states' ||
             datasetType === 'measurements') && (
-            <Select value={seriesKey} onValueChange={handleSeriesChange}>
+            <Select value={seriesKey} onValueChange={setSeriesKey}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select series" />
               </SelectTrigger>
@@ -327,8 +401,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             </Select>
           )}
 
-          {/* averaging filter */}
-          <Select value={avgWindow.toString()} onValueChange={handleAvgChange}>
+          <Select
+            value={avgWindow.toString()}
+            onValueChange={(v) => setAvgWindow(Number(v))}
+          >
             <SelectTrigger className="w-52">
               <SelectValue placeholder="Averaging window" />
             </SelectTrigger>
@@ -341,7 +417,6 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             </SelectContent>
           </Select>
 
-          {/* view mode */}
           <Select
             value={viewMode}
             onValueChange={(v) => setViewMode(v as ViewMode)}
