@@ -1,6 +1,6 @@
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class VariableConfig(BaseModel):
@@ -20,7 +20,7 @@ class TimeFeatureConfig(BaseModel):
 
 class StateSpaceConfig(BaseModel):
     variables: Dict[str, VariableConfig]
-    meters: Optional[Dict[str, MeterConfig]] = {}
+    meters: Dict[str, MeterConfig] = Field(default_factory=dict)
     time_info: Optional[Dict[str, TimeFeatureConfig]] = None
 
     @field_validator("meters", mode="before")

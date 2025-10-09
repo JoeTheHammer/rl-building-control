@@ -299,19 +299,18 @@ const EnvStateSpaceTab = ({
                     </div>
                   )}
                   <div className={cn(fieldContainerStyles, 'md:col-span-1')}>
-                    <label className={fieldLabelStyles}>Agent State</label>
-                    <label className="flex items-center gap-2 text-sm">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-primary">
                       <Checkbox
-                        checked={!variable.excludeFromState}
+                        checked={variable.excludeFromState}
                         onCheckedChange={(checked) =>
                           handleVariableFieldChange(
                             index,
                             'excludeFromState',
-                            !(checked === true),
+                            checked === true,
                           )
                         }
                       />
-                      <span>Include in state</span>
+                      <span>Exclude from state space</span>
                     </label>
                   </div>
                 </div>
