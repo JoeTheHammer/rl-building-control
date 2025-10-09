@@ -426,7 +426,7 @@ const ExperimentConfigurator = () => {
                           handleDenormalizeStateChange(index, !!checked)
                         }
                       />
-                      Denormalize state
+                      Denormalize state in collected data
                     </label>
                   </div>
                 </CardContent>
