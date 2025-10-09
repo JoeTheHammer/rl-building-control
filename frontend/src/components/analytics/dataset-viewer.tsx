@@ -28,7 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table.tsx'
 
-type DatasetType = 'reward' | 'actions' | 'states'
+type DatasetType = 'reward' | 'actions' | 'states' | 'measurements'
 type ViewMode = 'line' | 'bar' | 'table'
 
 interface DatasetViewerProps {
@@ -36,6 +36,7 @@ interface DatasetViewerProps {
   reward?: number[]
   actions?: Record<string, number[]>
   states?: Record<string, number[]>
+  measurements?: Record<string, number[]>
   metadata?: Record<string, unknown>
   emptyMessage?: string
 }
@@ -61,6 +62,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   reward,
   actions,
   states,
+  measurements,
   metadata,
   emptyMessage,
 }) => {
@@ -75,13 +77,19 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       Object.entries(states ?? {}).filter(([, values]) => values.length > 0),
     [states],
   )
+  const availableMeasurements = useMemo(
+    () =>
+      Object.entries(measurements ?? {}).filter(([, values]) => values.length > 0),
+    [measurements],
+  )
 
   const firstAvailableType: DatasetType | null = useMemo(() => {
     if (hasReward) return 'reward'
     if (availableActions.length > 0) return 'actions'
     if (availableStates.length > 0) return 'states'
+    if (availableMeasurements.length > 0) return 'measurements'
     return null
-  }, [hasReward, availableActions, availableStates])
+  }, [hasReward, availableActions, availableStates, availableMeasurements])
 
   const [datasetType, setDatasetType] = useState<DatasetType>('reward')
   const [seriesKey, setSeriesKey] = useState<string>('')
@@ -98,11 +106,16 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         availableStates.length > 0
       ) {
         setSeriesKey(availableStates[0][0])
+      } else if (
+        firstAvailableType === 'measurements' &&
+        availableMeasurements.length > 0
+      ) {
+        setSeriesKey(availableMeasurements[0][0])
       } else {
         setSeriesKey('')
       }
     }
-  }, [firstAvailableType, availableActions, availableStates])
+  }, [firstAvailableType, availableActions, availableStates, availableMeasurements])
 
   useEffect(() => {
     if (datasetType === 'actions' && availableActions.length > 0) {
@@ -115,10 +128,15 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         setSeriesKey(availableStates[0][0])
       }
     }
+    if (datasetType === 'measurements' && availableMeasurements.length > 0) {
+      if (!availableMeasurements.some(([key]) => key === seriesKey)) {
+        setSeriesKey(availableMeasurements[0][0])
+      }
+    }
     if (datasetType === 'reward') {
       setSeriesKey('')
     }
-  }, [datasetType, seriesKey, availableActions, availableStates])
+  }, [datasetType, seriesKey, availableActions, availableStates, availableMeasurements])
 
   const dataValues: number[] | null = useMemo(() => {
     if (datasetType === 'reward') {
@@ -132,6 +150,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       const entry = availableStates.find(([key]) => key === seriesKey)
       return entry ? entry[1] : (availableStates[0]?.[1] ?? null)
     }
+    if (datasetType === 'measurements') {
+      const entry = availableMeasurements.find(([key]) => key === seriesKey)
+      return entry ? entry[1] : (availableMeasurements[0]?.[1] ?? null)
+    }
     return null
   }, [
     datasetType,
@@ -139,6 +161,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     hasReward,
     availableActions,
     availableStates,
+    availableMeasurements,
     seriesKey,
   ])
 
@@ -272,11 +295,19 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
               >
                 States
               </SelectItem>
+              <SelectItem
+                value="measurements"
+                disabled={availableMeasurements.length === 0}
+              >
+                Measurements
+              </SelectItem>
             </SelectContent>
           </Select>
 
           {/* series */}
-          {(datasetType === 'actions' || datasetType === 'states') && (
+          {(datasetType === 'actions' ||
+            datasetType === 'states' ||
+            datasetType === 'measurements') && (
             <Select value={seriesKey} onValueChange={handleSeriesChange}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select series" />
@@ -284,7 +315,9 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
               <SelectContent className="bg-background">
                 {(datasetType === 'actions'
                   ? availableActions
-                  : availableStates
+                  : datasetType === 'states'
+                    ? availableStates
+                    : availableMeasurements
                 ).map(([key]) => (
                   <SelectItem key={key} value={key}>
                     {key}

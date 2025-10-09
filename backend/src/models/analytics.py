@@ -23,12 +23,14 @@ class AnalyticsEpisode(BaseModel):
     reward: List[float] = Field(default_factory=list)
     actions: Dict[str, List[float]] = Field(default_factory=dict)
     states: Dict[str, List[float]] = Field(default_factory=dict)
+    measurements: Dict[str, List[float]] = Field(default_factory=dict)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class AnalyticsEvaluation(BaseModel):
     action_names: List[str] = Field(default_factory=list)
     state_names: List[str] = Field(default_factory=list)
+    measurement_names: List[str] = Field(default_factory=list)
     episodes: List[AnalyticsEpisode] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
@@ -36,9 +38,11 @@ class AnalyticsEvaluation(BaseModel):
 class AnalyticsTraining(BaseModel):
     action_names: List[str] = Field(default_factory=list)
     state_names: List[str] = Field(default_factory=list)
+    measurement_names: List[str] = Field(default_factory=list)
     reward: List[float] = Field(default_factory=list)
     actions: Dict[str, List[float]] = Field(default_factory=dict)
     states: Dict[str, List[float]] = Field(default_factory=dict)
+    measurements: Dict[str, List[float]] = Field(default_factory=dict)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
