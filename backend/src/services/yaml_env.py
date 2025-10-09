@@ -56,12 +56,22 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
 
     for v in cfg.stateSpaceSettings.variables:
         if v.variableType == "meter":
-            meters[v.name] = DoubleQuotedScalarString(v.meterName.strip('"'))
+            meter_name = DoubleQuotedScalarString(v.meterName.strip('"'))
+            if v.excludeFromState:
+                meters[v.name] = {
+                    "name": meter_name,
+                    "exclude_from_state": True,
+                }
+            else:
+                meters[v.name] = meter_name
         else:
-            variables[v.name] = {
+            entry = {
                 "type": DoubleQuotedScalarString(v.energyPlusType.strip('"')),
                 "zone": DoubleQuotedScalarString(v.zone.strip('"')),
             }
+            if v.excludeFromState:
+                entry["exclude_from_state"] = True
+            variables[v.name] = entry
 
     if variables:
         state_space["variables"] = variables

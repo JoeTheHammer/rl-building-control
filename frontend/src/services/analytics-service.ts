@@ -14,12 +14,14 @@ export interface AnalyticsEpisode {
   reward: NumericSeries
   actions: AnalyticsSeriesMap
   states: AnalyticsSeriesMap
+  measurements: AnalyticsSeriesMap
   metadata?: Record<string, unknown>
 }
 
 export interface AnalyticsEvaluation {
   action_names: string[]
   state_names: string[]
+  measurement_names: string[]
   episodes: AnalyticsEpisode[]
   metadata?: Record<string, unknown>
 }
@@ -27,9 +29,11 @@ export interface AnalyticsEvaluation {
 export interface AnalyticsTraining {
   action_names: string[]
   state_names: string[]
+  measurement_names: string[]
   reward: NumericSeries
   actions: AnalyticsSeriesMap
   states: AnalyticsSeriesMap
+  measurements: AnalyticsSeriesMap
   metadata?: Record<string, unknown>
 }
 

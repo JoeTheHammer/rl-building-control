@@ -96,16 +96,22 @@ def _parse_training_group(group: h5py.Group) -> AnalyticsTraining:
     metadata = _read_metadata(group)
     action_names = _read_string_dataset(group.get("action_names"))
     state_names = _read_string_dataset(group.get("state_names"))
+    measurement_names = _read_string_dataset(group.get("non_state_metric_names"))
     reward = _read_reward_dataset(group.get("rewards"))
     actions = _build_series_map(group.get("actions"), action_names, "action")
     states = _build_series_map(group.get("states"), state_names, "state")
+    measurements = _build_series_map(
+        group.get("non_state_metrics"), measurement_names, "measurement"
+    )
 
     return AnalyticsTraining(
         action_names=action_names,
         state_names=state_names,
+        measurement_names=measurement_names,
         reward=reward,
         actions=actions,
         states=states,
+        measurements=measurements,
         metadata=metadata,
     )
 
@@ -115,13 +121,21 @@ def _parse_episode_group(
     group: h5py.Group,
     default_action_names: Iterable[str],
     default_state_names: Iterable[str],
+    default_measurement_names: Iterable[str],
 ) -> AnalyticsEpisode:
     metadata = _read_metadata(group)
     action_names = _read_string_dataset(group.get("action_names")) or list(default_action_names)
     state_names = _read_string_dataset(group.get("state_names")) or list(default_state_names)
+    measurement_names = (
+        _read_string_dataset(group.get("non_state_metric_names"))
+        or list(default_measurement_names)
+    )
     reward = _read_reward_dataset(group.get("rewards"))
     actions = _build_series_map(group.get("actions"), action_names, "action")
     states = _build_series_map(group.get("states"), state_names, "state")
+    measurements = _build_series_map(
+        group.get("non_state_metrics"), measurement_names, "measurement"
+    )
 
     label = metadata.get("name") or metadata.get("label")
     if label is None:
@@ -137,6 +151,7 @@ def _parse_episode_group(
         reward=reward,
         actions=actions,
         states=states,
+        measurements=measurements,
         metadata=metadata,
     )
 
@@ -145,15 +160,21 @@ def _parse_evaluation_group(group: h5py.Group) -> AnalyticsEvaluation:
     metadata = _read_metadata(group)
     action_names = _read_string_dataset(group.get("action_names"))
     state_names = _read_string_dataset(group.get("state_names"))
+    measurement_names = _read_string_dataset(group.get("non_state_metric_names"))
 
     episodes: List[AnalyticsEpisode] = []
     for key, item in sorted(group.items()):
         if isinstance(item, h5py.Group) and key.startswith("episode"):
-            episodes.append(_parse_episode_group(key, item, action_names, state_names))
+            episodes.append(
+                _parse_episode_group(
+                    key, item, action_names, state_names, measurement_names
+                )
+            )
 
     return AnalyticsEvaluation(
         action_names=action_names,
         state_names=state_names,
+        measurement_names=measurement_names,
         episodes=episodes,
         metadata=metadata,
     )

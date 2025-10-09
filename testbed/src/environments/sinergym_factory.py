@@ -28,6 +28,10 @@ class EnvironmentElements:
     weather_data_path: str
     variables: Dict[str, Tuple[str, str]]
     meters: Dict[str, str]
+    state_variable_keys: List[str]
+    state_meter_keys: List[str]
+    non_state_variable_keys: List[str]
+    non_state_meter_keys: List[str]
     time_info: Optional[Dict[str, Dict[str, bool]]]
     actuators: Dict[str, Tuple[str, str, str]]
     reward_function_cls: type[BaseReward]
@@ -48,12 +52,39 @@ def _resolve_paths(config: SinergymEnvironmentConfig) -> Tuple[str, str]:
     return building_model_path, weather_data_path
 
 
-def _parse_variables(config: SinergymEnvironmentConfig) -> dict:
-    return {key: (v.type, v.zone) for key, v in config.state_space.variables.items()}
+def _parse_variables(
+    config: SinergymEnvironmentConfig,
+) -> Tuple[dict[str, Tuple[str, str]], List[str], List[str]]:
+    variables: dict[str, Tuple[str, str]] = {}
+    included: List[str] = []
+    excluded: List[str] = []
+
+    for key, var_cfg in config.state_space.variables.items():
+        variables[key] = (var_cfg.type, var_cfg.zone)
+        if var_cfg.exclude_from_state:
+            excluded.append(key)
+        else:
+            included.append(key)
+
+    return variables, included, excluded
 
 
-def _parse_meters(config: SinergymEnvironmentConfig) -> dict:
-    return config.state_space.meters
+def _parse_meters(
+    config: SinergymEnvironmentConfig,
+) -> Tuple[dict[str, str], List[str], List[str]]:
+    meters: dict[str, str] = {}
+    included: List[str] = []
+    excluded: List[str] = []
+
+    if config.state_space.meters:
+        for key, meter_cfg in config.state_space.meters.items():
+            meters[key] = meter_cfg.name
+            if meter_cfg.exclude_from_state:
+                excluded.append(key)
+            else:
+                included.append(key)
+
+    return meters, included, excluded
 
 
 def _parse_time_info(config: SinergymEnvironmentConfig) -> Optional[Dict[str, Dict[str, bool]]]:
@@ -167,8 +198,8 @@ def _build_reward_function(
 
 def _build_environment_elements(config: SinergymEnvironmentConfig) -> EnvironmentElements:
     building_model_path, weather_data_path = _resolve_paths(config)
-    variables = _parse_variables(config)
-    meters = _parse_meters(config)
+    variables, state_variable_keys, non_state_variable_keys = _parse_variables(config)
+    meters, state_meter_keys, non_state_meter_keys = _parse_meters(config)
     actuators = _parse_actuators(config)
     time_info = _parse_time_info(config)
     action_space = _build_action_space(config)
@@ -180,6 +211,10 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
         weather_data_path=weather_data_path,
         variables=variables,
         meters=meters,
+        state_variable_keys=state_variable_keys,
+        state_meter_keys=state_meter_keys,
+        non_state_variable_keys=non_state_variable_keys,
+        non_state_meter_keys=non_state_meter_keys,
         actuators=actuators,
         time_info=time_info,
         reward_function_cls=reward_function_cls,
@@ -201,6 +236,10 @@ class SinergymFactory(IEnvironmentFactory):
             env_elements.weather_data_path,
             env_elements.variables,
             env_elements.meters,
+            env_elements.state_variable_keys,
+            env_elements.state_meter_keys,
+            env_elements.non_state_variable_keys,
+            env_elements.non_state_meter_keys,
             env_elements.actuators,
             env_elements.reward_variables,
             env_elements.reward_function_cls,

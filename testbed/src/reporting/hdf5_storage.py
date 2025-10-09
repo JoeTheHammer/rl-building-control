@@ -69,6 +69,15 @@ class BaseStorageHandler:
         string_dtype = h5py.string_dtype(encoding="utf-8")
         self.group.create_dataset("action_names", data=np.array(list(names), dtype=string_dtype))
 
+    def set_non_state_metric_names(self, names: Optional[Iterable[str]]) -> None:
+        if not names or "non_state_metric_names" in self.group:
+            return
+        string_dtype = h5py.string_dtype(encoding="utf-8")
+        self.group.create_dataset(
+            "non_state_metric_names",
+            data=np.array(list(names), dtype=string_dtype),
+        )
+
     def on_start(self) -> None:
         if "started_at" not in self.group.attrs:
             self.group.attrs["started_at"] = datetime.utcnow().isoformat()
@@ -87,13 +96,20 @@ class TrainingStorageHandler(BaseStorageHandler):
         self.total_steps = 0
         self.total_reward = 0.0
 
-    def record_chunk(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray) -> None:
+    def record_chunk(
+        self,
+        states: np.ndarray,
+        actions: np.ndarray,
+        rewards: np.ndarray,
+        non_state_metrics: np.ndarray | None = None,
+    ) -> None:
         if rewards.size == 0:
             return
 
         states = np.asarray(states)
         actions = np.asarray(actions)
         rewards = np.asarray(rewards)
+        metrics = np.asarray(non_state_metrics) if non_state_metrics is not None else None
 
         if states.ndim == 1:
             states = states.reshape(-1, 1)
@@ -101,10 +117,16 @@ class TrainingStorageHandler(BaseStorageHandler):
             actions = actions.reshape(-1, 1)
         if rewards.ndim == 1:
             rewards = rewards.reshape(-1, 1)
+        if metrics is not None and metrics.ndim == 1:
+            metrics = metrics.reshape(-1, 1)
 
         self._datasets["states"] = _append_dataset(self.group, "states", states)
         self._datasets["actions"] = _append_dataset(self.group, "actions", actions)
         self._datasets["rewards"] = _append_dataset(self.group, "rewards", rewards)
+        if metrics is not None and metrics.size:
+            self._datasets["non_state_metrics"] = _append_dataset(
+                self.group, "non_state_metrics", metrics
+            )
 
         self.total_steps += rewards.shape[0]
         self.total_reward += float(rewards.sum())
@@ -141,7 +163,13 @@ class EvaluationStorageHandler(BaseStorageHandler):
         episode_group.attrs["created_at"] = datetime.utcnow().isoformat()
         _store_metadata(episode_group, metadata)
 
-    def record_chunk(self, states: np.ndarray, actions: np.ndarray, rewards: np.ndarray) -> None:
+    def record_chunk(
+        self,
+        states: np.ndarray,
+        actions: np.ndarray,
+        rewards: np.ndarray,
+        non_state_metrics: np.ndarray | None = None,
+    ) -> None:
         if self._current_episode_group is None:
             raise RuntimeError("Cannot record data without an active episode.")
         if rewards.size == 0:
@@ -150,6 +178,7 @@ class EvaluationStorageHandler(BaseStorageHandler):
         states = np.asarray(states)
         actions = np.asarray(actions)
         rewards = np.asarray(rewards)
+        metrics = np.asarray(non_state_metrics) if non_state_metrics is not None else None
 
         if states.ndim == 1:
             states = states.reshape(-1, 1)
@@ -157,11 +186,17 @@ class EvaluationStorageHandler(BaseStorageHandler):
             actions = actions.reshape(-1, 1)
         if rewards.ndim == 1:
             rewards = rewards.reshape(-1, 1)
+        if metrics is not None and metrics.ndim == 1:
+            metrics = metrics.reshape(-1, 1)
 
         group = self._current_episode_group
         self._episode_datasets["states"] = _append_dataset(group, "states", states)
         self._episode_datasets["actions"] = _append_dataset(group, "actions", actions)
         self._episode_datasets["rewards"] = _append_dataset(group, "rewards", rewards)
+        if metrics is not None and metrics.size:
+            self._episode_datasets["non_state_metrics"] = _append_dataset(
+                group, "non_state_metrics", metrics
+            )
 
         steps = rewards.shape[0]
         self._episode_steps += steps
@@ -214,7 +249,7 @@ class HDF5StorageManager:
         self.file_path = file_path
         self._file = h5py.File(file_path, "w")
         self._file.attrs["created_at"] = datetime.utcnow().isoformat()
-        self._file.attrs["schema_version"] = "1.0"
+        self._file.attrs["schema_version"] = "1.1"
 
     def create_experiment(
         self,

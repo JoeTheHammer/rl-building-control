@@ -183,6 +183,9 @@ const Analytics: React.FC = () => {
         Object.entries(training.states ?? {}).forEach(([key, values]) => {
           addSeries(`${baseLabel} • Training • State • ${key}`, values)
         })
+        Object.entries(training.measurements ?? {}).forEach(([key, values]) => {
+          addSeries(`${baseLabel} • Training • Measurement • ${key}`, values)
+        })
       }
 
       if (experiment.evaluation) {
@@ -205,6 +208,12 @@ const Analytics: React.FC = () => {
           Object.entries(episode.states ?? {}).forEach(([key, values]) => {
             addSeries(
               `${baseLabel} • Evaluation • ${episodeLabel} • State • ${key}`,
+              values,
+            )
+          })
+          Object.entries(episode.measurements ?? {}).forEach(([key, values]) => {
+            addSeries(
+              `${baseLabel} • Evaluation • ${episodeLabel} • Measurement • ${key}`,
               values,
             )
           })
@@ -341,6 +350,7 @@ const Analytics: React.FC = () => {
                 reward={episode.reward}
                 actions={episode.actions}
                 states={episode.states}
+                measurements={episode.measurements}
                 metadata={episode.metadata}
                 emptyMessage="No data recorded for this episode."
               />
@@ -356,6 +366,7 @@ const Analytics: React.FC = () => {
               reward={training.reward}
               actions={training.actions}
               states={training.states}
+              measurements={training.measurements}
               metadata={training.metadata}
               emptyMessage="No training data recorded for this experiment."
             />
