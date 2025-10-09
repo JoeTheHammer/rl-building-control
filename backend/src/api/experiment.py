@@ -34,6 +34,8 @@ EXPERIMENTS_DIR = (BASE_DIR / "config" / "experiments").resolve()
 ENVIRONMENTS_DIR = (BASE_DIR / "config" / "environments").resolve()
 CONTROLLERS_DIR = (BASE_DIR / "config" / "controllers").resolve()
 
+LEGACY_REPORTING_FIELDS = {"plots", "export"}
+
 
 def _resolve_within(base: Path, name: str) -> Path:
     path = (base / name).resolve()
@@ -48,8 +50,25 @@ def _load_yaml_file(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as file:
         data = yaml.safe_load(file)
     if isinstance(data, dict):
-        return data
+        return _remove_legacy_reporting_fields(data)
     return {}
+
+
+def _remove_legacy_reporting_fields(data: Dict[str, Any]) -> Dict[str, Any]:
+    experiments = data.get("experiments")
+    if not isinstance(experiments, list):
+        return data
+
+    for experiment in experiments:
+        if not isinstance(experiment, dict):
+            continue
+        reporting = experiment.get("reporting")
+        if not isinstance(reporting, dict):
+            continue
+        for field in LEGACY_REPORTING_FIELDS:
+            reporting.pop(field, None)
+
+    return data
 
 
 def _extract_config_filename(value: Optional[Any]) -> Optional[str]:
