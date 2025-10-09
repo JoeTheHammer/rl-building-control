@@ -24,8 +24,6 @@ class Experiment:
         experiment_storage: ExperimentStorage | None = None,
         episodes: int = 1,
         denorm_state: bool = False,
-        plots: bool = False,
-        export: bool = False,
         status_tracking: bool = True,
         flush_interval: int = 1024,
     ):
@@ -35,9 +33,6 @@ class Experiment:
         self.experiment_id = experiment_id
         self.episodes = episodes
         self.denorm_state = denorm_state
-        self.plots = plots
-        self.export = export
-        self.report = self.plots or self.export
         self.status_tracking = status_tracking
         self.experiment_storage = experiment_storage
         self.flush_interval = flush_interval
@@ -52,15 +47,14 @@ class Experiment:
         episode_rewards = []
         total_rewards = []
 
-        if self.report:
-            self._setup_reporting()
+        self._setup_reporting()
 
         for ep in range(1, self.episodes + 1):
 
             if self.status_tracking:
                 increment_evaluation_episode()
 
-            if self.report and isinstance(self.env, ReportingWrapper):
+            if isinstance(self.env, ReportingWrapper):
                 self.env.begin_episode(ep)
 
             episode_reward = 0
@@ -78,10 +72,10 @@ class Experiment:
             logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
 
             episode_rewards.append(episode_reward)
-            if self.report and isinstance(self.env, ReportingWrapper):
+            if isinstance(self.env, ReportingWrapper):
                 self.env.finalize_episode({"episode_reward": float(episode_reward)})
-        if self.report:
-            self._report()
+
+        self._report()
 
         self.env.close()
         logger.info(f"Experiment {self.name} complete.")
