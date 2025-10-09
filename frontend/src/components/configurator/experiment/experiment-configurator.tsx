@@ -56,9 +56,7 @@ const createDefaultExperiment = (): ExperimentFormState => ({
   controllerConfig: '',
   episodes: 1,
   reporting: {
-    plots: true,
     denormalizeState: false,
-    export: true,
   },
 })
 

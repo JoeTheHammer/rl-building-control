@@ -6,9 +6,7 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/dqn_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
   - name: "SAC Experiment"
     engine: "sinergym"
     environment_config: "/home/johannes/workspace/rl-building-control/config/environment1.yaml"
@@ -16,9 +14,7 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/sac_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
   - name: "PPO Experiment"
     engine: "sinergym"
     environment_config: "/home/johannes/workspace/rl-building-control/config/environment1.yaml"
@@ -26,9 +22,7 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/ppo_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
   - name: "Recurrent PPO Experiment"
     engine: "sinergym"
     environment_config: "/home/johannes/workspace/rl-building-control/config/environment1.yaml"
@@ -36,9 +30,7 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/recurrent_ppo_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
   - name: "A2C Experiment"
     engine: "sinergym"
     environment_config: "/home/johannes/workspace/rl-building-control/config/environment1.yaml"
@@ -46,9 +38,7 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/a2c_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
   - name: "DDPG Experiment"
     engine: "sinergym"
     environment_config: "/home/johannes/workspace/rl-building-control/config/environment1.yaml"
@@ -56,9 +46,7 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/ddpg_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
   - name: "TD3 Experiment"
     engine: "sinergym"
     environment_config: "/home/johannes/workspace/rl-building-control/config/environment1.yaml"
@@ -66,8 +54,6 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/td3_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
 
   

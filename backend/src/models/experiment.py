@@ -6,9 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class ExperimentReporting(BaseModel):
-    plots: bool = False
     denormalizeState: bool = False
-    export: bool = False
 
 
 class ExperimentConfig(BaseModel):

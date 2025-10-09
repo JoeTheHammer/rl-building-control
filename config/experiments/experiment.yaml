@@ -6,6 +6,5 @@ experiments:
     controller_config: "/home/johannes/workspace/rl-building-control/config/controllers/ppo_controller.yaml"
     episodes: 1
     reporting:
-      plots: True
       denormalize_state: True
-      export: True
+

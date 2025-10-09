@@ -648,9 +648,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
 }
 
 export interface ExperimentReportingOptions {
-  plots: boolean
   denormalizeState: boolean
-  export: boolean
 }
 
 export interface ExperimentFormState {
@@ -681,9 +679,7 @@ interface ExperimentYamlEntry {
   controller_config?: unknown
   episodes?: unknown
   reporting?: {
-    plots?: unknown
     denormalize_state?: unknown
-    export?: unknown
   }
 }
 
@@ -712,9 +708,7 @@ const resolveExperimentBoolean = (value: unknown): boolean => value === true
 const resolveReporting = (
   experiment: ExperimentFormState,
 ): ExperimentReportingOptions => ({
-  plots: true,
   denormalizeState: experiment.reporting.denormalizeState,
-  export: true,
 })
 
 export const buildExperimentYaml = (
@@ -730,9 +724,7 @@ export const buildExperimentYaml = (
       episodes:
         typeof experiment.episodes === 'number' ? experiment.episodes : 0,
       reporting: {
-        plots: true,
         denormalize_state: experiment.reporting.denormalizeState,
-        export: true,
       },
     })),
   }
@@ -753,9 +745,7 @@ export const parseExperimentYaml = (yamlStr: string): ExperimentFormState[] => {
   return experimentsArray.map((experiment) => {
     const reporting = experiment.reporting ?? {}
     const reportingOptions: ExperimentReportingOptions = {
-      plots: true,
       denormalizeState: resolveExperimentBoolean(reporting.denormalize_state),
-      export: true,
     }
 
     return {
