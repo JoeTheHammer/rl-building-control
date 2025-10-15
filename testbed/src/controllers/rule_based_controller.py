@@ -7,7 +7,7 @@ from asteval import Interpreter
 from pydantic import BaseModel
 
 from controllers.base_controller import ControllerSetup, IController, IControllerFactory
-from environments.base_factory import IEnvironmentFactory
+from reward.expression_reward import within
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
 
@@ -72,15 +72,67 @@ class RuleBasedController(IController):
         state_space: List[str],
         custom_variables: Dict[str, float],
     ):
-        # Use continuous action wrapper to ensure that raw actions are used if Sinergym environment
-        # was provided. If not, sinergym environment tries to translate expected indices to the real
-        # values for discrete action spaces.
+        # Ensure continuous actions are used for Sinergym
         env = ContinuousActionWrapper(env)
         super().__init__(env)
+
         self.rules = rules
         self.state_space = state_space
         self.custom_variables = custom_variables
-        self.aeval = Interpreter(no_print=True)
+        self.aeval = Interpreter(
+            usersyms={
+                "abs": abs,
+                "min": min,
+                "max": max,
+                "exp": np.exp,
+                "clip": np.clip,
+                "sqrt": np.sqrt,
+                "within": within,
+            },
+            no_print=True,
+        )
+        # Add after init — ensures it’s not removed from safe symbols
+        self.aeval.symtable["list"] = list
+
+    def _extract_state_values(self, state: Any) -> Dict[str, float]:
+        """
+        Build a named state dictionary from either a NumPy array or a dict observation.
+        - If ndarray: assumes order in state_space == order in observation vector.
+        - If dict: matches by key, with fuzzy fallback for underscores/spaces.
+        """
+
+        # Case 1: Numeric array (Sinergym’s usual format)
+        if isinstance(state, np.ndarray):
+            return {name: float(state[i]) for i, name in enumerate(self.state_space)}
+
+        # Case 2: Dictionary observation (some wrappers may use this)
+        elif isinstance(state, dict):
+            state_dict: Dict[str, float] = {}
+            for var in self.state_space:
+                # Try exact key match
+                if var in state:
+                    state_dict[var] = float(state[var])
+                    continue
+
+                # Try fuzzy match: ignore case, underscores, spaces
+                normalized_var = var.replace("_", "").lower()
+                match = None
+                for key in state.keys():
+                    if key.replace(" ", "").replace("_", "").lower() == normalized_var:
+                        match = key
+                        break
+
+                if match:
+                    state_dict[var] = float(state[match])
+                else:
+                    raise KeyError(
+                        f"Variable '{var}' not found in observation keys: {list(state.keys())}"
+                    )
+
+            return state_dict
+
+        else:
+            raise TypeError(f"Unsupported observation type: {type(state)}")
 
     def get_action(self, state: Any) -> Any:
         """
@@ -97,14 +149,28 @@ class RuleBasedController(IController):
             RuntimeError: If no rule condition matches the current state.
         """
 
-        # Convert ndarray to named dictionary if needed
-        if isinstance(state, np.ndarray):
-            state_dict = {name: float(state[i]) for i, name in enumerate(self.state_space)}
-        else:
-            state_dict = dict(state)
+        # Create name→value mapping
+        state_dict = self._extract_state_values(state)
 
-        # Prepare the expression evaluator
+        # Prepare evaluator context
         self.aeval.symtable.clear()
+
+
+        self.aeval = Interpreter(
+            usersyms={
+                "abs": abs,
+                "min": min,
+                "max": max,
+                "exp": np.exp,
+                "clip": np.clip,
+                "sqrt": np.sqrt,
+                "within": within,
+            },
+            no_print=True,
+        )
+        # Add after init — ensures it’s not removed from safe symbols
+        self.aeval.symtable["list"] = list
+
         self.aeval.symtable.update(self.custom_variables)
         self.aeval.symtable.update(state_dict)
 
@@ -121,7 +187,10 @@ class RuleBasedController(IController):
 
             if condition_result:
                 self.aeval.error = []
-                action_result = self.aeval(rule.action)
+                expr = rule.action.strip()
+
+                # Evaluate directly — asteval now supports list literals and expressions
+                action_result = self.aeval(expr)
 
                 if self.aeval.error:
                     raise ValueError(
@@ -129,9 +198,9 @@ class RuleBasedController(IController):
                         + "\n".join(err.get_error() for err in self.aeval.error)
                     )
 
-                return np.array(action_result, dtype=np.float32)
 
-        raise RuntimeError("No matching rule found.")
+                # Ensure numeric numpy array output
+                return np.array(action_result, dtype=np.float32)
 
 
 class RuleBasedControllerFactory(IControllerFactory):
