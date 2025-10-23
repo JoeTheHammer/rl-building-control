@@ -32,7 +32,7 @@ const ReinforcementLearningSection = ({
             className="text-primary text-sm font-semibold"
             htmlFor="training-timesteps"
           >
-            Training Timesteps
+            Total Training Timesteps
           </label>
           <Input
             id="training-timesteps"
