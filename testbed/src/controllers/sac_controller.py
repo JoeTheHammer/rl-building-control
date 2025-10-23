@@ -43,7 +43,7 @@ class SACFactory(IRLControllerFactory):
         config = load_rl_controller_config(self.config_path)
 
         env_wrap_manager = EnvWrapperManager(
-            [NormalizeObservation, ContinuousActionWrapper], config.environment_wrapper
+            [ContinuousActionWrapper], config.environment_wrapper
         )
 
         return super().create_rl_controller_setup(config.hyperparameters, env_wrap_manager)

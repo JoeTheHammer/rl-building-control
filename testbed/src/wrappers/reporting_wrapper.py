@@ -6,7 +6,7 @@ import numpy as np
 import copy
 import h5py
 
-from wrappers.normalization_utils import denormalize_state, get_original_action
+from wrappers.normalization_utils import denormalize_state, get_original_action, denormalize_reward
 from reporting.hdf5_storage import BaseStorageHandler, EvaluationStorageHandler
 
 
@@ -143,7 +143,7 @@ class ReportingWrapper(gym.Wrapper):
         if self.is_recording:
             self.states.append(obs if not self.denorm_state else denormalize_state(obs, self.env))
             self.actions.append(get_original_action(action_copy, self.env))
-            self.rewards.append(reward)
+            self.rewards.append(denormalize_reward(reward, self.env))
             metrics = info.get("non_state_metrics")
             if metrics is not None:
                 if isinstance(metrics, dict):

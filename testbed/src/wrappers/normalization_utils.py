@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Any, SupportsFloat
 
 import gymnasium
 import numpy as np
-from gymnasium.wrappers import NormalizeObservation
+from gymnasium.wrappers import NormalizeObservation, NormalizeReward
 from sinergym.utils.wrappers import NormalizeAction
 from stable_baselines3.common.vec_env import VecNormalize
 
@@ -55,13 +55,11 @@ def denormalize_state(state: Any, env: gymnasium.Env) -> Any:
     # 1. First, check for the Stable-Baselines3 VecNormalize wrapper
     vec_normalize_wrapper = _find_wrapper(env, VecNormalize)
     if vec_normalize_wrapper is not None and vec_normalize_wrapper.norm_obs:
-        # Use the wrapper's dedicated, safer method for denormalization
         return vec_normalize_wrapper.unnormalize_obs(state)
 
     # 2. If not found, check for the standard Gymnasium wrapper
     gym_normalize_wrapper = _find_wrapper(env, NormalizeObservation)
     if gym_normalize_wrapper is not None and hasattr(gym_normalize_wrapper, "obs_rms"):
-        # Use the manual calculation for this wrapper type
         return (
             state * np.sqrt(gym_normalize_wrapper.obs_rms.var + gym_normalize_wrapper.epsilon)
             + gym_normalize_wrapper.obs_rms.mean
@@ -69,6 +67,20 @@ def denormalize_state(state: Any, env: gymnasium.Env) -> Any:
 
     # 3. If neither wrapper is found, return the original state
     return state
+
+
+def denormalize_reward(reward: SupportsFloat, env: gymnasium.Env) -> SupportsFloat:
+    vec_normalize_wrapper = _find_wrapper(env, VecNormalize)
+    if vec_normalize_wrapper is not None and vec_normalize_wrapper.norm_reward:
+        return vec_normalize_wrapper.unnormalize_reward(reward)
+
+    norm_rew = _find_wrapper(env, NormalizeReward)
+    if norm_rew is not None and hasattr(norm_rew, "return_rms"):
+        scale = np.sqrt(norm_rew.return_rms.var + norm_rew.epsilon)
+        return reward * scale
+
+    return reward
+
 
 
 def get_original_action(action: Any, env: gymnasium.Env) -> Any:

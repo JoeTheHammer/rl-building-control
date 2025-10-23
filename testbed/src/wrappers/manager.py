@@ -1,7 +1,8 @@
 import gymnasium as gym
 from typing import List, Type, Optional
 
-from gymnasium.wrappers import NormalizeObservation
+from gymnasium.wrappers import NormalizeObservation, NormalizeReward
+from sinergym.utils.wrappers import NormalizeAction
 
 from controllers.config import EnvironmentWrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
@@ -32,6 +33,11 @@ class EnvWrapperManager:
         if wrapper_config is not None:
             if wrapper_config.normalize_state:
                 self.add_wrapper(NormalizeObservation)
+            if wrapper_config.normalize_action:
+                self.add_wrapper(NormalizeAction)
+            if wrapper_config.normalize_reward:
+                print("Apply normalize Reward")
+                self.add_wrapper(NormalizeReward)
             if wrapper_config.continuous_action:
                 self.add_wrapper(ContinuousActionWrapper)
             if wrapper_config.discrete_action:
