@@ -8,6 +8,7 @@ import type {
   ControllerSettings,
   ControllerType,
 } from '@/components/configurator/controller/controller-types.ts'
+import { createDefaultEnvironmentWrapperSettings } from '@/components/configurator/controller/controller-types.ts'
 import type { KeyValue } from '@/components/shared/key-value-list.tsx'
 import { getDefaultControllerHyperparameters } from '@/components/configurator/controller/controller-defaults.ts'
 
@@ -394,6 +395,13 @@ interface ControllerYamlDoc {
     enabled?: boolean
   } | null
   hyperparameters?: Record<string, unknown>
+  environment_wrapper?: {
+    normalize_state?: unknown
+    normalize_reward?: unknown
+    normalize_action?: unknown
+    continuous_action?: unknown
+    discrete_action?: unknown
+  }
   state_space?: unknown
   custom_variables?: Record<string, unknown>
   rules?: { condition?: unknown; action?: unknown }[]
@@ -501,6 +509,14 @@ export const buildControllerYaml = (settings: ControllerSettings): string => {
     training,
   }
 
+  doc.environment_wrapper = {
+    normalize_state: settings.environmentWrapper.normalizeState,
+    normalize_reward: settings.environmentWrapper.normalizeReward,
+    normalize_action: settings.environmentWrapper.normalizeAction,
+    continuous_action: settings.environmentWrapper.continuousAction,
+    discrete_action: settings.environmentWrapper.discreteAction,
+  }
+
   if (settings.hpTuning) {
     const hpTuning: Record<string, unknown> = {}
     if (typeof settings.numTrials === 'number') {
@@ -546,6 +562,23 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
         ? 'custom'
         : 'reinforcement learning')
 
+  const resolveControllerBoolean = (
+    value: unknown,
+    defaultValue: boolean,
+  ): boolean => {
+    if (typeof value === 'boolean') {
+      return value
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase()
+      if (normalized === 'true') return true
+      if (normalized === 'false') return false
+    }
+
+    return defaultValue
+  }
+
   if (resolvedType === 'rule based') {
     const rules = Array.isArray(doc.rules)
       ? doc.rules.map((rule) => ({
@@ -570,6 +603,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
       numEpisodes: undefined,
       numTrials: undefined,
       hyperparameters: getDefaultControllerHyperparameters(),
+      environmentWrapper: createDefaultEnvironmentWrapperSettings(),
       customVariables: recordToKeyValueArray(doc.custom_variables),
       stateSpace: stateSpaceArray,
       rules: rules.length > 0 ? rules : [createDefaultRule()],
@@ -592,6 +626,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
       numEpisodes: undefined,
       numTrials: undefined,
       hyperparameters: [],
+      environmentWrapper: createDefaultEnvironmentWrapperSettings(),
       customVariables: [],
       stateSpace: [],
       rules: [createDefaultRule()],
@@ -603,6 +638,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
 
   const training = doc.training ?? {}
   const hyperparameterTuning = doc.hyperparameter_tuning ?? null
+  const environmentWrapperDoc = doc.environment_wrapper ?? {}
 
   const hyperparametersEntries = Object.entries(doc.hyperparameters ?? {})
   const hyperparameters = hyperparametersEntries.length
@@ -613,9 +649,32 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
             ? ''
             : typeof value === 'object'
               ? JSON.stringify(value)
-              : String(value),
+            : String(value),
       }))
     : getDefaultControllerHyperparameters()
+
+  const environmentWrapper = createDefaultEnvironmentWrapperSettings()
+
+  environmentWrapper.normalizeState = resolveControllerBoolean(
+    environmentWrapperDoc.normalize_state,
+    environmentWrapper.normalizeState,
+  )
+  environmentWrapper.normalizeReward = resolveControllerBoolean(
+    environmentWrapperDoc.normalize_reward,
+    environmentWrapper.normalizeReward,
+  )
+  environmentWrapper.normalizeAction = resolveControllerBoolean(
+    environmentWrapperDoc.normalize_action,
+    environmentWrapper.normalizeAction,
+  )
+  environmentWrapper.continuousAction = resolveControllerBoolean(
+    environmentWrapperDoc.continuous_action,
+    environmentWrapper.continuousAction,
+  )
+  environmentWrapper.discreteAction = resolveControllerBoolean(
+    environmentWrapperDoc.discrete_action,
+    environmentWrapper.discreteAction,
+  )
 
   return {
     type: resolvedType,
@@ -638,6 +697,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
         ? hyperparameterTuning.num_episodes
         : undefined,
     hyperparameters,
+    environmentWrapper,
     customVariables: [],
     stateSpace: [],
     rules: [createDefaultRule()],
