@@ -676,6 +676,30 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
     environmentWrapper.discreteAction,
   )
 
+  if (
+    environmentWrapper.continuousAction ===
+    environmentWrapper.discreteAction
+  ) {
+    if ('discrete_action' in environmentWrapperDoc) {
+      const discretePreferred = resolveControllerBoolean(
+        environmentWrapperDoc.discrete_action,
+        false,
+      )
+      environmentWrapper.discreteAction = discretePreferred
+      environmentWrapper.continuousAction = !discretePreferred
+    } else if ('continuous_action' in environmentWrapperDoc) {
+      const continuousPreferred = resolveControllerBoolean(
+        environmentWrapperDoc.continuous_action,
+        true,
+      )
+      environmentWrapper.continuousAction = continuousPreferred
+      environmentWrapper.discreteAction = !continuousPreferred
+    } else {
+      environmentWrapper.continuousAction = true
+      environmentWrapper.discreteAction = false
+    }
+  }
+
   return {
     type: resolvedType,
     trainingTimesteps:

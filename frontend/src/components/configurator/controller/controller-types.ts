@@ -19,7 +19,7 @@ export const createDefaultEnvironmentWrapperSettings = (): EnvironmentWrapperSet
   normalizeState: true,
   normalizeReward: true,
   normalizeAction: true,
-  continuousAction: false,
+  continuousAction: true,
   discreteAction: false,
 })
 

@@ -98,13 +98,47 @@ const ControllerConfigurator = () => {
     field: keyof ControllerSettings['environmentWrapper'],
     value: boolean,
   ) => {
-    setSettings((previous) => ({
-      ...previous,
-      environmentWrapper: {
-        ...previous.environmentWrapper,
-        [field]: value,
-      },
-    }))
+    setSettings((previous) => {
+      const current = previous.environmentWrapper
+
+      if (field === 'continuousAction') {
+        if (!value && !current.discreteAction) {
+          return previous
+        }
+
+        return {
+          ...previous,
+          environmentWrapper: {
+            ...current,
+            continuousAction: value,
+            discreteAction: value ? false : current.discreteAction,
+          },
+        }
+      }
+
+      if (field === 'discreteAction') {
+        if (!value && !current.continuousAction) {
+          return previous
+        }
+
+        return {
+          ...previous,
+          environmentWrapper: {
+            ...current,
+            discreteAction: value,
+            continuousAction: value ? false : current.continuousAction,
+          },
+        }
+      }
+
+      return {
+        ...previous,
+        environmentWrapper: {
+          ...current,
+          [field]: value,
+        },
+      }
+    })
   }
 
   const handleHyperparametersChange = (values: KeyValue[]) => {

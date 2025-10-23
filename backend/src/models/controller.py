@@ -13,7 +13,7 @@ class EnvironmentWrapper(BaseModel):
     normalizeState: bool = True
     normalizeReward: bool = True
     normalizeAction: bool = True
-    continuousAction: bool = False
+    continuousAction: bool = True
     discreteAction: bool = False
 
 
