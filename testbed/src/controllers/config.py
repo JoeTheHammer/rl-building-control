@@ -1,6 +1,6 @@
 from typing import Optional, Any, Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Training(BaseModel):
@@ -18,6 +18,8 @@ class HyperparameterTuning(BaseModel):
 
 class EnvironmentWrapper(BaseModel):
     normalize_state: Optional[bool] = True
+    normalize_reward: Optional[bool] = True
+    normalize_action: Optional[bool] = True
     continuous_action: Optional[bool] = False
     discrete_action: Optional[bool] = False
 
@@ -25,5 +27,5 @@ class EnvironmentWrapper(BaseModel):
 class RLControllerConfig(BaseModel):
     training: Training
     hyperparameter_tuning: Optional[HyperparameterTuning] = None
-    environment_wrapper: Optional[EnvironmentWrapper] = None
+    environment_wrapper: EnvironmentWrapper = Field(default_factory=EnvironmentWrapper)
     hyperparameters: Optional[Dict[str, Any]] = None

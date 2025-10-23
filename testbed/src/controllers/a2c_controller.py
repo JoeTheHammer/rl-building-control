@@ -1,7 +1,9 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List, Type
 
+import gymnasium
 import optuna
 from gymnasium import Env
+from sinergym.utils.wrappers import NormalizeAction
 from stable_baselines3 import A2C
 
 from adapters.on_policy_adapter import OnPolicyAdapter
@@ -18,6 +20,10 @@ class A2CFactory(IHPTunableControllerFactory):
     """
     Factory for the DDPGController, including hyperparameter tuning with Optuna.
     """
+
+    def __init__(self):
+        super().__init__()
+        self.normalize_reward = None
 
     def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
         if trial is None:
@@ -55,9 +61,17 @@ class A2CFactory(IHPTunableControllerFactory):
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
         rl_config = load_rl_controller_config(self.config_path)
-        env_wrap_manager = EnvWrapperManager(
-            [ContinuousActionWrapper], rl_config.environment_wrapper
-        )
+
+        wrapper_classes: List[Type[gymnasium.Wrapper]] = [ContinuousActionWrapper]
+
+        if rl_config.environment_wrapper.normalize_action:
+            wrapper_classes.append(NormalizeAction)
+
+        self.normalize_reward = rl_config.environment_wrapper.normalize_reward
+
+        env_wrap_manager = EnvWrapperManager(wrapper_classes)
+
+
         hp = rl_config.hyperparameters
         hp_tuning_config = rl_config.hyperparameter_tuning
 

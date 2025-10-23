@@ -5,6 +5,7 @@ import gymnasium as gym
 from controllers.base_controller import IController
 from custom_loggers.experiment_logger import logger
 from reporting.hdf5_storage import ExperimentStorage
+from wrappers.normalization_utils import denormalize_reward
 from wrappers.reporting_wrapper import ReportingWrapper
 
 from experiment.status import (
@@ -65,9 +66,11 @@ class Experiment:
                 action = self.controller.get_action(state)
                 state, reward, terminated, truncated, info = self.env.step(action)
                 done = terminated or truncated
-                episode_reward += reward
 
-                total_rewards.append(reward)
+                denorm_reward = denormalize_reward(reward, self.env)
+
+                episode_reward += denorm_reward
+                total_rewards.append(denorm_reward)
 
             logger.info(f"Episode {ep}/{self.episodes} finished — reward: {episode_reward}")
 
