@@ -13,6 +13,10 @@ interface ReinforcementLearningSectionProps {
     field: 'reportTraining' | 'denormalize' | 'tensorboardLogs' | 'hpTuning',
     value: boolean,
   ) => void
+  onEnvironmentWrapperChange: (
+    field: keyof ControllerSettings['environmentWrapper'],
+    value: boolean,
+  ) => void
   onHyperparametersChange: (values: KeyValue[]) => void
 }
 
@@ -20,6 +24,7 @@ const ReinforcementLearningSection = ({
   settings,
   onNumberChange,
   onBooleanChange,
+  onEnvironmentWrapperChange,
   onHyperparametersChange,
 }: ReinforcementLearningSectionProps) => {
   return (
@@ -137,7 +142,61 @@ const ReinforcementLearningSection = ({
         </div>
       </section>
 
-      {/* Row 3: Hyperparameters */}
+      {/* Row 3: Environment wrapper options */}
+      <section className="flex flex-col gap-2">
+        <span className="text-primary text-sm font-semibold">
+          Environment Wrapper
+        </span>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={settings.environmentWrapper.normalizeState}
+              onCheckedChange={(checked) =>
+                onEnvironmentWrapperChange('normalizeState', !!checked)
+              }
+            />
+            Normalize state
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={settings.environmentWrapper.normalizeReward}
+              onCheckedChange={(checked) =>
+                onEnvironmentWrapperChange('normalizeReward', !!checked)
+              }
+            />
+            Normalize reward
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={settings.environmentWrapper.normalizeAction}
+              onCheckedChange={(checked) =>
+                onEnvironmentWrapperChange('normalizeAction', !!checked)
+              }
+            />
+            Normalize action
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={settings.environmentWrapper.continuousAction}
+              onCheckedChange={(checked) =>
+                onEnvironmentWrapperChange('continuousAction', !!checked)
+              }
+            />
+            Continuous action
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={settings.environmentWrapper.discreteAction}
+              onCheckedChange={(checked) =>
+                onEnvironmentWrapperChange('discreteAction', !!checked)
+              }
+            />
+            Discrete action
+          </label>
+        </div>
+      </section>
+
+      {/* Row 4: Hyperparameters */}
       <section className="flex flex-col gap-2">
         <h2 className="text-primary text-base font-semibold">
           Hyperparameters

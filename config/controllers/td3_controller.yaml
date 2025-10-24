@@ -1,20 +1,18 @@
 training:
-  timesteps: 100000
+  timesteps: 300000
   report_training: false
-  report_denormalized_state: true
-
-hyperparameter_tuning:
-  enabled: false
-  num_trials: 50
-  num_episodes: 5
-
+  report_denormalized_state: false
+  tensorboard_logs: true
 hyperparameters:
-  learning_rate: 0.0001
+  learning_rate: 0.0003
   gamma: 0.99
   buffer_size: 1000000
   tau: 0.005
   batch_size: 256
   policy_delay: 2
-  target_policy_noise: 0.2
-  target_noise_clip: 0.5
-  tensorboard_log: logs/
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false

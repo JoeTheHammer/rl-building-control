@@ -67,8 +67,12 @@ class DQNFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
+        # This controlle relies on a discrete action space.
+        config.environment_wrapper.discrete_action = True
+        config.environment_wrapper.continuous_action = False
+
         env_wrap_manager = EnvWrapperManager(
-            [DiscreteActionWrapper], config.environment_wrapper
+            [], config.environment_wrapper
         )
 
         return super().create_rl_controller_setup(config.hyperparameters, env_wrap_manager)

@@ -7,6 +7,7 @@ from sinergym.utils.wrappers import NormalizeAction
 from controllers.config import EnvironmentWrapper
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.discrete_action_wrapper import DiscreteActionWrapper
+from custom_loggers.setup_logger import logger
 
 
 class EnvWrapperManager:
@@ -31,17 +32,17 @@ class EnvWrapperManager:
             wrapper_classes if wrapper_classes is not None else []
         )
         if wrapper_config is not None:
+            if wrapper_config.continuous_action:
+                self.add_wrapper(ContinuousActionWrapper)
+            if wrapper_config.discrete_action:
+                self.add_wrapper(DiscreteActionWrapper)
             if wrapper_config.normalize_state:
                 self.add_wrapper(NormalizeObservation)
             if wrapper_config.normalize_action:
                 self.add_wrapper(NormalizeAction)
             if wrapper_config.normalize_reward:
-                print("Apply normalize Reward")
                 self.add_wrapper(NormalizeReward)
-            if wrapper_config.continuous_action:
-                self.add_wrapper(ContinuousActionWrapper)
-            if wrapper_config.discrete_action:
-                self.add_wrapper(DiscreteActionWrapper)
+
 
     def add_wrapper(self, wrapper_class: Type[gym.Wrapper]):
         """
@@ -74,5 +75,6 @@ class EnvWrapperManager:
         wrapped_env = env
         for wrapper_class in self._wrapper_classes:
             # Instantiate the wrapper class with the current environment
+            logger.info(f"Wrap env with {wrapper_class.__name__}" )
             wrapped_env = wrapper_class(wrapped_env)
         return wrapped_env

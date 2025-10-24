@@ -8,6 +8,15 @@ class ControllerRule(BaseModel):
     condition: str
     action: str
 
+
+class EnvironmentWrapper(BaseModel):
+    normalizeState: bool = True
+    normalizeReward: bool = True
+    normalizeAction: bool = True
+    continuousAction: bool = True
+    discreteAction: bool = False
+
+
 class ControllerSettings(BaseModel):
     type: str = "reinforcement learning"  # "reinforcement learning" | "rule based" | "custom"
     trainingTimesteps: int | None = None
@@ -18,6 +27,7 @@ class ControllerSettings(BaseModel):
     numEpisodes: int | None = None
     numTrials: int | None = None
     hyperparameters: list[KV] = Field(default_factory=list)
+    environmentWrapper: EnvironmentWrapper = Field(default_factory=EnvironmentWrapper)
     customVariables: list[KV] = Field(default_factory=list)
     stateSpace: list[str] = Field(default_factory=list)
     rules: list[ControllerRule] = Field(default_factory=list)

@@ -338,6 +338,7 @@ const ExperimentConfigurator = () => {
                         onChange={(event) =>
                           handleEngineChange(index, event.target.value)
                         }
+                        disabled={true}
                         placeholder="sinergym"
                       />
                     </div>

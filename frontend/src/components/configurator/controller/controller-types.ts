@@ -7,6 +7,22 @@ export interface ControllerRule {
   action: string
 }
 
+export interface EnvironmentWrapperSettings {
+  normalizeState: boolean
+  normalizeReward: boolean
+  normalizeAction: boolean
+  continuousAction: boolean
+  discreteAction: boolean
+}
+
+export const createDefaultEnvironmentWrapperSettings = (): EnvironmentWrapperSettings => ({
+  normalizeState: true,
+  normalizeReward: true,
+  normalizeAction: true,
+  continuousAction: true,
+  discreteAction: false,
+})
+
 export interface ControllerSettings {
   type: ControllerType
   trainingTimesteps?: number
@@ -17,6 +33,7 @@ export interface ControllerSettings {
   numEpisodes?: number
   numTrials?: number
   hyperparameters: KeyValue[]
+  environmentWrapper: EnvironmentWrapperSettings
   customVariables: KeyValue[]
   stateSpace: string[]
   rules: ControllerRule[]

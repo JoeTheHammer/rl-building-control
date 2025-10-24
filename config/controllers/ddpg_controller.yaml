@@ -1,20 +1,18 @@
-# Configuration for the DDPG RL controller.
-
 training:
-  timesteps: 100000
+  timesteps: 300000
   report_training: false
   report_denormalized_state: false
-
-hyperparameter_tuning:
-  enabled: false
-  num_trials: 50
-  num_episodes: 5
-
+  tensorboard_logs: true
 hyperparameters:
   learning_rate: 0.001
   gamma: 0.99
   buffer_size: 100000
   tau: 0.005
   batch_size: 64
-  tensorboard_log: logs/
-
+  tensorboard_log: "logs/"
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false

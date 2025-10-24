@@ -1,18 +1,19 @@
 training:
- timesteps: 50000
- report_training: False
- report_denormalized_state: False
-
-hyperparameter_tuning:
- enabled: False
- num_trials: 50
- num_episodes: 5
-
+  timesteps: 300000
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
 hyperparameters:
-  tensorboard_log: logs/
+  tensorboard_log: "logs/"
   ent_coef: 0.01
   learning_rate: 0.00005
   n_steps: 512
   gamma: 0.995
   gae_lambda: 0.95
   vf_coef: 0.5
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false

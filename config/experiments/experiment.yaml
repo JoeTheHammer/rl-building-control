@@ -1,7 +1,7 @@
 experiments:
   - name: "PPO experiment"
     engine: "sinergym"
-    environment_config: "/home/johannes/workspace/rl-building-control/config/environments/environment1.yaml"
+    environment_config: "/home/johannes/workspace/rl-building-control/config/environments/hotel.yaml"
     controller: "ppo"
     controller_config: "/home/johannes/workspace/rl-building-control/config/controllers/ppo_controller.yaml"
     episodes: 1

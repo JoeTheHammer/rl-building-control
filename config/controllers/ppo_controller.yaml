@@ -1,20 +1,24 @@
 training:
- timesteps: 100_000
- report_training: False
- report_denormalized_state: False
-
-hyperparameter_tuning:
- num_trials: 50
- num_episodes: 5
-
+  timesteps: 300000
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
 hyperparameters:
-  tensorboard_log: logs/
-  learning_rate: 0.00001
-  n_steps: 2048
-  batch_size: 64
-  n_epochs: 10
+  learning_rate: 0.0004
+  n_steps: 4096
   gamma: 0.995
   gae_lambda: 0.95
-  clip_range: 0.2
-  ent_coef: 0.001
   vf_coef: 0.5
+  normalize_advantage: "True"
+  verbose: 1
+  target_kl: 0.01
+  ent_coef: 0.015
+  clip_range: 0.2
+  batch_size: 512
+  max_grad_norm: 0.5
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false

@@ -22,6 +22,7 @@ import type {
   ControllerSettings,
   ControllerType,
 } from './controller-types.ts'
+import { createDefaultEnvironmentWrapperSettings } from './controller-types.ts'
 import ControllerConfigDialog from './controller-config-dialog.tsx'
 import { fetchControllerConfig } from '@/services/controller-service.ts'
 import { Badge } from '@/components/ui/badge'
@@ -49,6 +50,7 @@ const ControllerConfigurator = () => {
     numEpisodes: undefined,
     numTrials: undefined,
     hyperparameters: getDefaultControllerHyperparameters(),
+    environmentWrapper: createDefaultEnvironmentWrapperSettings(),
     customVariables: [],
     stateSpace: [],
     rules: [createEmptyRule()],
@@ -90,6 +92,53 @@ const ControllerConfigurator = () => {
     value: boolean,
   ) => {
     updateSettings(field, value)
+  }
+
+  const handleEnvironmentWrapperChange = (
+    field: keyof ControllerSettings['environmentWrapper'],
+    value: boolean,
+  ) => {
+    setSettings((previous) => {
+      const current = previous.environmentWrapper
+
+      if (field === 'continuousAction') {
+        if (!value && !current.discreteAction) {
+          return previous
+        }
+
+        return {
+          ...previous,
+          environmentWrapper: {
+            ...current,
+            continuousAction: value,
+            discreteAction: value ? false : current.discreteAction,
+          },
+        }
+      }
+
+      if (field === 'discreteAction') {
+        if (!value && !current.continuousAction) {
+          return previous
+        }
+
+        return {
+          ...previous,
+          environmentWrapper: {
+            ...current,
+            discreteAction: value,
+            continuousAction: value ? false : current.continuousAction,
+          },
+        }
+      }
+
+      return {
+        ...previous,
+        environmentWrapper: {
+          ...current,
+          [field]: value,
+        },
+      }
+    })
   }
 
   const handleHyperparametersChange = (values: KeyValue[]) => {
@@ -321,6 +370,7 @@ const ControllerConfigurator = () => {
                 settings={settings}
                 onNumberChange={handleNumberChange}
                 onBooleanChange={handleBooleanChange}
+                onEnvironmentWrapperChange={handleEnvironmentWrapperChange}
                 onHyperparametersChange={handleHyperparametersChange}
               />
             )}

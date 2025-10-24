@@ -80,6 +80,14 @@ def save_controller(req: SaveControllerRequest) -> str:
             },
         }
 
+        doc["environment_wrapper"] = {
+            "normalize_state": s.environmentWrapper.normalizeState,
+            "normalize_reward": s.environmentWrapper.normalizeReward,
+            "normalize_action": s.environmentWrapper.normalizeAction,
+            "continuous_action": s.environmentWrapper.continuousAction,
+            "discrete_action": s.environmentWrapper.discreteAction,
+        }
+
         # Only add hyperparameter_tuning if enabled == True
         if s.hpTuning:
             hp_tuning = {
