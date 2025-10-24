@@ -71,7 +71,6 @@ class A2CFactory(IHPTunableControllerFactory):
 
         env_wrap_manager = EnvWrapperManager(wrapper_classes)
 
-
         hp = rl_config.hyperparameters
         hp_tuning_config = rl_config.hyperparameter_tuning
 

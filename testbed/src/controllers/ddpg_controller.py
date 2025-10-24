@@ -63,7 +63,7 @@ class DDPGFactory(IRLControllerFactory):
         config = load_rl_controller_config(self.config_path)
 
         env_wrap_manager = EnvWrapperManager(
-            [ContinuousActionWrapper], config.environment_wrapper
+            [], config.environment_wrapper
         )
 
         return super().create_rl_controller_setup(config.hyperparameters, env_wrap_manager)
