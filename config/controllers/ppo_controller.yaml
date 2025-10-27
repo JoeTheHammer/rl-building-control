@@ -6,14 +6,15 @@ training:
 hyperparameters:
   n_steps: 2048
   batch_size: 256
-  learning_rate: 0.0000122416516434409
-  gamma: 0.933513864882931
-  gae_lambda: 0.9214269221800669
-  ent_coef: 0.041758616332144956
-  vf_coef: 0.30359203179761657
-  clip_range: 0.11579626877114878
-  target_kl: 0.00442884683027372
-  max_grad_norm: 0.3488414778429676
+  learning_rate: 1.0e-5
+  gamma: 0.995
+  gae_lambda: 0.95
+  ent_coef: 0.0001
+  vf_coef: 0.8
+  clip_range: 0.25
+  target_kl: 0.001
+  max_grad_norm: 0.5
+
 environment_wrapper:
   normalize_state: true
   normalize_reward: false
