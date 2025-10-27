@@ -1,5 +1,7 @@
 from typing import (
-    Dict, Type, List,
+    Dict,
+    Type,
+    List,
 )
 
 import gymnasium as gym
@@ -15,6 +17,7 @@ from controllers.utils import add_squash_output_to_hp, stabilize_training
 from wrappers.manager import EnvWrapperManager
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from sinergym.utils.wrappers import NormalizeAction
+from custom_loggers.setup_logger import logger
 
 
 class RecurrentPPOFactory(IRLControllerFactory):
@@ -32,7 +35,7 @@ class RecurrentPPOFactory(IRLControllerFactory):
             model_class=RecurrentPPO,
             hyper_params=hyper_params,
             policy="MlpLstmPolicy",
-            normalize_reward=self.normalize_reward
+            normalize_reward=self.normalize_reward,
         )
 
     def create_controller_setup(self) -> ControllerSetup:
@@ -40,6 +43,9 @@ class RecurrentPPOFactory(IRLControllerFactory):
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
         rl_config = load_rl_controller_config(self.config_path)
+
+        if rl_config.hyperparameter_tuning.enabled:
+            logger.warning("The Recurrent PPO controller does not support hyperparameter tuning.")
 
         wrapper_classes: List[Type[gym.Wrapper]] = [ContinuousActionWrapper]
 

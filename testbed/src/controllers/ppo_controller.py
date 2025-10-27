@@ -13,6 +13,7 @@ from controllers.base_rl_controller import (
 from controllers.utils import add_squash_output_to_hp, stabilize_training
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.manager import EnvWrapperManager
+from custom_loggers.setup_logger import logger
 
 
 class PPOFactory(IRLControllerFactory):
@@ -40,6 +41,9 @@ class PPOFactory(IRLControllerFactory):
             raise RuntimeError("No configuration was provided for the PPO controller.")
 
         rl_config = load_rl_controller_config(self.config_path)
+
+        if rl_config.hyperparameter_tuning.enabled:
+            logger.warning("The PPO controller does not support hyperparameter tuning.")
 
         wrapper_classes: List[Type[gym.Wrapper]] = [ContinuousActionWrapper]
 

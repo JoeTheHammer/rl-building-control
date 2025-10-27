@@ -11,8 +11,7 @@ from controllers.base_rl_controller import (
     load_rl_controller_config,
 )
 from wrappers.manager import EnvWrapperManager
-from wrappers.discrete_action_wrapper import DiscreteActionWrapper
-from gymnasium.wrappers import NormalizeObservation
+from custom_loggers.setup_logger import logger
 
 
 class DQNController(IRLController):
@@ -67,12 +66,13 @@ class DQNFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
+        if config.hyperparameter_tuning.enabled:
+            logger.warning("The DQN controller does not support hyperparameter tuning.")
+
         # This controlle relies on a discrete action space.
         config.environment_wrapper.discrete_action = True
         config.environment_wrapper.continuous_action = False
 
-        env_wrap_manager = EnvWrapperManager(
-            [], config.environment_wrapper
-        )
+        env_wrap_manager = EnvWrapperManager([], config.environment_wrapper)
 
         return super().create_rl_controller_setup(config.hyperparameters, env_wrap_manager)
