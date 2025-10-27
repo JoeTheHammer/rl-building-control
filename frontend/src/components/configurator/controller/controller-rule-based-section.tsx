@@ -1,9 +1,15 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Info, Plus, Trash2 } from 'lucide-react'
 import KeyValueList, { type KeyValue } from '../../shared/key-value-list.tsx'
 import StringValueList from '../../shared/string-value-list.tsx'
 import { Button } from '../../ui/button.tsx'
 import { Input } from '../../ui/input.tsx'
 import type { ControllerRule } from './controller-types.ts'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../ui/tooltip.tsx'
 
 interface RuleBasedSectionProps {
   customVariables: KeyValue[]
@@ -33,6 +39,7 @@ const RuleBasedSection = ({
   return (
     <div className="flex flex-col gap-5">
       <section className="grid gap-6 lg:grid-cols-2">
+        {/* ----------------------- Custom Variables ----------------------- */}
         <div className="flex flex-col gap-2">
           <div>
             <h2 className="text-primary text-lg font-semibold">
@@ -47,10 +54,31 @@ const RuleBasedSection = ({
           />
         </div>
 
+        {/* ----------------------- State Space ----------------------- */}
         <div className="flex flex-col gap-2">
-          <div>
+          <div className="flex flex-row items-center gap-2">
             <h2 className="text-primary text-lg font-semibold">State Space</h2>
+
+            {/* ✅ Tooltip for Info icon */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="text-primary h-5 w-5 cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent className="text-md max-w-sm">
+                  <p>
+                    Can be empty for Sinergym environments as for them, the
+                    state space is determined automatically in the testbed.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <h5 className="text-primary text-lg font-extralight">
+              (For Sinergym env optional)
+            </h5>
           </div>
+
           <StringValueList
             values={stateSpace}
             onChange={onStateSpaceChange}
@@ -59,6 +87,7 @@ const RuleBasedSection = ({
         </div>
       </section>
 
+      {/* ----------------------- Rules Section ----------------------- */}
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div>

@@ -7,6 +7,8 @@ from asteval import Interpreter
 from pydantic import BaseModel
 
 from controllers.base_controller import ControllerSetup, IController, IControllerFactory
+from environments.sinergym_factory import SinergymFactory
+from parser.config_parser import parse_sinergym_environment_config
 from reward.expression_reward import within
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
@@ -201,6 +203,7 @@ class RuleBasedController(IController):
 
                 # Ensure numeric numpy array output
                 return np.array(action_result, dtype=np.float32)
+        return None
 
 
 class RuleBasedControllerFactory(IControllerFactory):
@@ -212,10 +215,18 @@ class RuleBasedControllerFactory(IControllerFactory):
 
         env = self.env_factory.create_environment()
 
+        # For sinergym environment, state space can be read out of config.
+        if isinstance(self.env_factory, SinergymFactory):
+            env_config = parse_sinergym_environment_config(self.env_factory.config_path)
+            state_space = list(env_config.state_space.variables.keys()) + list(env_config.state_space.meters.keys())
+        else:
+            # For other (future) environments: state space can be passed.
+            state_space = controller_config.state_space
+
         controller = RuleBasedController(
             env=env,
             rules=controller_config.rules,
-            state_space=controller_config.state_space,
+            state_space=state_space,
             custom_variables=controller_config.custom_variables or {},
         )
 
