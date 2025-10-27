@@ -11,9 +11,10 @@ class Training(BaseModel):
 
 
 class HyperparameterTuning(BaseModel):
-    enabled: Optional[bool] = False
+    enabled: bool = False
     num_trials: int
     num_episodes: int
+    sampler: str = None
 
 
 class EnvironmentWrapper(BaseModel):
@@ -28,4 +29,4 @@ class RLControllerConfig(BaseModel):
     training: Training
     hyperparameter_tuning: Optional[HyperparameterTuning] = None
     environment_wrapper: EnvironmentWrapper = Field(default_factory=EnvironmentWrapper)
-    hyperparameters: Optional[Dict[str, Any]] = None
+    hyperparameters: Dict[str, Any] = Field(default_factory=dict)

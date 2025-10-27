@@ -25,6 +25,15 @@ class A2CFactory(IHPTunableControllerFactory):
         super().__init__()
         self.normalize_reward = None
 
+    def get_grid_search_space(self) -> Dict[str, List[Any]]:
+        """Return a discrete search space for grid-based tuning."""
+        return {
+            "gamma": [0.9, 0.95, 0.99, 0.995],
+            "learning_rate": [1e-5, 5e-5, 1e-4, 5e-4],
+            "vf_coef": [0.3, 0.5, 0.7],
+            "ent_coef": [0.0, 0.05, 0.1],
+        }
+
     def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
         if trial is None:
             # Return a robust set of default values
@@ -75,7 +84,7 @@ class A2CFactory(IHPTunableControllerFactory):
         hp_tuning_config = rl_config.hyperparameter_tuning
 
         if hp_tuning_config is not None and hp_tuning_config.enabled:
-            # This controller supports hp tuning so we can use if.
+            # This controller supports hp tuning so we can use it.
             hp = tune_hp(self, hp_tuning_config, env_wrap_manager, hp, is_env_adapter=True)
 
         return super().create_rl_controller_setup(hp, env_wrap_manager, is_env_adapter=True)

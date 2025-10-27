@@ -24,6 +24,7 @@ class ControllerSettings(BaseModel):
     denormalize: bool = False
     tensorboardLogs: bool = False
     hpTuning: bool = False
+    hpSampler: str | None = None
     numEpisodes: int | None = None
     numTrials: int | None = None
     hyperparameters: list[KV] = Field(default_factory=list)

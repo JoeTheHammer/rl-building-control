@@ -11,8 +11,7 @@ from controllers.base_rl_controller import (
     load_rl_controller_config,
 )
 from wrappers.manager import EnvWrapperManager
-from gymnasium.wrappers import NormalizeObservation
-from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from custom_loggers.setup_logger import logger
 
 
 class DDPGController(IRLController):
@@ -62,8 +61,9 @@ class DDPGFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
-        env_wrap_manager = EnvWrapperManager(
-            [], config.environment_wrapper
-        )
+        if config.hyperparameter_tuning is not None and config.hyperparameter_tuning.enabled:
+            logger.warning("The DDPG controller does not support hyperparameter tuning.")
+
+        env_wrap_manager = EnvWrapperManager([], config.environment_wrapper)
 
         return super().create_rl_controller_setup(config.hyperparameters, env_wrap_manager)

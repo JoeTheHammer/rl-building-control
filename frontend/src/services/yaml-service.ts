@@ -11,6 +11,10 @@ import type {
 import { createDefaultEnvironmentWrapperSettings } from '@/components/configurator/controller/controller-types.ts'
 import type { KeyValue } from '@/components/shared/key-value-list.tsx'
 import { getDefaultControllerHyperparameters } from '@/components/configurator/controller/controller-defaults.ts'
+import {
+  HYPERPARAMETER_SAMPLERS,
+  type HyperparameterSampler,
+} from '@/constants/hyperparameter-samplers.ts'
 
 export interface EnvironmentConfig {
   generalSettings: EnvironmentGeneralSettings
@@ -24,6 +28,21 @@ const CONTROLLER_TYPES: ControllerType[] = [
   'rule based',
   'custom',
 ]
+
+const isHyperparameterSampler = (
+  value: string,
+): value is HyperparameterSampler =>
+  (HYPERPARAMETER_SAMPLERS as readonly string[]).includes(value)
+
+const normalizeSampler = (value: unknown): HyperparameterSampler => {
+  if (typeof value !== 'string') {
+    return 'tpe'
+  }
+
+  const normalized = value.trim().toLowerCase()
+
+  return isHyperparameterSampler(normalized) ? normalized : 'tpe'
+}
 
 const normalizeFile = (
   file: File | string | null | undefined,
@@ -393,6 +412,7 @@ interface ControllerYamlDoc {
     num_trials?: unknown
     num_episodes?: unknown
     enabled?: boolean
+    sampler?: unknown
   } | null
   hyperparameters?: Record<string, unknown>
   environment_wrapper?: {
@@ -518,12 +538,15 @@ export const buildControllerYaml = (settings: ControllerSettings): string => {
   }
 
   if (settings.hpTuning) {
-    const hpTuning: Record<string, unknown> = {}
+    const hpTuning: Record<string, unknown> = { enabled: true }
     if (typeof settings.numTrials === 'number') {
       hpTuning.num_trials = settings.numTrials
     }
     if (typeof settings.numEpisodes === 'number') {
       hpTuning.num_episodes = settings.numEpisodes
+    }
+    if (settings.hpSampler) {
+      hpTuning.sampler = settings.hpSampler
     }
     doc.hyperparameter_tuning = hpTuning
   }
@@ -600,6 +623,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
       denormalize: false,
       tensorboardLogs: false,
       hpTuning: false,
+      hpSampler: 'tpe',
       numEpisodes: undefined,
       numTrials: undefined,
       hyperparameters: getDefaultControllerHyperparameters(),
@@ -623,6 +647,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
       denormalize: false,
       tensorboardLogs: false,
       hpTuning: false,
+      hpSampler: 'tpe',
       numEpisodes: undefined,
       numTrials: undefined,
       hyperparameters: [],
@@ -700,6 +725,8 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
     }
   }
 
+  const sampler = normalizeSampler(hyperparameterTuning?.sampler)
+
   return {
     type: resolvedType,
     trainingTimesteps:
@@ -712,6 +739,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
         hyperparameterTuning !== undefined &&
         hyperparameterTuning.enabled) ??
       false,
+    hpSampler: sampler,
     numTrials:
       typeof hyperparameterTuning?.num_trials === 'number'
         ? hyperparameterTuning.num_trials

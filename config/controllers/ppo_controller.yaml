@@ -4,18 +4,16 @@ training:
   report_denormalized_state: false
   tensorboard_logs: true
 hyperparameters:
-  learning_rate: 0.0004
-  n_steps: 4096
-  gamma: 0.995
-  gae_lambda: 0.95
-  vf_coef: 0.5
-  normalize_advantage: "True"
-  verbose: 1
-  target_kl: 0.01
-  ent_coef: 0.015
-  clip_range: 0.2
-  batch_size: 512
-  max_grad_norm: 0.5
+  n_steps: 2048
+  batch_size: 256
+  learning_rate: 0.0000122416516434409
+  gamma: 0.933513864882931
+  gae_lambda: 0.9214269221800669
+  ent_coef: 0.041758616332144956
+  vf_coef: 0.30359203179761657
+  clip_range: 0.11579626877114878
+  target_kl: 0.00442884683027372
+  max_grad_norm: 0.3488414778429676
 environment_wrapper:
   normalize_state: true
   normalize_reward: false

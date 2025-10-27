@@ -17,3 +17,8 @@ environment_wrapper:
   normalize_action: true
   continuous_action: true
   discrete_action: false
+hyperparameter_tuning:
+  enabled: true
+  num_trials: 5
+  num_episodes: 2
+  sampler: nsgaii
