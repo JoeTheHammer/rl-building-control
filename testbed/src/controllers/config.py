@@ -14,6 +14,7 @@ class HyperparameterTuning(BaseModel):
     enabled: Optional[bool] = False
     num_trials: int
     num_episodes: int
+    sampler: str = None
 
 
 class EnvironmentWrapper(BaseModel):
