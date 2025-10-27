@@ -44,7 +44,7 @@ class RecurrentPPOFactory(IRLControllerFactory):
 
         rl_config = load_rl_controller_config(self.config_path)
 
-        if rl_config.hyperparameter_tuning.enabled:
+        if rl_config.hyperparameter_tuning is not None and rl_config.hyperparameter_tuning.enabled:
             logger.warning("The Recurrent PPO controller does not support hyperparameter tuning.")
 
         wrapper_classes: List[Type[gym.Wrapper]] = [ContinuousActionWrapper]

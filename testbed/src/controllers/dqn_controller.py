@@ -66,7 +66,7 @@ class DQNFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
-        if config.hyperparameter_tuning.enabled:
+        if config.hyperparameter_tuning is not None and config.hyperparameter_tuning.enabled:
             logger.warning("The DQN controller does not support hyperparameter tuning.")
 
         # This controlle relies on a discrete action space.

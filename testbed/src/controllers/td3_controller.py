@@ -64,7 +64,7 @@ class TD3Factory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
-        if config.hyperparameter_tuning.enabled:
+        if config.hyperparameter_tuning is not None and config.hyperparameter_tuning.enabled:
             logger.warning("The TD3 controller does not support hyperparameter tuning.")
 
         # This controller relies on a continuous action space.

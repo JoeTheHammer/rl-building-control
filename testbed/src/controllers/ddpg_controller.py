@@ -61,7 +61,7 @@ class DDPGFactory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
-        if config.hyperparameter_tuning.enabled:
+        if config.hyperparameter_tuning is not None and config.hyperparameter_tuning.enabled:
             logger.warning("The DDPG controller does not support hyperparameter tuning.")
 
         env_wrap_manager = EnvWrapperManager([], config.environment_wrapper)

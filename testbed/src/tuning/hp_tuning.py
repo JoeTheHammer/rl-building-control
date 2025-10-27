@@ -48,8 +48,7 @@ def tune_hp(
     if sampler_cls is optuna.samplers.GridSampler:
         if not hasattr(controller_factory, "get_grid_search_space"):
             raise ValueError(
-                "Controller factory must implement get_grid_search_space() "
-                "to use GridSampler."
+                "Controller factory must implement get_grid_search_space() " "to use GridSampler."
             )
         search_space = controller_factory.get_grid_search_space()
         sampler = optuna.samplers.GridSampler(search_space)
@@ -58,9 +57,13 @@ def tune_hp(
 
     logger.info(f"Using Optuna sampler: {sampler_cls.__name__}")
 
-
     def objective(trial: optuna.Trial) -> float:
         trial_hp = _suggest_hyperparameters(controller_factory, trial, hp)
+
+        # Needed to keep n_steps and batch_size compatible in PPO controller
+        if "nstep_batch" in trial_hp:
+            trial_hp.update(trial_hp.pop("nstep_batch"))
+
         logger.info(f"Test with these hp: {trial_hp}")
 
         env_t = controller_factory.env_factory.create_environment()
@@ -92,4 +95,8 @@ def tune_hp(
     logger.info(f"Best trial params: {study.best_params}")
     logger.info(f"Best value: {study.best_value:.4f}")
 
-    return {**study.best_params, **hp}
+    best_params = dict(study.best_params)
+    if "ent_coef_scale" in best_params:
+        best_params["ent_coef"] = f"auto_{best_params.pop('ent_coef_scale')}"
+
+    return {**best_params, **hp}
