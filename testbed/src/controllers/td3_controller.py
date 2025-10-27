@@ -11,8 +11,7 @@ from controllers.base_rl_controller import (
     load_rl_controller_config,
 )
 from wrappers.manager import EnvWrapperManager
-from gymnasium.wrappers import NormalizeObservation
-from wrappers.continuous_action_wrapper import ContinuousActionWrapper
+from custom_loggers.setup_logger import logger
 
 
 class TD3Controller(IRLController):
@@ -65,12 +64,13 @@ class TD3Factory(IRLControllerFactory):
 
         config = load_rl_controller_config(self.config_path)
 
+        if config.hyperparameter_tuning is not None and config.hyperparameter_tuning.enabled:
+            logger.warning("The TD3 controller does not support hyperparameter tuning.")
+
         # This controller relies on a continuous action space.
         config.environment_wrapper.discrete_action = False
         config.environment_wrapper.continuous_action = True
 
-        env_wrap_manager = EnvWrapperManager(
-            [], config.environment_wrapper
-        )
+        env_wrap_manager = EnvWrapperManager([], config.environment_wrapper)
 
         return super().create_rl_controller_setup(config.hyperparameters, env_wrap_manager)

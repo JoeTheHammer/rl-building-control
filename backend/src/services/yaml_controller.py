@@ -92,9 +92,13 @@ def save_controller(req: SaveControllerRequest) -> str:
         if s.hpTuning:
             hp_tuning = {
                 "enabled": True,
-                "num_trials": s.numTrials,
-                "num_episodes": s.numEpisodes,
             }
+            if s.numTrials is not None:
+                hp_tuning["num_trials"] = s.numTrials
+            if s.numEpisodes is not None:
+                hp_tuning["num_episodes"] = s.numEpisodes
+            if s.hpSampler:
+                hp_tuning["sampler"] = s.hpSampler
             doc["hyperparameter_tuning"] = hp_tuning
 
     Path(req.directory).mkdir(parents=True, exist_ok=True)

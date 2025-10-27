@@ -2,6 +2,17 @@ import { Checkbox } from '../../ui/checkbox.tsx'
 import { Input } from '../../ui/input.tsx'
 import KeyValueList, { type KeyValue } from '../../shared/key-value-list.tsx'
 import type { ControllerSettings } from './controller-types.ts'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/select.tsx'
+import {
+  HYPERPARAMETER_SAMPLERS,
+  type HyperparameterSampler,
+} from '@/constants/hyperparameter-samplers.ts'
 
 interface ReinforcementLearningSectionProps {
   settings: ControllerSettings
@@ -18,6 +29,7 @@ interface ReinforcementLearningSectionProps {
     value: boolean,
   ) => void
   onHyperparametersChange: (values: KeyValue[]) => void
+  onSamplerChange: (value: HyperparameterSampler) => void
 }
 
 const ReinforcementLearningSection = ({
@@ -26,6 +38,7 @@ const ReinforcementLearningSection = ({
   onBooleanChange,
   onEnvironmentWrapperChange,
   onHyperparametersChange,
+  onSamplerChange,
 }: ReinforcementLearningSectionProps) => {
   return (
     <div className="flex flex-col gap-6">
@@ -64,7 +77,7 @@ const ReinforcementLearningSection = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div className="flex flex-col gap-1">
               <label
                 className="text-primary text-sm font-semibold"
@@ -101,6 +114,37 @@ const ReinforcementLearningSection = ({
                 placeholder="Enter"
                 disabled={!settings.hpTuning}
               />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                className="text-primary text-sm font-semibold"
+                htmlFor="hp-sampler"
+              >
+                Sampler
+              </label>
+              <Select
+                value={settings.hpSampler}
+                onValueChange={(value) =>
+                  onSamplerChange(value as HyperparameterSampler)
+                }
+                disabled={!settings.hpTuning}
+              >
+                <SelectTrigger
+                  id="hp-sampler"
+                  className="w-full"
+                  disabled={!settings.hpTuning}
+                >
+                  <SelectValue placeholder="Select sampler" />
+                </SelectTrigger>
+                <SelectContent>
+                  {HYPERPARAMETER_SAMPLERS.map((sampler) => (
+                    <SelectItem key={sampler} value={sampler}>
+                      {sampler.toUpperCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import type { KeyValue } from '../../shared/key-value-list.tsx'
+import type { HyperparameterSampler } from '@/constants/hyperparameter-samplers.ts'
 
 export type ControllerType = 'reinforcement learning' | 'rule based' | 'custom'
 
@@ -30,6 +31,7 @@ export interface ControllerSettings {
   denormalize: boolean
   tensorboardLogs: boolean
   hpTuning: boolean
+  hpSampler: HyperparameterSampler
   numEpisodes?: number
   numTrials?: number
   hyperparameters: KeyValue[]

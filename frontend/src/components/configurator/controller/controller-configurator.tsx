@@ -30,6 +30,7 @@ import ControllerSaveDialog from './controller-save-dialog.tsx'
 import { toast } from 'sonner'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { ConfigDetailsSection } from '@/services/experiment-service.ts'
+import type { HyperparameterSampler } from '@/constants/hyperparameter-samplers.ts'
 
 const controllerTypes: ControllerType[] = [
   'reinforcement learning',
@@ -47,6 +48,7 @@ const ControllerConfigurator = () => {
     denormalize: false,
     tensorboardLogs: false,
     hpTuning: false,
+    hpSampler: 'tpe',
     numEpisodes: undefined,
     numTrials: undefined,
     hyperparameters: getDefaultControllerHyperparameters(),
@@ -92,6 +94,10 @@ const ControllerConfigurator = () => {
     value: boolean,
   ) => {
     updateSettings(field, value)
+  }
+
+  const handleSamplerChange = (value: HyperparameterSampler) => {
+    updateSettings('hpSampler', value)
   }
 
   const handleEnvironmentWrapperChange = (
@@ -372,6 +378,7 @@ const ControllerConfigurator = () => {
                 onBooleanChange={handleBooleanChange}
                 onEnvironmentWrapperChange={handleEnvironmentWrapperChange}
                 onHyperparametersChange={handleHyperparametersChange}
+                onSamplerChange={handleSamplerChange}
               />
             )}
           </div>

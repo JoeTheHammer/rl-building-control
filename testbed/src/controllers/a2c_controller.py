@@ -52,8 +52,6 @@ class A2CFactory(IHPTunableControllerFactory):
             "ent_coef": trial.suggest_float("ent_coef", 0.0, 0.1),
         }
 
-
-
     def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
 
         # Add this to ensure that output of controller is in defined (tanh) range.
@@ -86,7 +84,7 @@ class A2CFactory(IHPTunableControllerFactory):
         hp_tuning_config = rl_config.hyperparameter_tuning
 
         if hp_tuning_config is not None and hp_tuning_config.enabled:
-            # This controller supports hp tuning so we can use if.
+            # This controller supports hp tuning so we can use it.
             hp = tune_hp(self, hp_tuning_config, env_wrap_manager, hp, is_env_adapter=True)
 
         return super().create_rl_controller_setup(hp, env_wrap_manager, is_env_adapter=True)
