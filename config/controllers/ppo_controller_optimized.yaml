@@ -1,0 +1,16 @@
+training:
+  timesteps: 500000
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
+hyperparameters:
+  learning_rate: 0.0003
+  n_steps: 4096
+  batch_size: 512
+  n_epochs: 20
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  vf_coef: 0.5
+  ent_coef: 0.01
+  max_grad_norm: 0.5

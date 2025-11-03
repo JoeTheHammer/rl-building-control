@@ -1,0 +1,11 @@
+experiments:
+  - name: "default-experiment"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    controller: "custom"
+    controller_config: 
+      /home/johannes/workspace/rl-building-control/config/controllers/default-controller.yaml
+    episodes: 1
+    reporting:
+      denormalize_state: true
