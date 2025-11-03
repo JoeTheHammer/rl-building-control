@@ -49,6 +49,7 @@ const ControllerConfigurator = () => {
     tensorboardLogs: false,
     hpTuning: false,
     hpSampler: 'tpe',
+    hpTrainingTimesteps: undefined,
     numEpisodes: undefined,
     numTrials: undefined,
     hyperparameters: getDefaultControllerHyperparameters(),
@@ -81,7 +82,11 @@ const ControllerConfigurator = () => {
   }
 
   const handleNumberChange = (
-    field: 'trainingTimesteps' | 'numEpisodes' | 'numTrials',
+    field:
+      | 'trainingTimesteps'
+      | 'hpTrainingTimesteps'
+      | 'numEpisodes'
+      | 'numTrials',
     value: string,
   ) => {
     const trimmed = value.trim()

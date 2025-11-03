@@ -17,7 +17,11 @@ import {
 interface ReinforcementLearningSectionProps {
   settings: ControllerSettings
   onNumberChange: (
-    field: 'trainingTimesteps' | 'numEpisodes' | 'numTrials',
+    field:
+      | 'trainingTimesteps'
+      | 'hpTrainingTimesteps'
+      | 'numEpisodes'
+      | 'numTrials',
     value: string,
   ) => void
   onBooleanChange: (
@@ -77,7 +81,7 @@ const ReinforcementLearningSection = ({
             </span>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col gap-1">
               <label
                 className="text-primary text-sm font-semibold"
@@ -145,6 +149,25 @@ const ReinforcementLearningSection = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                className="text-primary text-sm font-semibold"
+                htmlFor="hp-training-timesteps"
+              >
+                Training timesteps
+              </label>
+              <Input
+                id="hp-training-timesteps"
+                type="number"
+                value={settings.hpTrainingTimesteps ?? ''}
+                onChange={(event) =>
+                  onNumberChange('hpTrainingTimesteps', event.target.value)
+                }
+                placeholder="Enter"
+                disabled={!settings.hpTuning}
+              />
             </div>
           </div>
         </div>

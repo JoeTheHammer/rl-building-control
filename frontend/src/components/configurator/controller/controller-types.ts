@@ -32,6 +32,7 @@ export interface ControllerSettings {
   tensorboardLogs: boolean
   hpTuning: boolean
   hpSampler: HyperparameterSampler
+  hpTrainingTimesteps?: number
   numEpisodes?: number
   numTrials?: number
   hyperparameters: KeyValue[]
