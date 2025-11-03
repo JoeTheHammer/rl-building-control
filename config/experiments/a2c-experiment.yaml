@@ -1,0 +1,11 @@
+experiments:
+  - name: "a2c-experiment"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    controller: "a2c"
+    controller_config: 
+      /home/johannes/workspace/rl-building-control/config/controllers/a2c_controller.yaml
+    episodes: 1
+    reporting:
+      denormalize_state: true

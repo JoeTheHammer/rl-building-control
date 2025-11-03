@@ -1,0 +1,11 @@
+experiments:
+  - name: "sinergym-experiment"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    controller: "rule-based"
+    controller_config: 
+      /home/johannes/workspace/rl-building-control/config/controllers/15degrees.yaml
+    episodes: 1
+    reporting:
+      denormalize_state: true

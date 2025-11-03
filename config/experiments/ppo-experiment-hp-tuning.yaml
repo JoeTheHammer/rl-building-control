@@ -1,0 +1,11 @@
+experiments:
+  - name: "ppo-experiment-hp-tuning"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    controller: "ppo"
+    controller_config: 
+      /home/johannes/workspace/rl-building-control/config/controllers/ppo_controller_hp_tuning.yaml
+    episodes: 3
+    reporting:
+      denormalize_state: true
