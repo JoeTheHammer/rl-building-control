@@ -14,6 +14,7 @@ class HyperparameterTuning(BaseModel):
     enabled: bool = False
     num_trials: int
     num_episodes: int
+    training_timesteps: int
     sampler: str = None
 
 

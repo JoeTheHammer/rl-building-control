@@ -70,6 +70,9 @@ def tune_hp(
         env_t = env_wrapper_manager.apply_wrappers(env_t)
         ctrl = controller_factory.build_controller(env_t, trial_hp)
 
+        logger.info(f"Training for {hp_tuning_config.training_timesteps} timesteps")
+        ctrl.train(hp_tuning_config.training_timesteps)
+
         if is_env_adapter:
             # If OnPolicyAdapter is returned, it serves as controller and env
             env_t = ctrl
