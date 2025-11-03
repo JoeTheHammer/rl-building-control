@@ -99,6 +99,8 @@ def save_controller(req: SaveControllerRequest) -> str:
                 hp_tuning["num_episodes"] = s.numEpisodes
             if s.hpSampler:
                 hp_tuning["sampler"] = s.hpSampler
+            if s.hpTrainingTimesteps is not None:
+                hp_tuning["training_timesteps"] = s.hpTrainingTimesteps
             doc["hyperparameter_tuning"] = hp_tuning
 
     Path(req.directory).mkdir(parents=True, exist_ok=True)

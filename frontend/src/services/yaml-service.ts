@@ -413,6 +413,7 @@ interface ControllerYamlDoc {
     num_episodes?: unknown
     enabled?: boolean
     sampler?: unknown
+    training_timesteps?: unknown
   } | null
   hyperparameters?: Record<string, unknown>
   environment_wrapper?: {
@@ -547,6 +548,9 @@ export const buildControllerYaml = (settings: ControllerSettings): string => {
     }
     if (settings.hpSampler) {
       hpTuning.sampler = settings.hpSampler
+    }
+    if (typeof settings.hpTrainingTimesteps === 'number') {
+      hpTuning.training_timesteps = settings.hpTrainingTimesteps
     }
     doc.hyperparameter_tuning = hpTuning
   }
@@ -740,6 +744,10 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
         hyperparameterTuning.enabled) ??
       false,
     hpSampler: sampler,
+    hpTrainingTimesteps:
+      typeof hyperparameterTuning?.training_timesteps === 'number'
+        ? hyperparameterTuning.training_timesteps
+        : undefined,
     numTrials:
       typeof hyperparameterTuning?.num_trials === 'number'
         ? hyperparameterTuning.num_trials
