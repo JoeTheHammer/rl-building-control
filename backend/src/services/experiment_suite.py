@@ -420,6 +420,9 @@ class ExperimentSuiteManager:
             target_path.write_text(content, encoding="utf-8")
             return target_path
 
+        def context_absolute_path(target_relative: str) -> str:
+            return str((context_dir / Path(target_relative)).resolve())
+
         for resource in record.iter_resources():
             target = context_dir / Path(resource.relative_path)
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -448,13 +451,17 @@ class ExperimentSuiteManager:
         if environment_file:
             env_data = yaml.safe_load(environment_file.content.decode("utf-8")) or {}
             if building_resource:
-                env_data["building_model"] = str(Path("context") / Path(building_resource.relative_path))
+                env_data["building_model"] = context_absolute_path(building_resource.relative_path)
             if weather_resource:
-                env_data["weather_data"] = str(Path("context") / Path(weather_resource.relative_path))
+                env_data["weather_data"] = context_absolute_path(weather_resource.relative_path)
             environment_yaml = yaml.safe_dump(env_data, sort_keys=False, allow_unicode=True)
             environment_config_path = write_text_file(environment_file.relative_path, environment_yaml)
         if controller_file:
-            write_text_file(controller_file.relative_path, controller_file.content.decode("utf-8"))
+            controller_config_path = write_text_file(
+                controller_file.relative_path, controller_file.content.decode("utf-8")
+            )
+        else:
+            controller_config_path = None
 
         experiment_definition: Dict[str, Any]
         if entry_file:
@@ -476,11 +483,9 @@ class ExperimentSuiteManager:
         experiment_definition.pop("controllerConfig", None)
 
         if environment_config_path:
-            rel_env = str(Path("context") / Path(environment_file.relative_path))
-            experiment_definition["environment_config"] = rel_env
-        if controller_file:
-            rel_ctrl = str(Path("context") / Path(controller_file.relative_path))
-            experiment_definition["controller_config"] = rel_ctrl
+            experiment_definition["environment_config"] = str(environment_config_path)
+        if controller_config_path:
+            experiment_definition["controller_config"] = str(controller_config_path)
 
         experiment_yaml_data = {"experiments": [experiment_definition]}
         experiment_yaml = yaml.safe_dump(experiment_yaml_data, sort_keys=False, allow_unicode=True)
