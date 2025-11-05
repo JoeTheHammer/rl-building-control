@@ -292,6 +292,26 @@ class ExperimentSuiteManager:
             raise HTTPException(status_code=404, detail="Experiment suite not found")
         return suite
 
+    def _initialize_suite(
+        self,
+        name: str,
+        config_filename: str,
+        tensorboard_enabled: bool,
+    ) -> tuple[int, Path]:
+        tmp_id = self._repository.create(
+            name,
+            ExperimentSuiteStatus.RUNNING,
+            None,
+            None,
+            config_filename,
+            tensorboard_enabled,
+        )
+        safe_name = _sanitize_name(name)
+        suite_dir = DATA_DIR / f"experiment_{tmp_id}_{safe_name}"
+        suite_dir.mkdir(parents=True, exist_ok=True)
+        self._repository.update_path_and_filename(tmp_id, str(suite_dir), config_filename)
+        return tmp_id, suite_dir
+
     def run_suite(self, name: str, config_path: Path) -> ExperimentSuiteResponse:
         testbed_path = os.getenv("TESTBED_PATH")
         if not testbed_path:
@@ -309,22 +329,8 @@ class ExperimentSuiteManager:
 
         tensorboard_enabled = _detect_tensorboard_enabled(full_config_path)
 
-        # Step 1: Create DB entry with placeholder path
-        tmp_id = self._repository.create(
-            name,
-            ExperimentSuiteStatus.RUNNING,
-            None,
-            None,
-            config_filename,
-            tensorboard_enabled,
-        )
-        safe_name = _sanitize_name(name)
-        suite_dir = DATA_DIR / f"experiment_{tmp_id}_{safe_name}"
-        suite_dir.mkdir(parents=True, exist_ok=True)
+        tmp_id, suite_dir = self._initialize_suite(name, config_filename, tensorboard_enabled)
         log_path = suite_dir / "experiment_log.txt"
-
-        # Update DB with correct path + filename
-        self._repository.update_path_and_filename(tmp_id, str(suite_dir), config_filename)
 
         main_py = src_path / "main.py"
 
@@ -373,6 +379,160 @@ class ExperimentSuiteManager:
             pid=process.pid,
             path=str(suite_dir),
             config_filename=config_filename,
+            archived=False,
+            tensorboard_enabled=tensorboard_enabled,
+        )
+
+    def reproduce_experiment(self, suite_id: int, experiment_key: str) -> ExperimentSuiteResponse:
+        testbed_path = os.getenv("TESTBED_PATH")
+        if not testbed_path:
+            raise HTTPException(status_code=500, detail="TESTBED_PATH environment variable is not set")
+
+        src_path = Path(testbed_path).expanduser().resolve() / "src"
+        if not src_path.exists():
+            raise HTTPException(status_code=500, detail=f"Testbed src folder not found: {src_path}")
+
+        original_suite = self.get_suite(suite_id)
+
+        try:
+            from services.experiment_context import get_experiment_record
+        except ImportError as exc:  # pragma: no cover - defensive
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+        record = get_experiment_record(suite_id, experiment_key)
+
+        reproduction_name = f"{original_suite.name} • Reproduction • {record.name}".strip()
+
+        tmp_id, suite_dir = self._initialize_suite(
+            reproduction_name,
+            "context/configs/experiment.yaml",
+            False,
+        )
+
+        context_dir = suite_dir / "context"
+        context_dir.mkdir(parents=True, exist_ok=True)
+
+        import yaml
+
+        def write_text_file(target_relative: str, content: str) -> Path:
+            target_path = context_dir / Path(target_relative)
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            target_path.write_text(content, encoding="utf-8")
+            return target_path
+
+        for resource in record.iter_resources():
+            target = context_dir / Path(resource.relative_path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(resource.content)
+
+        environment_file = record.get_text_file("configs/environment.yaml")
+        controller_file = record.get_text_file("configs/controller.yaml")
+        entry_file = record.get_text_file("configs/experiment_entry.yaml")
+
+        if environment_file is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Environment configuration is missing from the experiment export",
+            )
+
+        building_resource = None
+        weather_resource = None
+        for resource in record.iter_resources():
+            resource_type = resource.metadata.get("resource_type") if resource.metadata else None
+            if resource_type == "building_model":
+                building_resource = resource
+            elif resource_type == "weather_epw":
+                weather_resource = resource
+
+        environment_config_path = None
+        if environment_file:
+            env_data = yaml.safe_load(environment_file.content.decode("utf-8")) or {}
+            if building_resource:
+                env_data["building_model"] = str(Path("context") / Path(building_resource.relative_path))
+            if weather_resource:
+                env_data["weather_data"] = str(Path("context") / Path(weather_resource.relative_path))
+            environment_yaml = yaml.safe_dump(env_data, sort_keys=False, allow_unicode=True)
+            environment_config_path = write_text_file(environment_file.relative_path, environment_yaml)
+        if controller_file:
+            write_text_file(controller_file.relative_path, controller_file.content.decode("utf-8"))
+
+        experiment_definition: Dict[str, Any]
+        if entry_file:
+            entry_data = yaml.safe_load(entry_file.content.decode("utf-8")) or {}
+            experiments_section = entry_data.get("experiments")
+            if isinstance(experiments_section, list) and experiments_section:
+                experiment_definition = experiments_section[0]
+            else:
+                experiment_definition = {}
+        else:
+            experiment_definition = {}
+
+        experiment_definition.setdefault("name", record.name)
+
+        if environment_config_path:
+            rel_env = str(Path("context") / Path(environment_file.relative_path))
+            experiment_definition["environment_config"] = rel_env
+            experiment_definition["environmentConfig"] = rel_env
+        if controller_file:
+            rel_ctrl = str(Path("context") / Path(controller_file.relative_path))
+            experiment_definition["controller_config"] = rel_ctrl
+            experiment_definition["controllerConfig"] = rel_ctrl
+
+        experiment_yaml_data = {"experiments": [experiment_definition]}
+        experiment_yaml = yaml.safe_dump(experiment_yaml_data, sort_keys=False, allow_unicode=True)
+        config_path = write_text_file("configs/experiment.yaml", experiment_yaml)
+
+        if entry_file:
+            updated_entry = yaml.safe_dump(experiment_yaml_data, sort_keys=False, allow_unicode=True)
+            write_text_file(entry_file.relative_path, updated_entry)
+
+        tensorboard_enabled = _detect_tensorboard_enabled(config_path)
+        self._repository.set_tensorboard_enabled(tmp_id, tensorboard_enabled)
+
+        log_path = suite_dir / "experiment_log.txt"
+        main_py = src_path / "main.py"
+        command = [
+            "pipenv",
+            "run",
+            "python",
+            str(main_py),
+            str(config_path),
+        ]
+
+        env = os.environ.copy()
+        env["PIPENV_PIPFILE"] = str(Path(testbed_path) / "Pipfile")
+
+        try:
+            log_file = open(log_path, "w", encoding="utf-8")
+            process = subprocess.Popen(
+                command,
+                cwd=suite_dir,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                env=env,
+            )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+        self._repository.update_status(tmp_id, ExperimentSuiteStatus.RUNNING, process.pid)
+
+        with self._lock:
+            self._config_paths[tmp_id] = config_path
+            self._processes[tmp_id] = process
+
+        Thread(
+            target=self._monitor_process,
+            args=(tmp_id, process, log_file),
+            daemon=True,
+        ).start()
+
+        return ExperimentSuiteResponse(
+            id=tmp_id,
+            name=reproduction_name,
+            status=ExperimentSuiteStatus.RUNNING,
+            pid=process.pid,
+            path=str(suite_dir),
+            config_filename="context/configs/experiment.yaml",
             archived=False,
             tensorboard_enabled=tensorboard_enabled,
         )

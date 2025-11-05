@@ -54,9 +54,9 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
       <div className="flex flex-wrap items-center gap-2">
         <Button
           onClick={() => openConfigDialog({ type: 'experiment' })}
-          disabled={!configName}
+          disabled={!configDetails?.experiment}
         >
-          Show experiment config
+          Show Experiment Config
         </Button>
         {(status === 'Finished' || status === 'Aborted') && (
           <Button
@@ -110,9 +110,9 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
                         experimentId: experiment.id,
                       })
                     }
-                    disabled={!configName || !experiment.environment}
+                    disabled={!experiment.environment}
                   >
-                    Show environment config
+                    Show Environment Config
                   </Button>
                   <Button
                     onClick={() =>
@@ -121,9 +121,9 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
                         experimentId: experiment.id,
                       })
                     }
-                    disabled={!configName || !experiment.controller}
+                    disabled={!experiment.controller}
                   >
-                    Show controller config
+                    Show Controller Config
                   </Button>
                 </div>
                 {hasPathInfo && (

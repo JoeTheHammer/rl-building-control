@@ -34,15 +34,15 @@ export const useConfigDialog = ({
 
   const openConfigDialog = useCallback(
     (config: Exclude<ActiveConfigState, null>) => {
-      if (!configName) {
-        setConfigError('No configuration file associated with this suite')
+      if (!configDetails) {
+        setConfigError('Configuration data is not available')
         setActiveConfig(null)
         return
       }
       setConfigError(null)
       setActiveConfig(config)
     },
-    [configName, setConfigError],
+    [configDetails, setConfigError],
   )
 
   const handleDialogOpenChange = useCallback((open: boolean) => {

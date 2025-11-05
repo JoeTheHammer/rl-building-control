@@ -7,6 +7,7 @@ from environments.base_factory import IEnvironmentFactory
 from experiment.experiment import Experiment
 from experiment.experiment_config import ExperimentConfig, ReportingConfig
 from experiment.status import initialize_status, set_current_experiment
+from reporting.context import collect_experiment_context
 from reporting.hdf5_storage import ExperimentStorage, HDF5StorageManager
 from parser.config_parser import parse_experiment_list
 
@@ -59,6 +60,9 @@ class ExperimentManager:
                         "episodes": experiment_config.episodes,
                     },
                 )
+
+                context = collect_experiment_context(config_path, experiment_config)
+                experiment_storage.store_context(context)
 
                 experiment = self._create_experiment(
                     experiment_config, index, experiment_storage

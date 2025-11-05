@@ -112,7 +112,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   }, [persistedSuite])
 
   const { configDetails, configLoading, configError, setConfigError } =
-    useSuiteConfig({ configName, detailsOpen })
+    useSuiteConfig({ configName, suiteId, detailsOpen })
 
   const {
     shouldLoadStatus,
@@ -227,6 +227,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
         loading={configLoading}
         error={configError}
         onEdit={activeConfig ? handleEdit : undefined}
+        editable={Boolean(configName)}
       />
       <CompletedLogDialog
         open={completedLogsOpen}
