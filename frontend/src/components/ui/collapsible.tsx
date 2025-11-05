@@ -93,115 +93,124 @@ interface CollapsibleTriggerProps
   asChild?: boolean
 }
 
-const CollapsibleTrigger = React.forwardRef<HTMLButtonElement, CollapsibleTriggerProps>(
-  ({ asChild = false, className, children, onClick, ...props }, ref) => {
-    const { open, toggle, triggerId, contentId } = useCollapsibleContext()
+const CollapsibleTrigger = React.forwardRef<
+  HTMLButtonElement,
+  CollapsibleTriggerProps
+>(({ asChild = false, className, children, onClick, ...props }, ref) => {
+  const { open, toggle, triggerId, contentId } = useCollapsibleContext()
 
-    const handleClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
-      (event) => {
-        onClick?.(event)
+  const handleClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (event) => {
+      onClick?.(event)
+      if (!event.defaultPrevented) {
+        toggle()
+      }
+    },
+    [onClick, toggle],
+  )
+
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children, {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      ref,
+      id: triggerId,
+      'aria-expanded': open,
+      'aria-controls': contentId,
+      onClick: (event: React.MouseEvent<HTMLElement>) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const childOnClick = (children as React.ReactElement).props.onClick
+        childOnClick?.(event)
         if (!event.defaultPrevented) {
           toggle()
         }
       },
-      [onClick, toggle],
-    )
+    })
+  }
 
-    if (asChild && React.isValidElement(children)) {
-      return React.cloneElement(children, {
-        ref,
-        id: triggerId,
-        'aria-expanded': open,
-        'aria-controls': contentId,
-        onClick: (event: React.MouseEvent<HTMLElement>) => {
-          const childOnClick = (children as React.ReactElement).props.onClick
-          childOnClick?.(event)
-          if (!event.defaultPrevented) {
-            toggle()
-          }
-        },
-      })
-    }
-
-    return (
-      <button
-        ref={ref}
-        type="button"
-        id={triggerId}
-        aria-expanded={open}
-        aria-controls={contentId}
-        className={className}
-        onClick={handleClick}
-        {...props}
-      >
-        {children}
-      </button>
-    )
-  },
-)
+  return (
+    <button
+      ref={ref}
+      type="button"
+      id={triggerId}
+      aria-expanded={open}
+      aria-controls={contentId}
+      className={className}
+      onClick={handleClick}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+})
 CollapsibleTrigger.displayName = 'CollapsibleTrigger'
 
 type CollapsibleContentProps = React.HTMLAttributes<HTMLDivElement>
 
-const CollapsibleContent = React.forwardRef<HTMLDivElement, CollapsibleContentProps>(
-  ({ className, style, children, ...props }, ref) => {
-    const { open, contentId } = useCollapsibleContext()
-    const innerRef = useRef<HTMLDivElement | null>(null)
-    const [height, setHeight] = useState<string>(open ? 'auto' : '0px')
-    const [isTransitioning, setIsTransitioning] = useState(false)
+const CollapsibleContent = React.forwardRef<
+  HTMLDivElement,
+  CollapsibleContentProps
+>(({ className, style, children, ...props }, ref) => {
+  const { open, contentId } = useCollapsibleContext()
+  const innerRef = useRef<HTMLDivElement | null>(null)
+  const [height, setHeight] = useState<string>(open ? 'auto' : '0px')
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
-    useLayoutEffect(() => {
-      const element = innerRef.current
-      if (!element) return
+  useLayoutEffect(() => {
+    const element = innerRef.current
+    if (!element) return
 
-      const scrollHeight = element.scrollHeight
+    const scrollHeight = element.scrollHeight
 
-      if (open) {
-        setIsTransitioning(true)
-        setHeight(`${scrollHeight}px`)
-        const timeout = window.setTimeout(() => {
-          setHeight('auto')
-          setIsTransitioning(false)
-        }, 300)
-        return () => window.clearTimeout(timeout)
-      }
-
+    if (open) {
       setIsTransitioning(true)
-      const currentHeight = element.getBoundingClientRect().height
-      setHeight(`${currentHeight}px`)
-
-      const animation = window.requestAnimationFrame(() => {
-        setHeight('0px')
-      })
-
+      setHeight(`${scrollHeight}px`)
       const timeout = window.setTimeout(() => {
+        setHeight('auto')
         setIsTransitioning(false)
       }, 300)
+      return () => window.clearTimeout(timeout)
+    }
 
-      return () => {
-        window.cancelAnimationFrame(animation)
-        window.clearTimeout(timeout)
-      }
-    }, [open, children])
+    setIsTransitioning(true)
+    const currentHeight = element.getBoundingClientRect().height
+    setHeight(`${currentHeight}px`)
 
-    return (
-      <div
-        ref={ref}
-        id={contentId}
-        data-state={open ? 'open' : 'closed'}
-        aria-hidden={!open && !isTransitioning}
-        className={cn('overflow-hidden transition-[max-height] duration-300 ease-in-out', className)}
-        style={{
-          maxHeight: height,
-          ...style,
-        }}
-        {...props}
-      >
-        <div ref={innerRef}>{children}</div>
-      </div>
-    )
-  },
-)
+    const animation = window.requestAnimationFrame(() => {
+      setHeight('0px')
+    })
+
+    const timeout = window.setTimeout(() => {
+      setIsTransitioning(false)
+    }, 300)
+
+    return () => {
+      window.cancelAnimationFrame(animation)
+      window.clearTimeout(timeout)
+    }
+  }, [open, children])
+
+  return (
+    <div
+      ref={ref}
+      id={contentId}
+      data-state={open ? 'open' : 'closed'}
+      aria-hidden={!open && !isTransitioning}
+      className={cn(
+        'overflow-hidden transition-[max-height] duration-300 ease-in-out',
+        className,
+      )}
+      style={{
+        maxHeight: height,
+        ...style,
+      }}
+      {...props}
+    >
+      <div ref={innerRef}>{children}</div>
+    </div>
+  )
+})
 CollapsibleContent.displayName = 'CollapsibleContent'
 
 export { Collapsible, CollapsibleTrigger, CollapsibleContent }
