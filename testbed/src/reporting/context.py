@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Optional
@@ -39,15 +40,15 @@ class ExperimentContextCollector:
 
         files.extend(self._collect_experiment_configs())
 
-        env_files, environment_yaml = self._collect_environment_files()
+        env_files, original_environment_yaml = self._collect_environment_files()
         files.extend(env_files)
 
         controller_file = self._collect_controller_file()
         if controller_file:
             files.append(controller_file)
 
-        if environment_yaml is not None:
-            files.extend(self._collect_environment_resources(environment_yaml))
+        if original_environment_yaml is not None:
+            files.extend(self._collect_environment_resources(original_environment_yaml))
 
         return ExperimentContext(files=files)
 
@@ -86,14 +87,19 @@ class ExperimentContextCollector:
         except yaml.YAMLError as exc:  # pragma: no cover - defensive
             raise ValueError(f"Invalid environment YAML at {env_path}: {exc}") from exc
 
+        original_data = deepcopy(data)
+
+        sanitized_data = self._sanitize_environment_config(deepcopy(data))
+        sanitized_yaml = yaml.safe_dump(sanitized_data, sort_keys=False, allow_unicode=True)
+
         file = ContextFile(
             relative_path="configs/environment.yaml",
-            content=content.encode("utf-8"),
+            content=sanitized_yaml.encode("utf-8"),
             original_path=str(env_path),
             is_text=True,
         )
 
-        return [file], data
+        return [file], original_data
 
     def _collect_controller_file(self) -> Optional[ContextFile]:
         path_value = self._experiment_config.controller_config
@@ -173,6 +179,25 @@ class ExperimentContextCollector:
 
         fallback_base = base if base is not None else Path.cwd()
         return (fallback_base / path).resolve()
+
+    @staticmethod
+    def _sanitize_environment_config(data: dict) -> dict:
+        if not isinstance(data, dict):
+            return data
+
+        def _context_path(subdir: str, value: str) -> str:
+            filename = Path(value).name
+            return str(Path("context") / "resources" / subdir / filename)
+
+        building = data.get("building_model")
+        if isinstance(building, str) and building:
+            data["building_model"] = _context_path("buildings", building)
+
+        weather = data.get("weather_data")
+        if isinstance(weather, str) and weather:
+            data["weather_data"] = _context_path("weather", weather)
+
+        return data
 
 
 def collect_experiment_context(
