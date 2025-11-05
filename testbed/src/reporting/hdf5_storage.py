@@ -40,7 +40,9 @@ def _append_dataset(group: h5py.Group, name: str, data: np.ndarray) -> h5py.Data
     )
 
 
-def _store_metadata(target: h5py.Group | h5py.File, metadata: Optional[Dict[str, Any]] = None) -> None:
+def _store_metadata(
+    target: h5py.Group | h5py.File, metadata: Optional[Dict[str, Any]] = None
+) -> None:
     if not metadata:
         return
 
@@ -281,7 +283,8 @@ class HDF5StorageManager:
     def __init__(self, file_path: str):
         _ensure_directory(file_path)
         self.file_path = file_path
-        self._file = h5py.File(file_path, "w")
+        self._file = h5py.File(file_path, "w", libver="latest")
+        self._file.swmr_mode = True
         self._file.attrs["created_at"] = datetime.utcnow().isoformat()
         self._file.attrs["schema_version"] = "1.1"
 
@@ -310,3 +313,7 @@ class HDF5StorageManager:
             self._file.close()
             self._file = None
 
+    def flush(self) -> None:
+        """Ensure all buffered data is written to disk (SWMR visible)."""
+        if self._file:
+            self._file.flush()

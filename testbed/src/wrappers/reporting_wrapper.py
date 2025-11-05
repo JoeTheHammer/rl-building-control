@@ -44,9 +44,7 @@ class ReportingWrapper(gym.Wrapper):
         self._non_state_names_sent = False
         self.reset_recordings()
 
-    def configure_storage(
-        self, handler: BaseStorageHandler, flush_interval: int = 1024
-    ) -> None:
+    def configure_storage(self, handler: BaseStorageHandler, flush_interval: int = 1024) -> None:
         self.storage_handler = handler
         self.flush_interval = max(1, flush_interval)
         handler.set_metadata({"denormalized": self.denorm_state})
@@ -156,7 +154,6 @@ class ReportingWrapper(gym.Wrapper):
             self._maybe_flush()
         return obs, reward, terminated, truncated, info
 
-
     def _update_storage_names(self):
         if not self.storage_handler:
             return
@@ -187,11 +184,7 @@ class ReportingWrapper(gym.Wrapper):
         states_arr = _flatten(self.states)
         actions_arr = _flatten(self.actions) if self.actions else np.empty((0,))
         rewards_arr = np.array(self.rewards)
-        metrics_arr = (
-            _flatten(self.non_state_metrics)
-            if self.non_state_metrics
-            else np.empty((0,))
-        )
+        metrics_arr = _flatten(self.non_state_metrics) if self.non_state_metrics else np.empty((0,))
 
         if rewards_arr.size == 0:
             return
@@ -242,8 +235,9 @@ class ReportingWrapper(gym.Wrapper):
             raise ValueError("A file path must be provided when no storage handler is configured.")
 
         # Create or overwrite file
-        with h5py.File(file_path, "w") as f:
+        with h5py.File(file_path, "w", libver="latest") as f:
             # Store main data arrays
+            f.swmr_mode = True
             f.create_dataset("states", data=states_arr, compression="gzip")
             f.create_dataset("actions", data=actions_arr, compression="gzip")
             f.create_dataset("rewards", data=rewards_arr, compression="gzip")
@@ -252,9 +246,13 @@ class ReportingWrapper(gym.Wrapper):
 
             # Optional names
             if self.state_names:
-                f.create_dataset("state_names", data=np.array(self.state_names, dtype=h5py.string_dtype()))
+                f.create_dataset(
+                    "state_names", data=np.array(self.state_names, dtype=h5py.string_dtype())
+                )
             if self.action_names:
-                f.create_dataset("action_names", data=np.array(self.action_names, dtype=h5py.string_dtype()))
+                f.create_dataset(
+                    "action_names", data=np.array(self.action_names, dtype=h5py.string_dtype())
+                )
             if self.non_state_metric_names:
                 f.create_dataset(
                     "non_state_metric_names",

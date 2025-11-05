@@ -83,7 +83,9 @@ const Analytics: React.FC = () => {
   const [selectedCsvOptions, setSelectedCsvOptions] = useState<string[]>([])
   const [autoLoadSuiteId, setAutoLoadSuiteId] = useState<number | null>(null)
   const requestedSuiteIdRef = useRef<number | null>(null)
-  const [suiteContext, setSuiteContext] = useState<SuiteContextResponse | null>(null)
+  const [suiteContext, setSuiteContext] = useState<SuiteContextResponse | null>(
+    null,
+  )
   const [contextLoading, setContextLoading] = useState(false)
   const [contextError, setContextError] = useState<string | null>(null)
   const [contextDialog, setContextDialog] = useState<{
@@ -227,7 +229,7 @@ const Analytics: React.FC = () => {
       }
 
       const defaultName = experimentName
-        ? `Reproduction • ${experimentName}`
+        ? `Reproduction ${experimentName}`
         : 'Reproduction'
 
       setReproductionDialog({
@@ -253,7 +255,12 @@ const Analytics: React.FC = () => {
 
   const handleCloseReproductionDialog = useCallback(() => {
     if (reproductionSubmitting) return
-    setReproductionDialog({ open: false, entry: null, experimentName: '', name: '' })
+    setReproductionDialog({
+      open: false,
+      entry: null,
+      experimentName: '',
+      name: '',
+    })
   }, [reproductionSubmitting])
 
   const handleConfirmReproduction = useCallback(async () => {
@@ -375,12 +382,14 @@ const Analytics: React.FC = () => {
               values,
             )
           })
-          Object.entries(episode.measurements ?? {}).forEach(([key, values]) => {
-            addSeries(
-              `${baseLabel} • Evaluation • ${episodeLabel} • Measurement • ${key}`,
-              values,
-            )
-          })
+          Object.entries(episode.measurements ?? {}).forEach(
+            ([key, values]) => {
+              addSeries(
+                `${baseLabel} • Evaluation • ${episodeLabel} • Measurement • ${key}`,
+                values,
+              )
+            },
+          )
         })
       }
     })
@@ -480,7 +489,8 @@ const Analytics: React.FC = () => {
     const contextEntry = suiteContext?.experiments.find(
       (item) => item.key === experiment.key,
     )
-    const canShowContext = Boolean(contextEntry) && selectedSuite?.status === 'Finished'
+    const canShowContext =
+      Boolean(contextEntry) && selectedSuite?.status === 'Finished'
 
     return (
       <section
@@ -505,27 +515,35 @@ const Analytics: React.FC = () => {
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
-              onClick={() => handleOpenContext(contextEntry, 'experiment', experimentName)}
+              onClick={() =>
+                handleOpenContext(contextEntry, 'experiment', experimentName)
+              }
             >
               Show Experiment Config
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleOpenContext(contextEntry, 'environment', experimentName)}
+              onClick={() =>
+                handleOpenContext(contextEntry, 'environment', experimentName)
+              }
               disabled={!contextEntry.environment}
             >
               Show Environment Config
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleOpenContext(contextEntry, 'controller', experimentName)}
+              onClick={() =>
+                handleOpenContext(contextEntry, 'controller', experimentName)
+              }
               disabled={!contextEntry.controller}
             >
               Show Controller Config
             </Button>
             <Button
               className="gap-2"
-              onClick={() => handleReproduceExperiment(contextEntry, experimentName)}
+              onClick={() =>
+                handleReproduceExperiment(contextEntry, experimentName)
+              }
               disabled={reproducingKey === contextEntry.key}
             >
               {reproducingKey === contextEntry.key ? (
@@ -629,12 +647,13 @@ const Analytics: React.FC = () => {
 
         {contextLoading && (
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <Loader2 className="size-4 animate-spin" /> Loading configuration context…
+            <Loader2 className="size-4 animate-spin" /> Loading configuration
+            context…
           </div>
         )}
 
         {contextError && (
-          <div className="text-destructive rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm">
+          <div className="text-destructive border-destructive/20 bg-destructive/10 rounded-lg border p-4 text-sm">
             {contextError}
           </div>
         )}
@@ -687,7 +706,10 @@ const Analytics: React.FC = () => {
           }
         }}
       >
-        <DialogContent showCloseButton={!reproductionSubmitting} aria-describedby={undefined}>
+        <DialogContent
+          showCloseButton={!reproductionSubmitting}
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle>Reproduce experiment</DialogTitle>
             <DialogDescription>
@@ -724,7 +746,10 @@ const Analytics: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button onClick={() => void handleConfirmReproduction()} disabled={reproductionSubmitting}>
+            <Button
+              onClick={() => void handleConfirmReproduction()}
+              disabled={reproductionSubmitting}
+            >
               {reproductionSubmitting ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="size-4 animate-spin" /> Starting…
@@ -745,7 +770,10 @@ const Analytics: React.FC = () => {
           }
         }}
       >
-        <DialogContent className="max-w-4xl sm:max-w-5xl" aria-describedby={undefined}>
+        <DialogContent
+          className="max-w-4xl sm:max-w-5xl"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle>{contextDialog?.title ?? ''}</DialogTitle>
             {contextDialog?.filename && (

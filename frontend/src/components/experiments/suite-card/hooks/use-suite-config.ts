@@ -101,7 +101,9 @@ export const useSuiteConfig = ({
 const parseSuiteContextFile = (file?: SuiteContextFile | null) => {
   if (!file) return null
   try {
-    const content = yaml.load(file.content) as Record<string, unknown> | undefined
+    const content = yaml.load(file.content) as
+      | Record<string, unknown>
+      | undefined
     return {
       filename: file.filename,
       content: content ?? {},

@@ -113,10 +113,10 @@ def _read_context_group(key: str, group: h5py.Group) -> Optional[ExperimentConte
 
 def _open_hdf5_file(file_path: Path) -> h5py.File:
     try:
-        return h5py.File(file_path, "r")
+        return h5py.File(file_path, "r", swmr=True)
     except OSError:
         try:
-            return h5py.File(file_path, "r", locking=False)  # type: ignore[call-arg]
+            return h5py.File(file_path, "r", locking=False,)  # type: ignore[call-arg]
         except Exception as secondary_error:  # pragma: no cover - best effort fallback
             raise HTTPException(
                 status_code=503,
@@ -153,8 +153,8 @@ def load_suite_context(suite_id: int) -> SuiteContextResponse:
 
     directory = Path(suite.path).expanduser()
     file_path = find_latest_h5_file(directory)
-
     records = _load_context_records(file_path)
+
     experiments: List[SuiteContextExperiment] = []
 
     for record in records:
@@ -181,6 +181,8 @@ def load_suite_context(suite_id: int) -> SuiteContextResponse:
         )
 
     experiments.sort(key=lambda item: item.id)
+
+
 
     return SuiteContextResponse(
         suite_id=suite_id,

@@ -33,18 +33,14 @@ class ExperimentManager:
                 "name": experiment_config.name,
                 "total_evaluation_episodes": experiment_config.episodes,
             }
-            for index, experiment_config in enumerate(
-                experiment_configs.experiments, start=1
-            )
+            for index, experiment_config in enumerate(experiment_configs.experiments, start=1)
         ]
         initialize_status(payload)
 
         self._storage_manager = HDF5StorageManager(self._storage_path)
 
         try:
-            for index, experiment_config in enumerate(
-                experiment_configs.experiments, start=1
-            ):
+            for index, experiment_config in enumerate(experiment_configs.experiments, start=1):
 
                 setup_logger.info(f"Creating experiment: {experiment_config.name} ---")
 
@@ -63,10 +59,9 @@ class ExperimentManager:
 
                 context = collect_experiment_context(config_path, experiment_config)
                 experiment_storage.store_context(context)
+                self._storage_manager.flush()
 
-                experiment = self._create_experiment(
-                    experiment_config, index, experiment_storage
-                )
+                experiment = self._create_experiment(experiment_config, index, experiment_storage)
 
                 if experiment is None:
                     set_current_experiment(None)
