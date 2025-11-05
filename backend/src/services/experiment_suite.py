@@ -472,11 +472,9 @@ class ExperimentSuiteManager:
         if environment_config_path:
             rel_env = str(Path("context") / Path(environment_file.relative_path))
             experiment_definition["environment_config"] = rel_env
-            experiment_definition["environmentConfig"] = rel_env
         if controller_file:
             rel_ctrl = str(Path("context") / Path(controller_file.relative_path))
             experiment_definition["controller_config"] = rel_ctrl
-            experiment_definition["controllerConfig"] = rel_ctrl
 
         experiment_yaml_data = {"experiments": [experiment_definition]}
         experiment_yaml = yaml.safe_dump(experiment_yaml_data, sort_keys=False, allow_unicode=True)

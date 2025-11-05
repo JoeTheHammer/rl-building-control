@@ -155,13 +155,24 @@ class ExperimentContextCollector:
     @staticmethod
     def _resolve_path(raw: str, base: Optional[Path] = None) -> Path:
         path = Path(raw).expanduser()
-        if not path.is_absolute():
-            if base is None:
-                base = Path.cwd()
-            path = (base / path).resolve()
-        else:
-            path = path.resolve()
-        return path
+        if path.is_absolute():
+            return path.resolve()
+
+        candidate_bases: list[Path] = []
+        if base is not None:
+            candidate_bases.append(base)
+            # Include parents to support configs that already include the
+            # context/ prefix when reproduced into a new suite directory.
+            candidate_bases.extend(parent for parent in base.parents)
+        candidate_bases.append(Path.cwd())
+
+        for candidate_base in candidate_bases:
+            resolved = (candidate_base / path).resolve()
+            if resolved.exists():
+                return resolved
+
+        fallback_base = base if base is not None else Path.cwd()
+        return (fallback_base / path).resolve()
 
 
 def collect_experiment_context(
