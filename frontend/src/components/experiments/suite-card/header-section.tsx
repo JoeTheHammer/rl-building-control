@@ -23,7 +23,7 @@ interface HeaderSectionProps {
   actions: React.ReactNode
   detailsOpen: boolean
   tensorboard?: TensorboardControls | null
-  progress?: ExperimentProgressResponse | null
+  progressEntries?: ExperimentProgressResponse[]
   statusLoading: boolean
   statusError: string | null
 }
@@ -36,7 +36,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   actions,
   detailsOpen,
   tensorboard,
-  progress,
+  progressEntries,
   statusLoading,
   statusError,
 }) => {
@@ -92,12 +92,23 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
         )}
 
         {status === 'Running' && (
-          <div className="mt-2 max-w-md">
-            <StatusSummary
-              progress={progress ?? null}
-              loading={statusLoading}
-              error={statusError}
-            />
+          <div className="mt-2 flex max-w-2xl flex-col gap-2">
+            {progressEntries?.length ? (
+              progressEntries.map((entry) => (
+                <StatusSummary
+                  key={entry.id}
+                  title={entry.name ?? `Experiment ${entry.id}`}
+                  progress={entry}
+                  loading={false}
+                />
+              ))
+            ) : (
+              <StatusSummary
+                progress={null}
+                loading={statusLoading}
+                error={statusError}
+              />
+            )}
           </div>
         )}
       </div>

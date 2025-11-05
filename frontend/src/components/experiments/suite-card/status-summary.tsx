@@ -7,6 +7,7 @@ interface StatusSummaryProps {
   progress: ExperimentProgressResponse | null
   loading: boolean
   error?: string | null
+  title?: string
 }
 
 const computePercentage = (current?: number, total?: number): number => {
@@ -29,6 +30,7 @@ const StatusSummary: React.FC<StatusSummaryProps> = ({
   progress,
   loading,
   error,
+  title = 'Current status',
 }) => {
   const trainingPercent = useMemo(
     () =>
@@ -82,13 +84,24 @@ const StatusSummary: React.FC<StatusSummaryProps> = ({
   }
 
   if (!progress) {
-    return null
+    return (
+      <div className="border-border/40 bg-background/60 flex flex-col gap-2 rounded-md border p-3 text-xs">
+        <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide">
+          <span>{title}</span>
+          <span>Pending</span>
+        </div>
+
+        <p className="text-muted-foreground text-[11px]">
+          Progress information is not available yet.
+        </p>
+      </div>
+    )
   }
 
   return (
     <div className="border-border/40 bg-background/60 flex flex-col gap-2 rounded-md border p-3 text-xs">
       <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide">
-        <span>Current status</span>
+        <span>{title}</span>
         <span>{progress.status ?? 'Pending'}</span>
       </div>
 
