@@ -401,7 +401,7 @@ class ExperimentSuiteManager:
 
         record = get_experiment_record(suite_id, experiment_key)
 
-        reproduction_name = f"{original_suite.name} • Reproduction • {record.name}".strip()
+        reproduction_name = f"Reproduction • {record.name}".strip()
 
         tmp_id, suite_dir = self._initialize_suite(
             reproduction_name,
