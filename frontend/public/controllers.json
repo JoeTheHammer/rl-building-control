@@ -1,0 +1,42 @@
+[
+  {
+    "key": "sac",
+    "name": "SAC"
+  },
+  {
+    "key": "custom",
+    "name": "Custom"
+  },
+  {
+    "key": "ppo",
+    "name": "PPO"
+  },
+  {
+    "key": "recurrent-ppo",
+    "name": "Recurrent PPO"
+  },
+  {
+    "key": "a2c",
+    "name": "A2C"
+  },
+  {
+    "key": "ddpg",
+    "name": "DDPG"
+  },
+  {
+    "key": "td3",
+    "name": "TD3"
+  },
+  {
+    "key": "dqn",
+    "name": "DQN"
+  },
+  {
+    "key": "random",
+    "name": "Random"
+  },
+  {
+    "key": "rule-based",
+    "name": "Rule Based"
+  }
+]

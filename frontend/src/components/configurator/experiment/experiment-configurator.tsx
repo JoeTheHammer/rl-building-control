@@ -36,7 +36,7 @@ interface ControllerOption {
   name: string
 }
 
-const controllerOptions: ControllerOption[] = [
+const defaultControllerOptions: ControllerOption[] = [
   { key: 'rule-based', name: 'Rule Based' },
   { key: 'custom', name: 'Custom' },
   { key: 'sac', name: 'SAC' },
@@ -83,6 +83,26 @@ const ExperimentConfigurator = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
+
+  const [controllerOptions, setControllerOptions] = useState<
+    ControllerOption[]
+  >([])
+
+  useEffect(() => {
+    async function loadControllers() {
+      try {
+        const response = await fetch('/controllers.json')
+        if (!response.ok) throw new Error('Failed to load controllers.json')
+        const data: ControllerOption[] = await response.json()
+        const setData = data.length !== 0 ? data : defaultControllerOptions
+        setControllerOptions(setData)
+      } catch (err) {
+        console.error('Failed to fetch controllers.json', err)
+        toast.error('Could not load controller list')
+      }
+    }
+    loadControllers()
+  }, [])
 
   const resolvedYaml = useMemo(
     () => (devMode ? editorValue : buildExperimentYaml(experiments)),
