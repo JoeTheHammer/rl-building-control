@@ -112,10 +112,11 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
   }, [persistedSuite])
 
   const { configDetails, configLoading, configError, setConfigError } =
-    useSuiteConfig({ configName, detailsOpen })
+    useSuiteConfig({ configName, suiteId, detailsOpen })
 
   const {
-    shouldLoadStatus,
+    shouldStreamLogs,
+    statusInfo,
     statusLoading,
     statusError,
     progressById,
@@ -124,8 +125,10 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
 
   const { logLines, logLoading, logError } = useSuiteLogs({
     suiteId,
-    shouldStream: shouldLoadStatus,
+    shouldStream: shouldStreamLogs,
   })
+
+  const progressEntries = statusInfo?.experiments ?? []
 
   const {
     tensorboardStatus,
@@ -195,6 +198,9 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
             actions={actions}
             detailsOpen={detailsOpen}
             tensorboard={tensorboardControls}
+            progressEntries={progressEntries}
+            statusLoading={statusLoading}
+            statusError={statusError}
           />
         </CardContent>
 
@@ -227,6 +233,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
         loading={configLoading}
         error={configError}
         onEdit={activeConfig ? handleEdit : undefined}
+        editable={Boolean(configName)}
       />
       <CompletedLogDialog
         open={completedLogsOpen}

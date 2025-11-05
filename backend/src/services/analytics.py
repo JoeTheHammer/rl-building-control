@@ -16,6 +16,7 @@ from models.analytics import (
     AnalyticsTraining,
 )
 from services.experiment_suite import manager as suite_manager
+from services.hdf5_utils import find_latest_h5_file
 
 
 def _ensure_scalar(value: Any) -> Any:
@@ -207,16 +208,6 @@ def _parse_experiment_group(key: str, group: h5py.Group) -> AnalyticsExperiment:
     )
 
 
-def _find_h5_file(directory: Path) -> Path:
-    if not directory.exists() or not directory.is_dir():
-        raise HTTPException(status_code=404, detail="Experiment suite directory not found")
-
-    candidates = sorted(directory.glob("*.h5"), key=lambda item: item.stat().st_mtime, reverse=True)
-    if not candidates:
-        raise HTTPException(status_code=404, detail="No HDF5 export found for the selected suite")
-    return candidates[0]
-
-
 def _load_hdf5_content(file_path: Path) -> tuple[Dict[str, Any], List[AnalyticsExperiment]]:
     metadata: Dict[str, Any] = {}
     experiments: List[AnalyticsExperiment] = []
@@ -238,7 +229,7 @@ def list_available_suites() -> List[AnalyticsSuiteSummary]:
         if suite.path:
             path = Path(suite.path).expanduser()
             try:
-                file_path = _find_h5_file(path)
+                file_path = find_latest_h5_file(path)
             except HTTPException:
                 has_data = False
             else:
@@ -266,7 +257,7 @@ def get_suite_file_path(suite_id: int) -> Path:
         raise HTTPException(status_code=404, detail="The selected suite does not contain exported data")
 
     directory = Path(suite.path).expanduser()
-    return _find_h5_file(directory)
+    return find_latest_h5_file(directory)
 
 
 def load_suite_data(suite_id: int) -> AnalyticsDataResponse:

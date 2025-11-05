@@ -1,6 +1,7 @@
 import importlib
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from parser.config_parser import parse_sinergym_environment_config
 from typing import (
     Any,
@@ -46,10 +47,24 @@ PYTHON_REWARD_TYPE = "python"
 
 
 def _resolve_paths(config: SinergymEnvironmentConfig) -> Tuple[str, str]:
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-    building_model_path = os.path.join(project_root, config.building_model)
-    weather_data_path = os.path.join(project_root, config.weather_data)
-    return building_model_path, weather_data_path
+    project_root = Path(__file__).resolve().parents[2]
+
+    def _resolve(single_path: str) -> str:
+        raw_path = Path(single_path)
+        if raw_path.is_absolute():
+            return str(raw_path)
+
+        project_candidate = project_root / raw_path
+        if project_candidate.exists():
+            return str(project_candidate)
+
+        cwd_candidate = Path.cwd() / raw_path
+        if cwd_candidate.exists():
+            return str(cwd_candidate)
+
+        return str(project_candidate)
+
+    return _resolve(config.building_model), _resolve(config.weather_data)
 
 
 def _parse_variables(

@@ -15,6 +15,8 @@ from models.experiment import (
     ExperimentProgress,
     ExperimentRunStatus,
     ExperimentSuiteResponse,
+    ReproduceExperimentRequest,
+    SuiteContextResponse,
     RunExperimentSuiteRequest,
     SaveExperimentRequest,
     StopExperimentSuiteResponse,
@@ -26,6 +28,7 @@ from models.experiment import (
 from services.yaml_experiment import save_experiment_yaml
 from services.experiment_suite import manager as suite_manager, resolve_config_path
 from services.tensorboard import tensorboard_manager
+from services.experiment_context import load_suite_context
 
 router = APIRouter()
 
@@ -188,10 +191,32 @@ def list_experiment_suites():
     return [tensorboard_manager.enrich_suite(suite) for suite in suites]
 
 
+@router.get(
+    "/suites/{suite_id}/context",
+    response_model=SuiteContextResponse,
+)
+def get_suite_context(suite_id: int):
+    return load_suite_context(suite_id)
+
+
 @router.post("/suites/run", response_model=ExperimentSuiteResponse)
 def run_experiment_suite(req: RunExperimentSuiteRequest):
     config_path = resolve_config_path(req.config_name)
     suite = suite_manager.run_suite(req.suite_name, config_path)
+    return tensorboard_manager.enrich_suite(suite)
+
+
+@router.post(
+    "/suites/{suite_id}/experiments/{experiment_key}/reproduce",
+    response_model=ExperimentSuiteResponse,
+)
+def reproduce_experiment(
+    suite_id: int,
+    experiment_key: str,
+    payload: ReproduceExperimentRequest | None = None,
+):
+    name = payload.name if payload else None
+    suite = suite_manager.reproduce_experiment(suite_id, experiment_key, name)
     return tensorboard_manager.enrich_suite(suite)
 
 

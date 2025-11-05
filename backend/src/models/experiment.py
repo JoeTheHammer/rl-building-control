@@ -88,6 +88,28 @@ class ExperimentConfigDetailsResponse(BaseModel):
     experiments: List[ExperimentConfigDetailsExperiment] = Field(default_factory=list)
 
 
+class SuiteContextFile(BaseModel):
+    filename: str
+    content: str
+    original_path: Optional[str] = None
+    relative_path: str
+
+
+class SuiteContextExperiment(BaseModel):
+    key: str
+    id: int
+    name: str
+    experiment: SuiteContextFile
+    environment: Optional[SuiteContextFile] = None
+    controller: Optional[SuiteContextFile] = None
+
+
+class SuiteContextResponse(BaseModel):
+    suite_id: int
+    hdf5_file: str
+    experiments: List[SuiteContextExperiment] = Field(default_factory=list)
+
+
 class ExperimentProgress(BaseModel):
     id: int
     name: Optional[str] = None
@@ -120,3 +142,7 @@ class StartTensorBoardRequest(BaseModel):
 
 class StopTensorBoardRequest(BaseModel):
     reason: Optional[str] = None
+
+
+class ReproduceExperimentRequest(BaseModel):
+    name: Optional[str] = None

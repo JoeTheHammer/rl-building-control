@@ -4,7 +4,17 @@ import { toast } from 'sonner'
 import { useLocation, useSearchParams } from 'react-router-dom'
 
 import CustomPage from '@/components/shared/page.tsx'
+import CustomEditor from '@/components/shared/custom-editor.tsx'
 import { Button } from '@/components/ui/button.tsx'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input.tsx'
 import DatasetViewer from '@/components/analytics/dataset-viewer.tsx'
 import LoadDataDialog from '@/components/analytics/load-data-dialog.tsx'
 import CsvExportDialog, {
@@ -20,6 +30,12 @@ import {
   fetchAnalyticsSuiteData,
   fetchAnalyticsSuites,
 } from '@/services/analytics-service.ts'
+import {
+  fetchSuiteContext,
+  reproduceSuiteExperiment,
+  type SuiteContextExperiment,
+  type SuiteContextResponse,
+} from '@/services/experiment-service.ts'
 
 interface ExportSeriesDefinition {
   option: CsvOption
@@ -67,6 +83,24 @@ const Analytics: React.FC = () => {
   const [selectedCsvOptions, setSelectedCsvOptions] = useState<string[]>([])
   const [autoLoadSuiteId, setAutoLoadSuiteId] = useState<number | null>(null)
   const requestedSuiteIdRef = useRef<number | null>(null)
+  const [suiteContext, setSuiteContext] = useState<SuiteContextResponse | null>(
+    null,
+  )
+  const [contextLoading, setContextLoading] = useState(false)
+  const [contextError, setContextError] = useState<string | null>(null)
+  const [contextDialog, setContextDialog] = useState<{
+    title: string
+    filename?: string | null
+    content: string
+  } | null>(null)
+  const [reproducingKey, setReproducingKey] = useState<string | null>(null)
+  const [reproductionDialog, setReproductionDialog] = useState<{
+    open: boolean
+    entry: SuiteContextExperiment | null
+    experimentName: string
+    name: string
+  }>({ open: false, entry: null, experimentName: '', name: '' })
+  const [reproductionSubmitting, setReproductionSubmitting] = useState(false)
 
   const requestedSuiteId = useMemo(() => {
     const state = location.state as { suiteId?: unknown } | null
@@ -118,6 +152,9 @@ const Analytics: React.FC = () => {
 
       setLoadingData(true)
       setLoadDialogOpen(false)
+      setSuiteContext(null)
+      setContextDialog(null)
+      setContextError(null)
       try {
         const response = await fetchAnalyticsSuiteData(suiteId)
         setSelectedSuite(suite)
@@ -125,15 +162,149 @@ const Analytics: React.FC = () => {
         setSelectedCsvOptions([])
         setSearchParams({ suiteId: String(suiteId) }, { replace: true })
         toast.success(`Loaded analytics for "${suite.name}"`)
+        setContextLoading(true)
+        try {
+          const contextResponse = await fetchSuiteContext(suiteId)
+          setSuiteContext(contextResponse)
+          setContextError(null)
+        } catch (contextError) {
+          console.error('Failed to load suite context', contextError)
+          setSuiteContext(null)
+          setContextError('Unable to load configuration context for this suite')
+        } finally {
+          setContextLoading(false)
+        }
       } catch (error) {
         console.error('Failed to fetch analytics data', error)
         toast.error('Unable to load analytics data for the selected suite')
+        setContextLoading(false)
       } finally {
         setLoadingData(false)
       }
     },
     [setSearchParams, suites],
   )
+
+  const handleOpenContext = useCallback(
+    (
+      entry: SuiteContextExperiment,
+      type: 'experiment' | 'environment' | 'controller',
+      experimentName: string,
+    ) => {
+      let file: SuiteContextExperiment['experiment'] | null | undefined
+      if (type === 'experiment') {
+        file = entry.experiment
+      } else if (type === 'environment') {
+        file = entry.environment ?? null
+      } else {
+        file = entry.controller ?? null
+      }
+
+      if (!file) {
+        toast.error('The selected configuration is not available in the export')
+        return
+      }
+
+      const typeLabel =
+        type === 'experiment'
+          ? 'Experiment'
+          : type === 'environment'
+            ? 'Environment'
+            : 'Controller'
+
+      setContextDialog({
+        title: `${experimentName} • ${typeLabel} Config`,
+        filename: file.original_path ?? file.filename,
+        content: file.content,
+      })
+    },
+    [],
+  )
+
+  const handleReproduceExperiment = useCallback(
+    (entry: SuiteContextExperiment, experimentName: string) => {
+      if (!selectedSuite) {
+        toast.error('Load an experiment suite before reproducing')
+        return
+      }
+
+      const defaultName = experimentName
+        ? `Reproduction ${experimentName}`
+        : 'Reproduction'
+
+      setReproductionDialog({
+        open: true,
+        entry,
+        experimentName,
+        name: defaultName.trim(),
+      })
+    },
+    [selectedSuite],
+  )
+
+  const handleReproductionNameChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = event.target
+      setReproductionDialog((prev) => ({
+        ...prev,
+        name: value,
+      }))
+    },
+    [],
+  )
+
+  const handleCloseReproductionDialog = useCallback(() => {
+    if (reproductionSubmitting) return
+    setReproductionDialog({
+      open: false,
+      entry: null,
+      experimentName: '',
+      name: '',
+    })
+  }, [reproductionSubmitting])
+
+  const handleConfirmReproduction = useCallback(async () => {
+    if (!selectedSuite || !reproductionDialog.entry) {
+      toast.error('Load an experiment suite before reproducing')
+      return
+    }
+
+    const trimmedName = reproductionDialog.name.trim()
+    if (trimmedName.length === 0) {
+      toast.error('Please provide a name for the reproduction experiment')
+      return
+    }
+
+    setReproductionSubmitting(true)
+    setReproducingKey(reproductionDialog.entry.key)
+
+    try {
+      await reproduceSuiteExperiment(
+        selectedSuite.id,
+        reproductionDialog.entry.key,
+        trimmedName,
+      )
+      toast.success(`Started reproduction for "${trimmedName}"`)
+      await loadSuites()
+      setReproductionDialog({
+        open: false,
+        entry: null,
+        experimentName: '',
+        name: '',
+      })
+    } catch (error) {
+      console.error('Failed to reproduce experiment', error)
+      toast.error('Unable to start reproduction for this experiment')
+    } finally {
+      setReproductionSubmitting(false)
+      setReproducingKey(null)
+    }
+  }, [
+    loadSuites,
+    reproductionDialog.entry,
+    reproductionDialog.name,
+    selectedSuite,
+  ])
 
   useEffect(() => {
     if (autoLoadSuiteId === null) {
@@ -211,12 +382,14 @@ const Analytics: React.FC = () => {
               values,
             )
           })
-          Object.entries(episode.measurements ?? {}).forEach(([key, values]) => {
-            addSeries(
-              `${baseLabel} • Evaluation • ${episodeLabel} • Measurement • ${key}`,
-              values,
-            )
-          })
+          Object.entries(episode.measurements ?? {}).forEach(
+            ([key, values]) => {
+              addSeries(
+                `${baseLabel} • Evaluation • ${episodeLabel} • Measurement • ${key}`,
+                values,
+              )
+            },
+          )
         })
       }
     })
@@ -313,6 +486,11 @@ const Analytics: React.FC = () => {
     const evaluation = experiment.evaluation
     const training = experiment.training
     const experimentName = experiment.name || experiment.key
+    const contextEntry = suiteContext?.experiments.find(
+      (item) => item.key === experiment.key,
+    )
+    const canShowContext =
+      Boolean(contextEntry) && selectedSuite?.status === 'Finished'
 
     return (
       <section
@@ -332,6 +510,52 @@ const Analytics: React.FC = () => {
               </p>
             )}
         </div>
+
+        {canShowContext && contextEntry && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                handleOpenContext(contextEntry, 'experiment', experimentName)
+              }
+            >
+              Show Experiment Config
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                handleOpenContext(contextEntry, 'environment', experimentName)
+              }
+              disabled={!contextEntry.environment}
+            >
+              Show Environment Config
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                handleOpenContext(contextEntry, 'controller', experimentName)
+              }
+              disabled={!contextEntry.controller}
+            >
+              Show Controller Config
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() =>
+                handleReproduceExperiment(contextEntry, experimentName)
+              }
+              disabled={reproducingKey === contextEntry.key}
+            >
+              {reproducingKey === contextEntry.key ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Reproducing…
+                </>
+              ) : (
+                'Reproduce'
+              )}
+            </Button>
+          </div>
+        )}
 
         {evaluation && (
           <div className="flex flex-col gap-4">
@@ -421,6 +645,19 @@ const Analytics: React.FC = () => {
           </div>
         )}
 
+        {contextLoading && (
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Loader2 className="size-4 animate-spin" /> Loading configuration
+            context…
+          </div>
+        )}
+
+        {contextError && (
+          <div className="text-destructive border-destructive/20 bg-destructive/10 rounded-lg border p-4 text-sm">
+            {contextError}
+          </div>
+        )}
+
         {!loadingData && !suiteData && (
           <div className="text-muted-foreground rounded-lg border border-dashed p-6 text-sm">
             Load experiment analytics to explore the recorded training and
@@ -460,6 +697,101 @@ const Analytics: React.FC = () => {
         onToggle={handleToggleCsvOption}
         onExport={handleExportCsv}
       />
+
+      <Dialog
+        open={reproductionDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseReproductionDialog()
+          }
+        }}
+      >
+        <DialogContent
+          showCloseButton={!reproductionSubmitting}
+          aria-describedby={undefined}
+        >
+          <DialogHeader>
+            <DialogTitle>Reproduce experiment</DialogTitle>
+            <DialogDescription>
+              Provide a name for the reproduced experiment run.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            {reproductionDialog.experimentName && (
+              <p className="text-muted-foreground text-xs sm:text-sm">
+                Original experiment: {reproductionDialog.experimentName}
+              </p>
+            )}
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="reproduction-name"
+                className="text-xs font-medium sm:text-sm"
+              >
+                Reproduction name
+              </label>
+              <Input
+                id="reproduction-name"
+                value={reproductionDialog.name}
+                onChange={handleReproductionNameChange}
+                disabled={reproductionSubmitting}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCloseReproductionDialog}
+              disabled={reproductionSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => void handleConfirmReproduction()}
+              disabled={reproductionSubmitting}
+            >
+              {reproductionSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" /> Starting…
+                </span>
+              ) : (
+                'Start reproduction'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={contextDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setContextDialog(null)
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-4xl sm:max-w-5xl"
+          aria-describedby={undefined}
+        >
+          <DialogHeader>
+            <DialogTitle>{contextDialog?.title ?? ''}</DialogTitle>
+            {contextDialog?.filename && (
+              <DialogDescription className="text-xs sm:text-sm">
+                File: {contextDialog.filename}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto">
+            <CustomEditor
+              defaultLanguage="yaml"
+              height="600px"
+              value={contextDialog?.content ?? ''}
+              options={{ readOnly: true, minimap: { enabled: false } }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </CustomPage>
   )
 }

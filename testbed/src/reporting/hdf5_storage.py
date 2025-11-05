@@ -3,10 +3,13 @@ from __future__ import annotations
 import os
 import re
 from datetime import datetime
+from pathlib import PurePosixPath
 from typing import Any, Dict, Iterable, Optional
 
 import h5py
 import numpy as np
+
+from reporting.context import ContextFile, ExperimentContext
 
 
 def _ensure_directory(path: str) -> None:
@@ -37,7 +40,9 @@ def _append_dataset(group: h5py.Group, name: str, data: np.ndarray) -> h5py.Data
     )
 
 
-def _store_metadata(target: h5py.Group | h5py.File, metadata: Optional[Dict[str, Any]] = None) -> None:
+def _store_metadata(
+    target: h5py.Group | h5py.File, metadata: Optional[Dict[str, Any]] = None
+) -> None:
     if not metadata:
         return
 
@@ -242,12 +247,44 @@ class ExperimentStorage:
         combined.update({k: v for k, v in kwargs.items() if v is not None})
         _store_metadata(self.group, combined)
 
+    def store_context(self, context: ExperimentContext) -> None:
+        context_group = self.group.require_group("context")
+        for context_file in context.files:
+            self._store_context_file(context_group, context_file)
+
+    def _store_context_file(self, base_group: h5py.Group, context_file: ContextFile) -> None:
+        path = PurePosixPath(context_file.relative_path)
+        group = base_group
+        for part in path.parts[:-1]:
+            group = group.require_group(part)
+
+        name = path.name
+        if context_file.is_text:
+            dtype = h5py.string_dtype(encoding="utf-8")
+            data = context_file.content.decode("utf-8")
+            dataset = group.create_dataset(name, data=np.array(data, dtype=dtype), dtype=dtype)
+        else:
+            dataset = group.create_dataset(
+                name,
+                data=np.frombuffer(context_file.content, dtype=np.uint8),
+            )
+
+        dataset.attrs["relative_path"] = str(path)
+        dataset.attrs["is_text"] = bool(context_file.is_text)
+        if context_file.original_path:
+            dataset.attrs["original_path"] = context_file.original_path
+        if context_file.metadata:
+            for key, value in context_file.metadata.items():
+                if value is not None:
+                    dataset.attrs[key] = value
+
 
 class HDF5StorageManager:
     def __init__(self, file_path: str):
         _ensure_directory(file_path)
         self.file_path = file_path
-        self._file = h5py.File(file_path, "w")
+        self._file = h5py.File(file_path, "w", libver="latest")
+        self._file.swmr_mode = True
         self._file.attrs["created_at"] = datetime.utcnow().isoformat()
         self._file.attrs["schema_version"] = "1.1"
 
@@ -276,3 +313,7 @@ class HDF5StorageManager:
             self._file.close()
             self._file = None
 
+    def flush(self) -> None:
+        """Ensure all buffered data is written to disk (SWMR visible)."""
+        if self._file:
+            self._file.flush()

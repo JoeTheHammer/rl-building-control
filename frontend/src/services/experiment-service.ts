@@ -59,6 +59,28 @@ export interface ConfigDetailsSection {
   content: Record<string, unknown>
 }
 
+export interface SuiteContextFile {
+  filename: string
+  content: string
+  original_path?: string | null
+  relative_path: string
+}
+
+export interface SuiteContextExperiment {
+  key: string
+  id: number
+  name: string
+  experiment: SuiteContextFile
+  environment?: SuiteContextFile | null
+  controller?: SuiteContextFile | null
+}
+
+export interface SuiteContextResponse {
+  suite_id: number
+  hdf5_file: string
+  experiments: SuiteContextExperiment[]
+}
+
 export interface ExperimentConfigDetailsResponse {
   experiment: ConfigDetailsSection
   environment?: ConfigDetailsSection | null
@@ -155,6 +177,15 @@ export const fetchExperimentSuites = async (): Promise<
   return response.data
 }
 
+export const fetchSuiteContext = async (
+  suiteId: number,
+): Promise<SuiteContextResponse> => {
+  const response = await axios.get<SuiteContextResponse>(
+    `${API_BASE}/suites/${suiteId}/context`,
+  )
+  return response.data
+}
+
 export const runExperimentSuite = async ({
   configName,
   suiteName,
@@ -189,6 +220,18 @@ export const archiveExperimentSuite = async (
 
 export const deleteExperimentSuite = async (suiteId: number): Promise<void> => {
   await axios.delete(`${API_BASE}/suites/${suiteId}`)
+}
+
+export const reproduceSuiteExperiment = async (
+  suiteId: number,
+  experimentKey: string,
+  reproductionName?: string,
+): Promise<ExperimentSuiteApiResponse> => {
+  const response = await axios.post<ExperimentSuiteApiResponse>(
+    `${API_BASE}/suites/${suiteId}/experiments/${encodeURIComponent(experimentKey)}/reproduce`,
+    reproductionName !== undefined ? { name: reproductionName } : {},
+  )
+  return response.data
 }
 
 export const fetchExperimentConfigDetails = async (
