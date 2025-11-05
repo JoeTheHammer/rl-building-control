@@ -36,18 +36,6 @@ interface ControllerOption {
   name: string
 }
 
-const controllerOptions: ControllerOption[] = [
-  { key: 'rule-based', name: 'Rule Based' },
-  { key: 'custom', name: 'Custom' },
-  { key: 'sac', name: 'SAC' },
-  { key: 'ppo', name: 'PPO' },
-  { key: 'recurrent-ppo', name: 'Recurrent PPO' },
-  { key: 'a2c', name: 'A2C' },
-  { key: 'ddpg', name: 'DDPG' },
-  { key: 'td3', name: 'TD3' },
-  { key: 'dqn', name: 'DQN' },
-]
-
 const createDefaultExperiment = (): ExperimentFormState => ({
   name: '',
   engine: 'sinergym',
@@ -69,6 +57,7 @@ const ExperimentConfigurator = () => {
   const [experiments, setExperiments] = useState<ExperimentFormState[]>([
     createDefaultExperiment(),
   ])
+  const [controllerOptions, setControllerOptions] = useState<ControllerOption[]>([])
   const [devMode, setDevMode] = useState(false)
   const [editorValue, setEditorValue] = useState('')
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
@@ -88,6 +77,38 @@ const ExperimentConfigurator = () => {
     () => (devMode ? editorValue : buildExperimentYaml(experiments)),
     [devMode, editorValue, experiments],
   )
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadControllers = async () => {
+      try {
+        const response = await fetch('/api/controllers')
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`)
+        }
+        const data: ControllerOption[] = await response.json()
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid controller manifest format')
+        }
+        if (isMounted) {
+          setControllerOptions(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch controllers', error)
+        if (isMounted) {
+          setControllerOptions([])
+        }
+        toast.error('Unable to load controllers from backend')
+      }
+    }
+
+    void loadControllers()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     const state = location.state as {

@@ -7,6 +7,7 @@ from api import building
 from api import weather
 from api import experiment
 from api import analytics
+from api import controllers_manifest
 
 app = FastAPI()
 
@@ -25,3 +26,4 @@ app.include_router(building.router, prefix="/api/building", tags=["building"])
 app.include_router(weather.router, prefix="/api/weather", tags=["weather"])
 app.include_router(experiment.router, prefix="/api/experiment", tags=["experiment"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(controllers_manifest.router, prefix="/api", tags=["controllers"])

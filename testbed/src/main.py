@@ -13,6 +13,7 @@ from controllers.sac_controller import SACFactory
 from controllers.td3_controller import TD3Factory
 from custom_loggers.setup_logger import logger
 from experiment.manager import ExperimentManager
+from services.controller_manifest import export_controller_manifest
 
 app = typer.Typer()
 
@@ -35,6 +36,8 @@ def run(config: str = typer.Argument(..., help="Path to the YAML environment_con
     experiment_manager.register_controller_factory("ddpg", DDPGFactory())
     experiment_manager.register_controller_factory("td3", TD3Factory())
     experiment_manager.register_controller_factory("dqn", DQNFactory())
+
+    export_controller_manifest(experiment_manager)
 
     experiment_manager.run_experiments_from_config(config)
     logger.info("All experiments finished.")
