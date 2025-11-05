@@ -16,11 +16,14 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-COPY Pipfile Pipfile.lock ./
+COPY backend/Pipfile backend/Pipfile.lock ./
 RUN pip install --no-cache-dir pipenv && \
     pipenv install --system --deploy
 
-COPY . .
+COPY backend/ ./
+COPY config/ /config/
+
+VOLUME ["/data"]
 
 EXPOSE 8000
 

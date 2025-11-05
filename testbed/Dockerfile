@@ -17,10 +17,13 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 python3-pip gcc g++ && \
     rm -rf /var/lib/apt/lists/*
 
-COPY Pipfile Pipfile.lock ./
+COPY testbed/Pipfile testbed/Pipfile.lock ./
 RUN python3 -m pip install --no-cache-dir pipenv && \
     pipenv install --system --deploy
 
-COPY . .
+COPY testbed/ ./
+COPY config/ /config/
+
+VOLUME ["/data"]
 
 CMD ["python3", "-m", "src.main"]

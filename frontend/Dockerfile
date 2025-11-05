@@ -9,10 +9,12 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY frontend/ ./
+COPY config/ /config/
+
 RUN npm run build
 
 EXPOSE 5173

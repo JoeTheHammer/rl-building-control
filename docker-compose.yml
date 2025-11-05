@@ -3,7 +3,8 @@ version: "3.9"
 services:
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     image: myproject/backend:latest
     environment:
       ENV: production
@@ -14,13 +15,16 @@ services:
       BACKEND_PORT: "8000"
     volumes:
       - ./backend:/app
+      - ./config:/config:ro
+      - ./data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8000:8000"
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     image: myproject/frontend:latest
     environment:
       ENV: production
@@ -30,12 +34,14 @@ services:
       BACKEND_PORT: "8000"
     volumes:
       - ./frontend:/app
+      - ./config:/config:ro
     ports:
       - "5173:5173"
 
   testbed:
     build:
-      context: ./testbed
+      context: .
+      dockerfile: testbed/Dockerfile
     image: myproject/testbed:latest
     profiles: ["testbed"]
     environment:
@@ -47,3 +53,5 @@ services:
       ENERGYPLUS_VERSION: "23.2.0"
     volumes:
       - ./testbed:/app
+      - ./config:/config:ro
+      - ./data:/data
