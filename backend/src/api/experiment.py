@@ -15,6 +15,7 @@ from models.experiment import (
     ExperimentProgress,
     ExperimentRunStatus,
     ExperimentSuiteResponse,
+    ReproduceExperimentRequest,
     SuiteContextResponse,
     RunExperimentSuiteRequest,
     SaveExperimentRequest,
@@ -209,8 +210,13 @@ def run_experiment_suite(req: RunExperimentSuiteRequest):
     "/suites/{suite_id}/experiments/{experiment_key}/reproduce",
     response_model=ExperimentSuiteResponse,
 )
-def reproduce_experiment(suite_id: int, experiment_key: str):
-    suite = suite_manager.reproduce_experiment(suite_id, experiment_key)
+def reproduce_experiment(
+    suite_id: int,
+    experiment_key: str,
+    payload: ReproduceExperimentRequest | None = None,
+):
+    name = payload.name if payload else None
+    suite = suite_manager.reproduce_experiment(suite_id, experiment_key, name)
     return tensorboard_manager.enrich_suite(suite)
 
 

@@ -142,3 +142,7 @@ class StartTensorBoardRequest(BaseModel):
 
 class StopTensorBoardRequest(BaseModel):
     reason: Optional[str] = None
+
+
+class ReproduceExperimentRequest(BaseModel):
+    name: Optional[str] = None

@@ -225,9 +225,11 @@ export const deleteExperimentSuite = async (suiteId: number): Promise<void> => {
 export const reproduceSuiteExperiment = async (
   suiteId: number,
   experimentKey: string,
+  reproductionName?: string,
 ): Promise<ExperimentSuiteApiResponse> => {
   const response = await axios.post<ExperimentSuiteApiResponse>(
     `${API_BASE}/suites/${suiteId}/experiments/${encodeURIComponent(experimentKey)}/reproduce`,
+    reproductionName !== undefined ? { name: reproductionName } : {},
   )
   return response.data
 }

@@ -383,7 +383,12 @@ class ExperimentSuiteManager:
             tensorboard_enabled=tensorboard_enabled,
         )
 
-    def reproduce_experiment(self, suite_id: int, experiment_key: str) -> ExperimentSuiteResponse:
+    def reproduce_experiment(
+        self,
+        suite_id: int,
+        experiment_key: str,
+        name: Optional[str] = None,
+    ) -> ExperimentSuiteResponse:
         testbed_path = os.getenv("TESTBED_PATH")
         if not testbed_path:
             raise HTTPException(status_code=500, detail="TESTBED_PATH environment variable is not set")
@@ -401,7 +406,10 @@ class ExperimentSuiteManager:
 
         record = get_experiment_record(suite_id, experiment_key)
 
-        reproduction_name = f"Reproduction • {record.name}".strip()
+        provided_name = (name or "").strip() if name is not None else ""
+        base_name = (record.name or "").strip()
+        default_name = f"Reproduction • {base_name}".strip(" •") if base_name else "Reproduction"
+        reproduction_name = provided_name or default_name
 
         tmp_id, suite_dir = self._initialize_suite(
             reproduction_name,
@@ -474,7 +482,7 @@ class ExperimentSuiteManager:
         else:
             experiment_definition = {}
 
-        experiment_definition.setdefault("name", record.name)
+        experiment_definition["name"] = reproduction_name
 
         # Remove camelCase duplicates that might have been persisted in the
         # original configuration to satisfy the pydantic schema used by the

@@ -10,9 +10,11 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input.tsx'
 import DatasetViewer from '@/components/analytics/dataset-viewer.tsx'
 import LoadDataDialog from '@/components/analytics/load-data-dialog.tsx'
 import CsvExportDialog, {
@@ -90,6 +92,13 @@ const Analytics: React.FC = () => {
     content: string
   } | null>(null)
   const [reproducingKey, setReproducingKey] = useState<string | null>(null)
+  const [reproductionDialog, setReproductionDialog] = useState<{
+    open: boolean
+    entry: SuiteContextExperiment | null
+    experimentName: string
+    name: string
+  }>({ open: false, entry: null, experimentName: '', name: '' })
+  const [reproductionSubmitting, setReproductionSubmitting] = useState(false)
 
   const requestedSuiteId = useMemo(() => {
     const state = location.state as { suiteId?: unknown } | null
@@ -211,26 +220,84 @@ const Analytics: React.FC = () => {
   )
 
   const handleReproduceExperiment = useCallback(
-    async (entry: SuiteContextExperiment, experimentName: string) => {
+    (entry: SuiteContextExperiment, experimentName: string) => {
       if (!selectedSuite) {
         toast.error('Load an experiment suite before reproducing')
         return
       }
 
-      setReproducingKey(entry.key)
-      try {
-        await reproduceSuiteExperiment(selectedSuite.id, entry.key)
-        toast.success(`Started reproduction for "${experimentName}"`)
-        await loadSuites()
-      } catch (error) {
-        console.error('Failed to reproduce experiment', error)
-        toast.error('Unable to start reproduction for this experiment')
-      } finally {
-        setReproducingKey(null)
-      }
+      const defaultName = experimentName
+        ? `Reproduction • ${experimentName}`
+        : 'Reproduction'
+
+      setReproductionDialog({
+        open: true,
+        entry,
+        experimentName,
+        name: defaultName.trim(),
+      })
     },
-    [loadSuites, selectedSuite],
+    [selectedSuite],
   )
+
+  const handleReproductionNameChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = event.target
+      setReproductionDialog((prev) => ({
+        ...prev,
+        name: value,
+      }))
+    },
+    [],
+  )
+
+  const handleCloseReproductionDialog = useCallback(() => {
+    if (reproductionSubmitting) return
+    setReproductionDialog({ open: false, entry: null, experimentName: '', name: '' })
+  }, [reproductionSubmitting])
+
+  const handleConfirmReproduction = useCallback(async () => {
+    if (!selectedSuite || !reproductionDialog.entry) {
+      toast.error('Load an experiment suite before reproducing')
+      return
+    }
+
+    const trimmedName = reproductionDialog.name.trim()
+    if (trimmedName.length === 0) {
+      toast.error('Please provide a name for the reproduction experiment')
+      return
+    }
+
+    setReproductionSubmitting(true)
+    setReproducingKey(reproductionDialog.entry.key)
+
+    try {
+      await reproduceSuiteExperiment(
+        selectedSuite.id,
+        reproductionDialog.entry.key,
+        trimmedName,
+      )
+      toast.success(`Started reproduction for "${trimmedName}"`)
+      await loadSuites()
+      setReproductionDialog({
+        open: false,
+        entry: null,
+        experimentName: '',
+        name: '',
+      })
+    } catch (error) {
+      console.error('Failed to reproduce experiment', error)
+      toast.error('Unable to start reproduction for this experiment')
+    } finally {
+      setReproductionSubmitting(false)
+      setReproducingKey(null)
+    }
+  }, [
+    loadSuites,
+    reproductionDialog.entry,
+    reproductionDialog.name,
+    selectedSuite,
+  ])
 
   useEffect(() => {
     if (autoLoadSuiteId === null) {
@@ -611,6 +678,64 @@ const Analytics: React.FC = () => {
         onToggle={handleToggleCsvOption}
         onExport={handleExportCsv}
       />
+
+      <Dialog
+        open={reproductionDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseReproductionDialog()
+          }
+        }}
+      >
+        <DialogContent showCloseButton={!reproductionSubmitting} aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Reproduce experiment</DialogTitle>
+            <DialogDescription>
+              Provide a name for the reproduced experiment run.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            {reproductionDialog.experimentName && (
+              <p className="text-muted-foreground text-xs sm:text-sm">
+                Original experiment: {reproductionDialog.experimentName}
+              </p>
+            )}
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="reproduction-name"
+                className="text-xs font-medium sm:text-sm"
+              >
+                Reproduction name
+              </label>
+              <Input
+                id="reproduction-name"
+                value={reproductionDialog.name}
+                onChange={handleReproductionNameChange}
+                disabled={reproductionSubmitting}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCloseReproductionDialog}
+              disabled={reproductionSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={() => void handleConfirmReproduction()} disabled={reproductionSubmitting}>
+              {reproductionSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" /> Starting…
+                </span>
+              ) : (
+                'Start reproduction'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={contextDialog !== null}
