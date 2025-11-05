@@ -111,9 +111,22 @@ def _read_context_group(key: str, group: h5py.Group) -> Optional[ExperimentConte
     return ExperimentContextRecord(key=key, experiment_id=experiment_id, name=name, files=files)
 
 
+def _open_hdf5_file(file_path: Path) -> h5py.File:
+    try:
+        return h5py.File(file_path, "r")
+    except OSError:
+        try:
+            return h5py.File(file_path, "r", locking=False)  # type: ignore[call-arg]
+        except Exception as secondary_error:  # pragma: no cover - best effort fallback
+            raise HTTPException(
+                status_code=503,
+                detail="Experiment data is currently unavailable; please try again shortly.",
+            ) from secondary_error
+
+
 def _load_context_records(file_path: Path) -> List[ExperimentContextRecord]:
     records: List[ExperimentContextRecord] = []
-    with h5py.File(file_path, "r") as handle:
+    with _open_hdf5_file(file_path) as handle:
         for key, item in handle.items():
             if not isinstance(item, h5py.Group) or not key.startswith("experiment"):
                 continue
