@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    image: myproject/backend:latest
+    environment:
+      ENV: production
+      TESTBED_PATH: /app
+      TESTBED_IMAGE: myproject/testbed:latest
+      DOCKER_HOST: unix:///var/run/docker.sock
+      FRONTEND_PORT: "5173"
+      BACKEND_PORT: "8000"
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    image: myproject/frontend:latest
+    environment:
+      ENV: production
+      TESTBED_PATH: /app
+      TESTBED_IMAGE: myproject/testbed:latest
+      FRONTEND_PORT: "5173"
+      BACKEND_PORT: "8000"
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+
+  testbed:
+    build:
+      context: ./testbed
+    image: myproject/testbed:latest
+    profiles: ["testbed"]
+    environment:
+      ENV: production
+      TESTBED_PATH: /app
+      TESTBED_IMAGE: myproject/testbed:latest
+      FRONTEND_PORT: "5173"
+      BACKEND_PORT: "8000"
+      ENERGYPLUS_VERSION: "23.2.0"
+    volumes:
+      - ./testbed:/app
