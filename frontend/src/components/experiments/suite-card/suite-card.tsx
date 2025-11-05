@@ -115,7 +115,8 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
     useSuiteConfig({ configName, suiteId, detailsOpen })
 
   const {
-    shouldLoadStatus,
+    shouldStreamLogs,
+    statusInfo,
     statusLoading,
     statusError,
     progressById,
@@ -124,8 +125,23 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
 
   const { logLines, logLoading, logError } = useSuiteLogs({
     suiteId,
-    shouldStream: shouldLoadStatus,
+    shouldStream: shouldStreamLogs,
   })
+
+  const activeProgress = useMemo(() => {
+    if (!statusInfo?.experiments?.length) {
+      return null
+    }
+    const prioritized = statusInfo.experiments.find((experiment) => {
+      const normalized = experiment.status?.toLowerCase()
+      return (
+        normalized === 'training' ||
+        normalized === 'evaluation' ||
+        normalized === 'hyperparameter_tuning'
+      )
+    })
+    return prioritized ?? statusInfo.experiments[0] ?? null
+  }, [statusInfo])
 
   const {
     tensorboardStatus,
@@ -195,6 +211,9 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
             actions={actions}
             detailsOpen={detailsOpen}
             tensorboard={tensorboardControls}
+            progress={activeProgress}
+            statusLoading={statusLoading}
+            statusError={statusError}
           />
         </CardContent>
 

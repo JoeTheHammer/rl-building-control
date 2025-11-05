@@ -6,10 +6,14 @@ import { Button } from '@/components/ui/button.tsx'
 import { CardDescription, CardTitle } from '@/components/ui/card.tsx'
 import { CollapsibleTrigger } from '@/components/ui/collapsible.tsx'
 import { cn } from '@/lib/utils.ts'
-import type { ExperimentSuiteStatus } from '@/services/experiment-service.ts'
+import type {
+  ExperimentProgressResponse,
+  ExperimentSuiteStatus,
+} from '@/services/experiment-service.ts'
 
 import type { Suite, TensorboardControls } from './types.ts'
 import { getStatusBadgeClass } from './utils.ts'
+import StatusSummary from './status-summary.tsx'
 
 interface HeaderSectionProps {
   suite: Suite
@@ -19,6 +23,9 @@ interface HeaderSectionProps {
   actions: React.ReactNode
   detailsOpen: boolean
   tensorboard?: TensorboardControls | null
+  progress?: ExperimentProgressResponse | null
+  statusLoading: boolean
+  statusError: string | null
 }
 
 const HeaderSection: React.FC<HeaderSectionProps> = ({
@@ -29,6 +36,9 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   actions,
   detailsOpen,
   tensorboard,
+  progress,
+  statusLoading,
+  statusError,
 }) => {
   const showTensorboardRow = Boolean(tensorboard)
   const isTensorboardRunning = tensorboard?.isRunning ?? false
@@ -79,6 +89,16 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
           <CardDescription className="text-muted-foreground text-sm font-medium">
             {idLabel}
           </CardDescription>
+        )}
+
+        {status === 'Running' && (
+          <div className="mt-2 max-w-md">
+            <StatusSummary
+              progress={progress ?? null}
+              loading={statusLoading}
+              error={statusError}
+            />
+          </div>
         )}
       </div>
 

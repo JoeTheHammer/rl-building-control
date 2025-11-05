@@ -16,7 +16,7 @@ interface UseSuiteStatusOptions {
 }
 
 interface UseSuiteStatusResult {
-  shouldLoadStatus: boolean
+  shouldStreamLogs: boolean
   statusInfo: ExperimentRunStatusResponse | null
   statusLoading: boolean
   statusError: string | null
@@ -29,8 +29,8 @@ export const useSuiteStatus = ({
   detailsOpen,
   status,
 }: UseSuiteStatusOptions): UseSuiteStatusResult => {
-  const shouldLoadStatus =
-    detailsOpen && status === 'Running' && typeof suiteId === 'number'
+  const shouldLoadStatus = status === 'Running' && typeof suiteId === 'number'
+  const shouldStreamLogs = shouldLoadStatus && detailsOpen
 
   const [statusInfo, setStatusInfo] =
     useState<ExperimentRunStatusResponse | null>(null)
@@ -92,7 +92,7 @@ export const useSuiteStatus = ({
   const hasStatusEntries = (statusInfo?.experiments?.length ?? 0) > 0
 
   return {
-    shouldLoadStatus,
+    shouldStreamLogs,
     statusInfo,
     statusLoading,
     statusError,

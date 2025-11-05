@@ -469,6 +469,12 @@ class ExperimentSuiteManager:
 
         experiment_definition.setdefault("name", record.name)
 
+        # Remove camelCase duplicates that might have been persisted in the
+        # original configuration to satisfy the pydantic schema used by the
+        # testbed parser.
+        experiment_definition.pop("environmentConfig", None)
+        experiment_definition.pop("controllerConfig", None)
+
         if environment_config_path:
             rel_env = str(Path("context") / Path(environment_file.relative_path))
             experiment_definition["environment_config"] = rel_env
