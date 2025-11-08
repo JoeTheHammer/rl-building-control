@@ -6,11 +6,13 @@ import shutil
 import signal
 import sqlite3
 import subprocess
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock, Thread
 from typing import Any, Dict, Iterable, Optional
 
+import requests
 import yaml
 
 from fastapi import HTTPException
@@ -22,6 +24,8 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 DATA_DIR = PROJECT_DIR / "data" / "experiments"
 DB_PATH = BACKEND_DIR / "experiment_suites.db"
+
+POLL_INTERVAL = 5
 
 
 def _sanitize_name(name: str) -> str:
@@ -662,20 +666,33 @@ class ExperimentSuiteManager:
         if not deleted:  # pragma: no cover - defensive
             raise HTTPException(status_code=404, detail="Experiment suite not found")
 
-    def _monitor_process(self, suite_id: int, process: subprocess.Popen, log_file) -> None:
-        return_code = process.wait()
-        log_file.close()
+    def _monitor_process(self, suite_id: int, pid: int, testbed_url: str) -> None:
+        """
+        Polls the remote Testbed container for the process status.
+        When the process finishes, updates the suite status in DB.
+        """
+        while True:
+            try:
+                # Example: http://testbed:8001/api/testbed/status/{pid}
+                response = requests.get(f"{testbed_url}/api/testbed/status/{pid}", timeout=5)
+                data = response.json()
+            except requests.RequestException as e:
+                print(f"[WARN] Polling failed for suite {suite_id}: {e}")
+                time.sleep(POLL_INTERVAL)
+                continue
 
-        status = (
-            ExperimentSuiteStatus.FINISHED
-            if return_code == 0
-            else ExperimentSuiteStatus.ABORTED
-        )
-        pid: Optional[int] = None if status != ExperimentSuiteStatus.RUNNING else process.pid
-        self._repository.update_status(suite_id, status, pid)
+            status = data.get("status", "unknown")
+            if status != "running":
+                print(f"[INFO] Suite {suite_id} finished (PID {pid}, status={status})")
+                final_status = (
+                    ExperimentSuiteStatus.FINISHED
+                    if status == "not running"
+                    else ExperimentSuiteStatus.ABORTED
+                )
+                self._repository.update_status(suite_id, final_status, None)
+                break
 
-        with self._lock:
-            self._processes.pop(suite_id, None)
+            time.sleep(POLL_INTERVAL)
 
 
 manager = ExperimentSuiteManager()
