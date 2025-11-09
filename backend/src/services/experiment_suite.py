@@ -303,10 +303,7 @@ def _controller_uses_tensorboard(path: Path) -> bool:
 
 def _detect_tensorboard_enabled(config_path: Path) -> bool:
     try:
-        print(f"Original path: {config_path}")
         experiment_config = _load_yaml_file(Path(resolve_project_path(str(config_path))))
-        print(f"Resolved config: {resolve_project_path(str(config_path))}")
-        print(f"Experiment config: {experiment_config}")
     except Exception:
         return False
 
