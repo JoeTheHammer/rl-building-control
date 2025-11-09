@@ -32,7 +32,6 @@ interface DetailsSectionProps {
 
 const DetailsSection: React.FC<DetailsSectionProps> = ({
   status,
-  configName,
   configDetails,
   progressById,
   statusLoading,

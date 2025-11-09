@@ -640,7 +640,6 @@ class ExperimentSuiteManager:
         """
         while True:
             try:
-                print(pid)
                 response = requests.get(f"{testbed_url}/api/testbed/status/{pid}", timeout=5)
                 data = response.json()
             except requests.RequestException as e:
@@ -648,7 +647,8 @@ class ExperimentSuiteManager:
                 time.sleep(POLL_INTERVAL)
                 continue
 
-            status = data.get("status", "unknown")
+            status = str(data.get("status", "unknown")).lower()
+
             if status != "running":
                 print(f"[INFO] Suite {suite_id} finished (PID {pid}, status={status})")
 
@@ -657,14 +657,18 @@ class ExperimentSuiteManager:
                     print(f"[INFO] Suite {suite_id} already aborted; skipping overwrite.")
                     break
 
-                final_status = (
-                    ExperimentSuiteStatus.FINISHED
-                    if status == "not running"
-                    else ExperimentSuiteStatus.ABORTED
-                )
+                # --- Determine final experiment suite status ---
+                if (
+                        "finished" in status
+                        or "terminated gracefully" in status
+                        or status == "exited" and data.get("return_code") == 0
+                ):
+                    final_status = ExperimentSuiteStatus.FINISHED
+                else:
+                    # Anything else (error, force killed, not running, etc.) = aborted
+                    final_status = ExperimentSuiteStatus.ABORTED
 
-                print(f"Updated with {final_status}")
-
+                print(f"[INFO] Updating suite {suite_id} with status {final_status}")
                 self._repository.update_status(suite_id, final_status, None)
                 break
 
