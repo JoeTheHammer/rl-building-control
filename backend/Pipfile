@@ -9,6 +9,8 @@ uvicorn = {extras = ["standard"], version = "*"}
 "ruamel.yaml" = "*"
 h5py = "*"
 numpy = "*"
+requests = "*"
+tensorboard = "*"
 
 [dev-packages]
 

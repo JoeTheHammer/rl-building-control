@@ -10,7 +10,6 @@ pydantic = "*"
 typer = "*"
 pyyaml = "*"
 gymnasium = "*"
-sinergym = "*"
 asteval = "*"
 stable-baselines3 = "*"
 optuna = "*"
@@ -18,6 +17,10 @@ matplotlib = "*"
 sb3-contrib = "*"
 tensorboard = "*"
 h5py = "*"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+psutil = "*"
+sinergym = "==3.8.4"
 
 [dev-packages]
 black = "*"

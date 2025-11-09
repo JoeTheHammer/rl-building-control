@@ -341,31 +341,24 @@ class TensorBoardManager:
         record = self._repository.get(suite_id)
         if record and record.status == "running" and record.pid and _is_process_alive(record.pid):
             return self._build_status(suite, record)
-
         if record and record.status == "running":
             self._repository.mark_stopped(suite_id, expected_pid=record.pid)
 
         log_dir = Path(suite.path) / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
-        testbed_path = os.getenv("TESTBED_PATH")
-        if not testbed_path:
-            raise HTTPException(status_code=500, detail="TESTBED_PATH environment variable is not set")
-
         port = self._allocate_port()
         url = f"http://{self.HOST}:{port}/"
 
+        # ✅ run TensorBoard inside the same Python environment
         command = [
-            "pipenv",
-            "run",
-            "tensorboard",
+            "python",
+            "-m",
+            "tensorboard.main",
             f"--logdir={log_dir}",
             f"--host={self.HOST}",
             f"--port={port}",
         ]
-
-        env = os.environ.copy()
-        env["PIPENV_PIPFILE"] = str(Path(testbed_path) / "Pipfile")
 
         log_file_path = Path(suite.path) / "tensorboard.log"
         log_file = open(log_file_path, "w", encoding="utf-8")
@@ -376,7 +369,6 @@ class TensorBoardManager:
                 cwd=Path(suite.path),
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
-                env=env,
             )
         except FileNotFoundError as exc:
             log_file.close()
@@ -405,7 +397,6 @@ class TensorBoardManager:
         )
 
         self._track_process(suite_id, process)
-
         return self._build_status(suite, self._repository.get(suite_id))
 
     def stop(self, suite_id: int) -> StopTensorBoardResponse:
