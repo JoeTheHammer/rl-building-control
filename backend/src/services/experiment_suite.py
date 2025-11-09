@@ -570,8 +570,6 @@ class ExperimentSuiteManager:
                     if suite.status == ExperimentSuiteStatus.RUNNING.value
                 ]
 
-                print(f"running_suites: {running_suites}")
-
                 if not running_suites:
                     continue
 
