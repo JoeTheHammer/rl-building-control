@@ -20,9 +20,6 @@ class StartTestbed(BaseModel):
 def start(request: StartTestbed):
     main_py = SRC_DIR / "main.py"
 
-    env = os.environ.copy()
-    env["PIPENV_PIPFILE"] = str(Path(__file__).resolve().parents[2] / "Pipfile")
-
     command = ["pipenv", "run", "python", str(main_py), str(request.config_path)]
 
     try:
@@ -32,7 +29,6 @@ def start(request: StartTestbed):
             cwd=request.work_dir,
             stdout=log_file,
             stderr=subprocess.STDOUT,
-            env=env,
         )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -73,5 +69,28 @@ def get_status(pid: int):
 
 
 @router.post("/stop")
-def stop():
-    return {"Not implemented": "Not implemented"}
+def stop(pid: int):
+    try:
+        if not psutil.pid_exists(pid):
+            raise HTTPException(status_code=404, detail=f"Process {pid} not found")
+
+        process = psutil.Process(pid)
+
+        # Attempt graceful termination first
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+            return {"pid": pid, "status": "terminated gracefully"}
+        except psutil.TimeoutExpired:
+            # Force kill if it didn't stop
+            process.kill()
+            return {"pid": pid, "status": "force killed"}
+
+    except psutil.NoSuchProcess:
+        raise HTTPException(status_code=404, detail=f"Process {pid} not found")
+
+    except psutil.AccessDenied:
+        raise HTTPException(status_code=403, detail=f"Access denied to terminate process {pid}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
