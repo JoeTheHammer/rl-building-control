@@ -10,6 +10,7 @@ uvicorn = {extras = ["standard"], version = "*"}
 h5py = "*"
 numpy = "*"
 requests = "*"
+tensorboard = "*"
 
 [dev-packages]
 

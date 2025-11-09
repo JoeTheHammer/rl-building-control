@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import os
 import re
 import shutil
-import signal
 import sqlite3
-import subprocess
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -287,6 +284,9 @@ class ExperimentSuiteManager:
         self._processes: Set[int] = set()
         self._lock = Lock()
 
+        Thread(target=self._global_monitor_loop, daemon=True).start()
+
+
     def list_suites(self) -> list[ExperimentSuiteResponse]:
         return list(self._repository.list())
 
@@ -320,9 +320,7 @@ class ExperimentSuiteManager:
         """
         Starts a new experiment suite by calling the remote Testbed API.
         """
-        PORT = 8001
-        TESTBED_URL = f"http://127.0.0.1:{PORT}/api/testbed"
-        START_URL = f"{TESTBED_URL}/start"
+        api_endpoint = f"http://127.0.0.1:8001/api/testbed/start"
 
         full_config_path = config_path.expanduser().resolve()
         if not full_config_path.exists():
@@ -342,7 +340,7 @@ class ExperimentSuiteManager:
         }
 
         try:
-            response = requests.post(START_URL, json=start_payload, timeout=10)
+            response = requests.post(api_endpoint, json=start_payload, timeout=10)
             response.raise_for_status()
         except requests.RequestException as exc:
             raise HTTPException(status_code=500, detail=f"Failed to start Testbed API: {exc}")
@@ -359,13 +357,6 @@ class ExperimentSuiteManager:
         with self._lock:
             self._config_paths[tmp_id] = full_config_path
             self._processes.add(pid)  # store PID only
-
-        # Monitor the testbed process remotely
-        Thread(
-            target=self._monitor_process,
-            args=(tmp_id, pid, f"http://127.0.0.1:{PORT}"),
-            daemon=True,
-        ).start()
 
         return ExperimentSuiteResponse(
             id=tmp_id,
@@ -388,10 +379,6 @@ class ExperimentSuiteManager:
         Reproduce an existing experiment by restoring its context and
         starting it via the remote Testbed API.
         """
-        testbed_path = os.getenv("TESTBED_PATH")
-        if not testbed_path:
-            raise HTTPException(status_code=500, detail="TESTBED_PATH environment variable is not set")
-
         try:
             from services.experiment_context import get_experiment_record
         except ImportError as exc:  # pragma: no cover - defensive
@@ -482,8 +469,7 @@ class ExperimentSuiteManager:
         tensorboard_enabled = _detect_tensorboard_enabled(config_path)
         self._repository.set_tensorboard_enabled(tmp_id, tensorboard_enabled)
 
-        PORT = 8001
-        TESTBED_URL = f"http://127.0.0.1:{PORT}/api/testbed/start"
+        api_endpoint = f"http://127.0.0.1:8001/api/testbed/start"
         log_path = suite_dir / "experiment_log.txt"
 
         start_payload = {
@@ -493,7 +479,7 @@ class ExperimentSuiteManager:
         }
 
         try:
-            response = requests.post(TESTBED_URL, json=start_payload, timeout=10)
+            response = requests.post(api_endpoint, json=start_payload, timeout=10)
             response.raise_for_status()
         except requests.RequestException as exc:
             raise HTTPException(status_code=500, detail=f"Failed to start Testbed API: {exc}")
@@ -509,12 +495,6 @@ class ExperimentSuiteManager:
         with self._lock:
             self._config_paths[tmp_id] = config_path
             self._processes.add(pid)
-
-        Thread(
-            target=self._monitor_process,
-            args=(tmp_id, pid, f"http://127.0.0.1:{PORT}"),
-            daemon=True,
-        ).start()
 
         return ExperimentSuiteResponse(
             id=tmp_id,
@@ -536,10 +516,10 @@ class ExperimentSuiteManager:
         if not pid:
             raise HTTPException(status_code=400, detail="Suite has no running PID")
 
-        TESTBED_URL = "http://127.0.0.1:8001/api/testbed/stop"
+        api_endpoint = "http://127.0.0.1:8001/api/testbed/stop"
 
         try:
-            response = requests.post(f"{TESTBED_URL}?pid={pid}", timeout=10)
+            response = requests.post(f"{api_endpoint}?pid={pid}", timeout=10)
             response.raise_for_status()
         except requests.RequestException as exc:
             raise HTTPException(status_code=500, detail=f"Failed to contact Testbed API: {exc}")
@@ -575,6 +555,60 @@ class ExperimentSuiteManager:
         if updated is None:  # pragma: no cover - defensive
             raise HTTPException(status_code=500, detail="Failed to archive experiment suite")
         return updated
+
+    def _global_monitor_loop(self) -> None:
+        """
+        Periodically rechecks all suites marked as RUNNING in the database.
+        If the testbed responds that a suite is no longer running,
+        its status is updated accordingly.
+        """
+        while True:
+            time.sleep(POLL_INTERVAL)
+            try:
+                running_suites = [
+                    suite for suite in self._repository.list()
+                    if suite.status == ExperimentSuiteStatus.RUNNING.value
+                ]
+
+                print(f"running_suites: {running_suites}")
+
+                if not running_suites:
+                    continue
+
+                for suite in running_suites:
+                    pid = suite.pid
+                    if not pid:
+                        continue
+
+                    try:
+                        response = requests.get(
+                            f"http://127.0.0.1:8001/api/testbed/status/{pid}",
+                            timeout=5,
+                        )
+                        data = response.json()
+                    except requests.RequestException as e:
+                        print(f"[WARN] Global monitor: could not reach testbed for suite {suite.id}: {e}")
+                        continue
+
+                    status = str(data.get("status", "unknown")).lower()
+                    if status == "running":
+                        continue
+
+                    print(f"[INFO] Global monitor: suite {suite.id} no longer running (status={status})")
+
+                    if (
+                            "not running" in status,
+                            "finished" in status
+                            or "terminated gracefully" in status
+                            or status == "exited" and data.get("return_code") == 0
+                    ):
+                        final_status = ExperimentSuiteStatus.FINISHED
+                    else:
+                        final_status = ExperimentSuiteStatus.ABORTED
+
+                    self._repository.update_status(suite.id, final_status, None)
+            except Exception as e:
+                print(f"[WARN] Global monitor loop failed: {e}")
 
     def delete_suite(self, suite_id: int) -> None:
         suite = self._repository.get(suite_id)
@@ -633,46 +667,6 @@ class ExperimentSuiteManager:
         if not deleted:  # pragma: no cover - defensive
             raise HTTPException(status_code=404, detail="Experiment suite not found")
 
-    def _monitor_process(self, suite_id: int, pid: int, testbed_url: str) -> None:
-        """
-        Polls the remote Testbed container for the process status.
-        When the process finishes, updates the suite status in DB.
-        """
-        while True:
-            try:
-                response = requests.get(f"{testbed_url}/api/testbed/status/{pid}", timeout=5)
-                data = response.json()
-            except requests.RequestException as e:
-                print(f"[WARN] Polling failed for suite {suite_id}: {e}")
-                time.sleep(POLL_INTERVAL)
-                continue
-
-            status = str(data.get("status", "unknown")).lower()
-
-            if status != "running":
-                print(f"[INFO] Suite {suite_id} finished (PID {pid}, status={status})")
-
-                current_suite = self._repository.get(suite_id)
-                if current_suite and current_suite.status == ExperimentSuiteStatus.ABORTED.value:
-                    print(f"[INFO] Suite {suite_id} already aborted; skipping overwrite.")
-                    break
-
-                # --- Determine final experiment suite status ---
-                if (
-                        "finished" in status
-                        or "terminated gracefully" in status
-                        or status == "exited" and data.get("return_code") == 0
-                ):
-                    final_status = ExperimentSuiteStatus.FINISHED
-                else:
-                    # Anything else (error, force killed, not running, etc.) = aborted
-                    final_status = ExperimentSuiteStatus.ABORTED
-
-                print(f"[INFO] Updating suite {suite_id} with status {final_status}")
-                self._repository.update_status(suite_id, final_status, None)
-                break
-
-            time.sleep(POLL_INTERVAL)
 
 
 manager = ExperimentSuiteManager()

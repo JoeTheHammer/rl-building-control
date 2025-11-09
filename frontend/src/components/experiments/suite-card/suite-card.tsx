@@ -182,13 +182,15 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
       }
     : null
 
+  const className = detailsOpen ? '' : 'hidden'
+
   return (
     <Collapsible
       open={detailsOpen}
       onOpenChange={setDetailsOpen}
       className="w-full"
     >
-      <Card className="border-primary/20">
+      <Card className="border-primary/20 h-full w-full">
         <CardContent className="flex flex-col gap-4">
           <HeaderSection
             suite={suite}
@@ -221,6 +223,7 @@ const SuiteCard: React.FC<SuiteCardProps> = ({
             logError={logError}
             dataFolderPath={fullPath}
             experimentConfigFile={experimentConfigFile}
+            className={className}
           />
         </CollapsibleContent>
       </Card>

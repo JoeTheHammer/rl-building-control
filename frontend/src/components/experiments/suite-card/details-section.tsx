@@ -11,6 +11,7 @@ import type {
 import LogViewer from './log-viewer.tsx'
 import ProgressSection from './progress-section.tsx'
 import type { ActiveConfigState } from './hooks/use-config-dialog.ts'
+import { cn } from '@/lib/utils.ts'
 
 interface DetailsSectionProps {
   status: ExperimentSuiteStatus
@@ -28,6 +29,7 @@ interface DetailsSectionProps {
   logError: string | null
   dataFolderPath?: string
   experimentConfigFile?: string
+  className?: string
 }
 
 const DetailsSection: React.FC<DetailsSectionProps> = ({
@@ -45,11 +47,17 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
   logError,
   dataFolderPath,
   experimentConfigFile,
+  className,
 }) => {
   const experimentDetails = configDetails?.experiments ?? []
 
   return (
-    <CardContent className="bg-muted/20 border-primary/10 space-y-4 border-t pt-4">
+    <CardContent
+      className={cn(
+        'bg-muted/20 border-primary/10 space-y-4 border-t pt-4',
+        className,
+      )}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <Button
           onClick={() => openConfigDialog({ type: 'experiment' })}
