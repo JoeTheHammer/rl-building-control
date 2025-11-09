@@ -10,6 +10,8 @@ services:
     volumes:
       - ./config:/config
       - ./data:/data
+    environment:
+      RUNNING_IN_DOCKER: true
 
   backend:
     build:
@@ -20,6 +22,7 @@ services:
       CONFIG_PATH: /config
       DATA_PATH: /data
       TENSORBOARD_HOST: 0.0.0.0
+      RUNNING_IN_DOCKER: true
     ports:
       - "8000:8000"
       - "6006-6100:6006-6100"

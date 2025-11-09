@@ -633,21 +633,28 @@ class ExperimentSuiteManager:
                             timeout=5,
                         )
                         data = response.json()
+
                     except requests.RequestException as e:
                         print(f"[WARN] Global monitor: could not reach testbed for suite {suite.id}: {e}")
                         continue
 
                     status = str(data.get("status", "unknown")).lower()
+                    return_code = data.get("return_code", None)
                     if status == "running":
                         continue
 
                     print(f"[INFO] Global monitor: suite {suite.id} no longer running (status={status})")
 
+                    success = True
+                    if return_code is not None and return_code != 0:
+                        success = False
+
                     if (
+                            success and (
                             "not running" in status or
                             "finished" in status
                             or "terminated gracefully" in status
-                            or status == "exited" and data.get("return_code") == 0
+                            or status == "exited" and data.get("return_code") == 0)
                     ):
                         final_status = ExperimentSuiteStatus.FINISHED
                     else:

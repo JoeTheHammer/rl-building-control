@@ -21,6 +21,7 @@ from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.expression_reward import ExpressionReward
 from spaces.custom_action_space import ActuatorActionSpace
+from utils.yaml_utils import resolve_project_path
 
 
 @dataclass
@@ -64,7 +65,7 @@ def _resolve_paths(config: SinergymEnvironmentConfig) -> Tuple[str, str]:
 
         return str(project_candidate)
 
-    return _resolve(config.building_model), _resolve(config.weather_data)
+    return resolve_project_path(config.building_model), resolve_project_path(config.weather_data)
 
 
 def _parse_variables(
