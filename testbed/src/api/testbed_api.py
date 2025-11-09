@@ -43,29 +43,17 @@ def get_status(pid: int):
             return {"pid": pid, "status": "not running"}
 
         p = psutil.Process(pid)
+        if not p.is_running() or p.status() == psutil.STATUS_ZOMBIE:
+            return {"pid": pid, "status": "not running"}
 
-        # Handle zombie processes
-        if p.status() == psutil.STATUS_ZOMBIE:
-            try:
-                # Attempt to reap zombie if we're its parent
-                os.waitpid(pid, os.WNOHANG)
-            except ChildProcessError:
-                pass  # Not our child or already reaped
-            return {"pid": pid, "status": "zombie - cleaned up"}
-
-        # Process is alive and not a zombie
         return {"pid": pid, "status": "running", "cmd": p.cmdline()}
 
-    except psutil.ZombieProcess:
-        # Process is in zombie state (psutil detected it)
-        try:
-            os.waitpid(pid, os.WNOHANG)
-        except ChildProcessError:
-            pass
-        return {"pid": pid, "status": "zombie - cleaned up"}
-
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
+    except (psutil.NoSuchProcess, psutil.ZombieProcess):
         return {"pid": pid, "status": "not running"}
+
+    except psutil.AccessDenied:
+        return {"pid": pid, "status": "unknown"}
+
 
 
 @router.post("/stop")

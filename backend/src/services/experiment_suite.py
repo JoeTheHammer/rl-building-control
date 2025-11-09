@@ -10,7 +10,7 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Set
 
 import requests
 import yaml
@@ -284,7 +284,7 @@ class ExperimentSuiteManager:
     def __init__(self, repository: Optional[ExperimentSuiteRepository] = None) -> None:
         self._repository = repository or ExperimentSuiteRepository()
         self._config_paths: Dict[int, Path] = {}
-        self._processes: Dict[int, subprocess.Popen] = {}
+        self._processes: Set[int] = set()
         self._lock = Lock()
 
     def list_suites(self) -> list[ExperimentSuiteResponse]:
@@ -317,62 +317,53 @@ class ExperimentSuiteManager:
         return tmp_id, suite_dir
 
     def run_suite(self, name: str, config_path: Path) -> ExperimentSuiteResponse:
-        testbed_path = os.getenv("TESTBED_PATH")
-        if not testbed_path:
-            raise HTTPException(status_code=500, detail="TESTBED_PATH environment variable is not set")
-
-        src_path = Path(testbed_path).expanduser().resolve() / "src"
-        if not src_path.exists():
-            raise HTTPException(status_code=500, detail=f"Testbed src folder not found: {src_path}")
+        """
+        Starts a new experiment suite by calling the remote Testbed API.
+        """
+        PORT = 8001
+        TESTBED_URL = f"http://127.0.0.1:{PORT}/api/testbed"
+        START_URL = f"{TESTBED_URL}/start"
 
         full_config_path = config_path.expanduser().resolve()
         if not full_config_path.exists():
             raise HTTPException(status_code=404, detail=f"Experiment config not found: {full_config_path}")
 
         config_filename = full_config_path.name
-
         tensorboard_enabled = _detect_tensorboard_enabled(full_config_path)
 
         tmp_id, suite_dir = self._initialize_suite(name, config_filename, tensorboard_enabled)
         log_path = suite_dir / "experiment_log.txt"
 
-        main_py = src_path / "main.py"
-
-        command = [
-            "pipenv",
-            "run",
-            "python",
-            str(main_py),
-            str(full_config_path),
-        ]
-
-        # extend environment with PIPENV_PIPFILE pointing to the testbed
-        env = os.environ.copy()
-        env["PIPENV_PIPFILE"] = str(Path(testbed_path) / "Pipfile")
+        # Prepare JSON body for the testbed start API
+        start_payload = {
+            "config_path": str(full_config_path),
+            "log_path": str(log_path),
+            "work_dir": str(suite_dir),
+        }
 
         try:
-            log_file = open(log_path, "w", encoding="utf-8")
-            process = subprocess.Popen(
-                command,
-                cwd=suite_dir,
-                stdout=log_file,
-                stderr=subprocess.STDOUT,
-                env=env,
-            )
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
+            response = requests.post(START_URL, json=start_payload, timeout=10)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to start Testbed API: {exc}")
 
-        # Step 2: Update DB with pid
-        self._repository.update_status(tmp_id, ExperimentSuiteStatus.RUNNING, process.pid)
+        data = response.json()
+        pid = data.get("pid")
+        if not isinstance(pid, int):
+            raise HTTPException(status_code=500, detail=f"Unexpected response from Testbed API: {data}")
 
-        # Step 3: Track process
+        # Update DB with PID
+        self._repository.update_status(tmp_id, ExperimentSuiteStatus.RUNNING, pid)
+
+        # Track the PID (not the process object)
         with self._lock:
             self._config_paths[tmp_id] = full_config_path
-            self._processes[tmp_id] = process
+            self._processes.add(pid)  # store PID only
 
+        # Monitor the testbed process remotely
         Thread(
             target=self._monitor_process,
-            args=(tmp_id, process, log_file),
+            args=(tmp_id, pid, f"http://127.0.0.1:{PORT}"),
             daemon=True,
         ).start()
 
@@ -380,7 +371,7 @@ class ExperimentSuiteManager:
             id=tmp_id,
             name=name,
             status=ExperimentSuiteStatus.RUNNING,
-            pid=process.pid,
+            pid=pid,
             path=str(suite_dir),
             config_filename=config_filename,
             archived=False,
@@ -388,20 +379,18 @@ class ExperimentSuiteManager:
         )
 
     def reproduce_experiment(
-        self,
-        suite_id: int,
-        experiment_key: str,
-        name: Optional[str] = None,
+            self,
+            suite_id: int,
+            experiment_key: str,
+            name: Optional[str] = None,
     ) -> ExperimentSuiteResponse:
+        """
+        Reproduce an existing experiment by restoring its context and
+        starting it via the remote Testbed API.
+        """
         testbed_path = os.getenv("TESTBED_PATH")
         if not testbed_path:
             raise HTTPException(status_code=500, detail="TESTBED_PATH environment variable is not set")
-
-        src_path = Path(testbed_path).expanduser().resolve() / "src"
-        if not src_path.exists():
-            raise HTTPException(status_code=500, detail=f"Testbed src folder not found: {src_path}")
-
-        original_suite = self.get_suite(suite_id)
 
         try:
             from services.experiment_context import get_experiment_record
@@ -424,8 +413,7 @@ class ExperimentSuiteManager:
         context_dir = suite_dir / "context"
         context_dir.mkdir(parents=True, exist_ok=True)
 
-        import yaml
-
+        # --- Recreate experiment context files ---
         def write_text_file(target_relative: str, content: str) -> Path:
             target_path = context_dir / Path(target_relative)
             target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -450,100 +438,81 @@ class ExperimentSuiteManager:
                 detail="Environment configuration is missing from the experiment export",
             )
 
+        # --- Inject building/weather if present ---
         building_resource = None
         weather_resource = None
         for resource in record.iter_resources():
-            resource_type = resource.metadata.get("resource_type") if resource.metadata else None
-            if resource_type == "building_model":
+            rtype = resource.metadata.get("resource_type") if resource.metadata else None
+            if rtype == "building_model":
                 building_resource = resource
-            elif resource_type == "weather_epw":
+            elif rtype == "weather_epw":
                 weather_resource = resource
 
-        environment_config_path = None
-        if environment_file:
-            env_data = yaml.safe_load(environment_file.content.decode("utf-8")) or {}
-            if building_resource:
-                env_data["building_model"] = context_absolute_path(building_resource.relative_path)
-            if weather_resource:
-                env_data["weather_data"] = context_absolute_path(weather_resource.relative_path)
-            environment_yaml = yaml.safe_dump(env_data, sort_keys=False, allow_unicode=True)
-            environment_config_path = write_text_file(environment_file.relative_path, environment_yaml)
+        env_data = yaml.safe_load(environment_file.content.decode("utf-8")) or {}
+        if building_resource:
+            env_data["building_model"] = context_absolute_path(building_resource.relative_path)
+        if weather_resource:
+            env_data["weather_data"] = context_absolute_path(weather_resource.relative_path)
+
+        environment_yaml = yaml.safe_dump(env_data, sort_keys=False, allow_unicode=True)
+        environment_config_path = write_text_file(environment_file.relative_path, environment_yaml)
+
+        controller_config_path = None
         if controller_file:
             controller_config_path = write_text_file(
                 controller_file.relative_path, controller_file.content.decode("utf-8")
             )
-        else:
-            controller_config_path = None
 
-        experiment_definition: Dict[str, Any]
-        if entry_file:
-            entry_data = yaml.safe_load(entry_file.content.decode("utf-8")) or {}
-            experiments_section = entry_data.get("experiments")
-            if isinstance(experiments_section, list) and experiments_section:
-                experiment_definition = experiments_section[0]
-            else:
-                experiment_definition = {}
-        else:
-            experiment_definition = {}
+        # --- Build new experiment YAML ---
+        entry_data = yaml.safe_load(entry_file.content.decode("utf-8")) if entry_file else {}
+        experiments_section = entry_data.get("experiments") if isinstance(entry_data, dict) else []
+        experiment_definition = experiments_section[0] if experiments_section else {}
 
         experiment_definition["name"] = reproduction_name
-
-        # Remove camelCase duplicates that might have been persisted in the
-        # original configuration to satisfy the pydantic schema used by the
-        # testbed parser.
         experiment_definition.pop("environmentConfig", None)
         experiment_definition.pop("controllerConfig", None)
-
-        if environment_config_path:
-            experiment_definition["environment_config"] = str(environment_config_path)
+        experiment_definition["environment_config"] = str(environment_config_path)
         if controller_config_path:
             experiment_definition["controller_config"] = str(controller_config_path)
 
         experiment_yaml_data = {"experiments": [experiment_definition]}
-        experiment_yaml = yaml.safe_dump(experiment_yaml_data, sort_keys=False, allow_unicode=True)
-        config_path = write_text_file("configs/experiment.yaml", experiment_yaml)
-
-        if entry_file:
-            updated_entry = yaml.safe_dump(experiment_yaml_data, sort_keys=False, allow_unicode=True)
-            write_text_file(entry_file.relative_path, updated_entry)
+        config_path = write_text_file("configs/experiment.yaml",
+                                      yaml.safe_dump(experiment_yaml_data, sort_keys=False, allow_unicode=True))
 
         tensorboard_enabled = _detect_tensorboard_enabled(config_path)
         self._repository.set_tensorboard_enabled(tmp_id, tensorboard_enabled)
 
+        PORT = 8001
+        TESTBED_URL = f"http://127.0.0.1:{PORT}/api/testbed/start"
         log_path = suite_dir / "experiment_log.txt"
-        main_py = src_path / "main.py"
-        command = [
-            "pipenv",
-            "run",
-            "python",
-            str(main_py),
-            str(config_path),
-        ]
 
-        env = os.environ.copy()
-        env["PIPENV_PIPFILE"] = str(Path(testbed_path) / "Pipfile")
+        start_payload = {
+            "config_path": str(config_path),
+            "log_path": str(log_path),
+            "work_dir": str(suite_dir),
+        }
 
         try:
-            log_file = open(log_path, "w", encoding="utf-8")
-            process = subprocess.Popen(
-                command,
-                cwd=suite_dir,
-                stdout=log_file,
-                stderr=subprocess.STDOUT,
-                env=env,
-            )
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
+            response = requests.post(TESTBED_URL, json=start_payload, timeout=10)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to start Testbed API: {exc}")
 
-        self._repository.update_status(tmp_id, ExperimentSuiteStatus.RUNNING, process.pid)
+        data = response.json()
+        pid = data.get("pid")
+        if not isinstance(pid, int):
+            raise HTTPException(status_code=500, detail=f"Unexpected response from Testbed API: {data}")
+
+        # Update suite status in DB
+        self._repository.update_status(tmp_id, ExperimentSuiteStatus.RUNNING, pid)
 
         with self._lock:
             self._config_paths[tmp_id] = config_path
-            self._processes[tmp_id] = process
+            self._processes.add(pid)
 
         Thread(
             target=self._monitor_process,
-            args=(tmp_id, process, log_file),
+            args=(tmp_id, pid, f"http://127.0.0.1:{PORT}"),
             daemon=True,
         ).start()
 
@@ -551,7 +520,7 @@ class ExperimentSuiteManager:
             id=tmp_id,
             name=reproduction_name,
             status=ExperimentSuiteStatus.RUNNING,
-            pid=process.pid,
+            pid=pid,
             path=str(suite_dir),
             config_filename="context/configs/experiment.yaml",
             archived=False,
@@ -564,23 +533,21 @@ class ExperimentSuiteManager:
             raise HTTPException(status_code=404, detail="Experiment suite not found")
 
         pid = suite.pid
-        process: Optional[subprocess.Popen]
-        with self._lock:
-            process = self._processes.get(suite_id)
+        if not pid:
+            raise HTTPException(status_code=400, detail="Suite has no running PID")
 
-        if process is not None and process.poll() is None:
-            process.terminate()
-            process.wait()
-        elif pid:
-            try:
-                os.kill(pid, signal.SIGTERM)
-            except ProcessLookupError:
-                pass
+        TESTBED_URL = "http://127.0.0.1:8001/api/testbed/stop"
+
+        try:
+            response = requests.post(f"{TESTBED_URL}?pid={pid}", timeout=10)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to contact Testbed API: {exc}")
 
         self._repository.update_status(suite_id, ExperimentSuiteStatus.ABORTED, None)
 
         with self._lock:
-            self._processes.pop(suite_id, None)
+            self._processes.discard(suite_id)
 
         return ExperimentSuiteResponse(
             id=suite_id,
@@ -673,7 +640,7 @@ class ExperimentSuiteManager:
         """
         while True:
             try:
-                # Example: http://testbed:8001/api/testbed/status/{pid}
+                print(pid)
                 response = requests.get(f"{testbed_url}/api/testbed/status/{pid}", timeout=5)
                 data = response.json()
             except requests.RequestException as e:
@@ -684,11 +651,20 @@ class ExperimentSuiteManager:
             status = data.get("status", "unknown")
             if status != "running":
                 print(f"[INFO] Suite {suite_id} finished (PID {pid}, status={status})")
+
+                current_suite = self._repository.get(suite_id)
+                if current_suite and current_suite.status == ExperimentSuiteStatus.ABORTED.value:
+                    print(f"[INFO] Suite {suite_id} already aborted; skipping overwrite.")
+                    break
+
                 final_status = (
                     ExperimentSuiteStatus.FINISHED
                     if status == "not running"
                     else ExperimentSuiteStatus.ABORTED
                 )
+
+                print(f"Updated with {final_status}")
+
                 self._repository.update_status(suite_id, final_status, None)
                 break
 
