@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import sqlite3
@@ -24,6 +25,49 @@ DB_PATH = BACKEND_DIR / "experiment_suites.db"
 
 POLL_INTERVAL = 5
 
+def resolve_project_path(path: str) -> str:
+    """
+    Normalize a config or data path so it works both locally and inside Docker.
+
+    - On the host: uses absolute or existing paths as-is.
+    - Inside Docker: maps host-style paths (/home/.../config) to mounted volumes (/config, /data).
+    """
+    p = Path(path).expanduser()
+
+    # If path already exists, no need to modify
+    if p.exists():
+        return str(p.resolve())
+
+    # Detect if running inside a Docker container
+    in_docker = Path("/.dockerenv").exists() or os.getenv("RUNNING_IN_DOCKER") == "1"
+    if not in_docker:
+        # On the host, try to resolve relative to project root
+        project_root = Path(__file__).resolve().parents[3]
+        candidate = (project_root / p).resolve()
+        return str(candidate) if candidate.exists() else str(p)
+
+    # Inside Docker: remap known prefixes
+    path_str = str(p)
+    if "config" in path_str:
+        return str(Path("/config" + path_str.split("config", 1)[1]).resolve())
+    if "data" in path_str:
+        return str(Path("/data" + path_str.split("data", 1)[1]).resolve())
+
+    # Fallback: just return the same
+    return str(p)
+
+
+def get_testbed_base_url() -> str:
+    """
+    Returns the correct base URL for the Testbed API depending on
+    whether the current process is running inside a Docker container.
+
+    - Inside Docker: http://testbed:8001
+    - On the host:   http://127.0.0.1:8001
+    """
+    in_docker = Path("/.dockerenv").exists() or os.getenv("RUNNING_IN_DOCKER") == "1"
+    host = "testbed" if in_docker else "127.0.0.1"
+    return f"http://{host}:8001"
 
 def _sanitize_name(name: str) -> str:
     # replace spaces with underscore, drop unsafe chars
@@ -259,7 +303,10 @@ def _controller_uses_tensorboard(path: Path) -> bool:
 
 def _detect_tensorboard_enabled(config_path: Path) -> bool:
     try:
-        experiment_config = _load_yaml_file(config_path)
+        print(f"Original path: {config_path}")
+        experiment_config = _load_yaml_file(Path(resolve_project_path(str(config_path))))
+        print(f"Resolved config: {resolve_project_path(str(config_path))}")
+        print(f"Experiment config: {experiment_config}")
     except Exception:
         return False
 
@@ -271,7 +318,7 @@ def _detect_tensorboard_enabled(config_path: Path) -> bool:
         if not isinstance(experiment, dict):
             continue
         controller_value = experiment.get("controller_config") or experiment.get("controllerConfig")
-        controller_path = _resolve_controller_config_path(config_path, controller_value)
+        controller_path = _resolve_controller_config_path(config_path, resolve_project_path(controller_value))
         if controller_path and _controller_uses_tensorboard(controller_path):
             return True
     return False
@@ -320,7 +367,7 @@ class ExperimentSuiteManager:
         """
         Starts a new experiment suite by calling the remote Testbed API.
         """
-        api_endpoint = f"http://127.0.0.1:8001/api/testbed/start"
+        api_endpoint = f"{get_testbed_base_url()}/api/testbed/start"
 
         full_config_path = config_path.expanduser().resolve()
         if not full_config_path.exists():
@@ -469,7 +516,7 @@ class ExperimentSuiteManager:
         tensorboard_enabled = _detect_tensorboard_enabled(config_path)
         self._repository.set_tensorboard_enabled(tmp_id, tensorboard_enabled)
 
-        api_endpoint = f"http://127.0.0.1:8001/api/testbed/start"
+        api_endpoint = f"{get_testbed_base_url()}/api/testbed/start"
         log_path = suite_dir / "experiment_log.txt"
 
         start_payload = {
@@ -516,7 +563,7 @@ class ExperimentSuiteManager:
         if not pid:
             raise HTTPException(status_code=400, detail="Suite has no running PID")
 
-        api_endpoint = "http://127.0.0.1:8001/api/testbed/stop"
+        api_endpoint = f"{get_testbed_base_url()}/api/testbed/stop"
 
         try:
             response = requests.post(f"{api_endpoint}?pid={pid}", timeout=10)
@@ -557,6 +604,11 @@ class ExperimentSuiteManager:
         return updated
 
     def _global_monitor_loop(self) -> None:
+
+        api_endpoint = f"{get_testbed_base_url()}/api/testbed/status/"
+
+
+
         """
         Periodically rechecks all suites marked as RUNNING in the database.
         If the testbed responds that a suite is no longer running,
@@ -580,7 +632,7 @@ class ExperimentSuiteManager:
 
                     try:
                         response = requests.get(
-                            f"http://127.0.0.1:8001/api/testbed/status/{pid}",
+                            f"{api_endpoint}{pid}",
                             timeout=5,
                         )
                         data = response.json()
@@ -595,7 +647,7 @@ class ExperimentSuiteManager:
                     print(f"[INFO] Global monitor: suite {suite.id} no longer running (status={status})")
 
                     if (
-                            "not running" in status,
+                            "not running" in status or
                             "finished" in status
                             or "terminated gracefully" in status
                             or status == "exited" and data.get("return_code") == 0

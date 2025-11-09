@@ -1,4 +1,3 @@
-import os
 import subprocess
 import threading
 from pathlib import Path
@@ -46,7 +45,7 @@ def _monitor_process(pid: int, process: subprocess.Popen, log_file) -> None:
 def start(request: StartTestbed):
     """Starts a new testbed process and logs its output."""
     main_py = SRC_DIR / "main.py"
-    command = ["pipenv", "run", "python", str(main_py), str(request.config_path)]
+    command = ["python", str(main_py), str(request.config_path)]
 
     try:
         log_file = open(Path(request.log_path), "w", encoding="utf-8")

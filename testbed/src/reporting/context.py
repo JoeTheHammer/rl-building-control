@@ -8,6 +8,7 @@ from typing import Iterable, List, Optional
 import yaml
 
 from experiment.experiment_config import ExperimentConfig
+from utils.yaml_utils import resolve_project_path
 
 
 @dataclass(frozen=True)
@@ -73,7 +74,7 @@ class ExperimentContextCollector:
         )
 
     def _collect_environment_files(self) -> tuple[List[ContextFile], Optional[dict]]:
-        path_value = self._experiment_config.environment_config
+        path_value = resolve_project_path(self._experiment_config.environment_config)
         if not path_value:
             return [], None
 
@@ -84,8 +85,13 @@ class ExperimentContextCollector:
         content = env_path.read_text(encoding="utf-8")
         try:
             data = yaml.safe_load(content) or {}
-        except yaml.YAMLError as exc:  # pragma: no cover - defensive
+        except yaml.YAMLError as exc:
             raise ValueError(f"Invalid environment YAML at {env_path}: {exc}") from exc
+
+        # ✅ Normalize building/weather paths inside YAML here:
+        for key in ("building_model", "weather_data"):
+            if key in data and isinstance(data[key], str):
+                data[key] = str(resolve_project_path(data[key]))
 
         original_data = deepcopy(data)
 
@@ -106,7 +112,9 @@ class ExperimentContextCollector:
         if not path_value:
             return None
 
-        controller_path = self._resolve_path(path_value, base=self._suite_config_path.parent)
+
+
+        controller_path = self._resolve_path(resolve_project_path(path_value), base=self._suite_config_path.parent)
         if not controller_path.is_file():
             raise FileNotFoundError(f"Controller config not found: {controller_path}")
 
@@ -123,7 +131,7 @@ class ExperimentContextCollector:
         weather = data.get("weather_data")
 
         if building:
-            building_path = self._resolve_path(building)
+            building_path = self._resolve_path(resolve_project_path(building))
             if not building_path.is_file():
                 raise FileNotFoundError(f"Building model not found: {building_path}")
             yield ContextFile(
@@ -135,7 +143,7 @@ class ExperimentContextCollector:
 
         weather_path: Optional[Path] = None
         if weather:
-            weather_path = self._resolve_path(weather)
+            weather_path = self._resolve_path(resolve_project_path(weather))
             if not weather_path.is_file():
                 raise FileNotFoundError(f"Weather file not found: {weather_path}")
             yield ContextFile(
