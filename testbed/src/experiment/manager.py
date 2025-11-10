@@ -10,6 +10,7 @@ from experiment.status import initialize_status, set_current_experiment
 from reporting.context import collect_experiment_context
 from reporting.hdf5_storage import ExperimentStorage, HDF5StorageManager
 from parser.config_parser import parse_experiment_list
+from utils.yaml_utils import resolve_project_path
 
 
 class ExperimentManager:
@@ -26,7 +27,7 @@ class ExperimentManager:
         """
         Parses, creates, trains, and runs all experiments from a config file sequentially.
         """
-        experiment_configs = parse_experiment_list(config_path)
+        experiment_configs = parse_experiment_list(resolve_project_path(config_path))
         payload = [
             {
                 "id": index,
@@ -57,7 +58,7 @@ class ExperimentManager:
                     },
                 )
 
-                context = collect_experiment_context(config_path, experiment_config)
+                context = collect_experiment_context(resolve_project_path(config_path), experiment_config)
                 experiment_storage.store_context(context)
                 self._storage_manager.flush()
 
@@ -119,7 +120,7 @@ class ExperimentManager:
         self, experiment_config: ExperimentConfig
     ) -> IEnvironmentFactory | None:
         env_factory = self._env_factories.get(experiment_config.engine)
-        env_factory.set_config_path(experiment_config.environment_config)
+        env_factory.set_config_path(resolve_project_path(experiment_config.environment_config))
         if env_factory is None:
             setup_logger.error(
                 f"No environment factory registered for engine '{experiment_config.engine}'."
@@ -142,7 +143,7 @@ class ExperimentManager:
             return None
 
         controller_factory.set_env_factory(env_factory)
-        controller_factory.set_config_path(experiment_config.controller_config)
+        controller_factory.set_config_path(resolve_project_path(experiment_config.controller_config))
         controller_factory.set_experiment_storage(experiment_storage, self._flush_interval)
 
         set_current_experiment(experiment_id)

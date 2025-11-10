@@ -1,0 +1,47 @@
+
+services:
+  testbed:
+    build:
+      context: ./testbed
+    container_name: testbed
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./config:/config
+      - ./data:/data
+    environment:
+      RUNNING_IN_DOCKER: true
+
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    environment:
+      TESTBED_URL: http://testbed:8001
+      CONFIG_PATH: /config
+      DATA_PATH: /data
+      TENSORBOARD_HOST: 0.0.0.0
+      RUNNING_IN_DOCKER: true
+    ports:
+      - "8000:8000"
+      - "6006-6100:6006-6100"
+    volumes:
+      - ./config:/config
+      - ./data:/data
+    depends_on:
+      - testbed
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    environment:
+      VITE_BACKEND_URL: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+networks:
+  default:
+    name: rl-network

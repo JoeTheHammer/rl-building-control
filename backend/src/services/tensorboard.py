@@ -209,7 +209,7 @@ def _is_process_alive(pid: int) -> bool:
 
 
 class TensorBoardManager:
-    HOST = "127.0.0.1"
+    HOST = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
     DEFAULT_TTL = timedelta(hours=1)
     REAPER_INTERVAL = 60
     STOP_TIMEOUT = 10
@@ -246,10 +246,15 @@ class TensorBoardManager:
                     except HTTPException:
                         pass
 
-    def _allocate_port(self) -> int:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.bind((self.HOST, 0))
-            return int(sock.getsockname()[1])
+    def _allocate_port(self, start: int = 6006, end: int = 6100) -> int:
+        for port in range(start, end + 1):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                try:
+                    sock.bind((self.HOST, port))
+                    return port
+                except OSError:
+                    continue
+        raise RuntimeError(f"No free port available in range {start}-{end}")
 
     def _close_log_file(self, suite_id: int) -> None:
         with self._lock:
@@ -347,16 +352,18 @@ class TensorBoardManager:
         log_dir = Path(suite.path) / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
-        port = self._allocate_port()
-        url = f"http://{self.HOST}:{port}/"
+        # ✅ Pick a free port in the exposed range
+        port = self._allocate_port(start=6006, end=6100)
+        host = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
+        url = f"http://{host}:{port}/"
 
-        # ✅ run TensorBoard inside the same Python environment
+        # ✅ Run TensorBoard and bind to all interfaces
         command = [
             "python",
             "-m",
             "tensorboard.main",
             f"--logdir={log_dir}",
-            f"--host={self.HOST}",
+            f"--host={host}",
             f"--port={port}",
         ]
 
