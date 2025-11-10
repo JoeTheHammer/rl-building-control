@@ -1,4 +1,3 @@
-import os
 import subprocess
 import threading
 from pathlib import Path
@@ -6,6 +5,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import psutil
+import json
+
 
 router = APIRouter()
 SRC_DIR = Path(__file__).resolve().parents[1]
@@ -13,6 +14,8 @@ SRC_DIR = Path(__file__).resolve().parents[1]
 # Store active processes and their logs
 _processes: dict[int, subprocess.Popen] = {}
 _log_files: dict[int, any] = {}
+
+_exit_info: dict[int, dict[str, int | str | None]] = {}
 
 
 class StartTestbed(BaseModel):
@@ -26,27 +29,32 @@ def _monitor_process(pid: int, process: subprocess.Popen, log_file) -> None:
     return_code = process.wait()
     log_file.close()
 
-    status = "finished" if return_code == 0 else f"error ({return_code})"
-    print(f"[Monitor] Process {pid} ended with status: {status}")
+    status = "finished" if return_code == 0 else "error"
+    print(f"[Monitor] Process {pid} ended with status: {status} ({return_code})")
 
     # Remove from tracking dicts
     _processes.pop(pid, None)
     _log_files.pop(pid, None)
 
-    # Optionally write result to a small file beside the log
+    # Store result in memory
+    _exit_info[pid] = {"status": status, "return_code": return_code}
+
+    # (optional) also write to file for persistence
     try:
-        result_path = Path(log_file.name).with_suffix(".exit")
+        result_path = Path(log_file.name).with_suffix(".exit.json")
+        result_data = {"status": status, "return_code": return_code}
         with open(result_path, "w", encoding="utf-8") as f:
-            f.write(status)
+            json.dump(result_data, f)
     except Exception:
         pass
+
 
 
 @router.post("/start")
 def start(request: StartTestbed):
     """Starts a new testbed process and logs its output."""
     main_py = SRC_DIR / "main.py"
-    command = ["pipenv", "run", "python", str(main_py), str(request.config_path)]
+    command = ["python", str(main_py), str(request.config_path)]
 
     try:
         log_file = open(Path(request.log_path), "w", encoding="utf-8")
@@ -75,34 +83,42 @@ def start(request: StartTestbed):
 def get_status(pid: int):
     """Checks whether a given process is running or has exited."""
     try:
+        # Check if still tracked
         if pid in _processes:
             p = _processes[pid]
             running = p.poll() is None
             if not running:
-                return {"pid": pid, "status": "exited", "return_code": p.returncode}
-            return {"pid": pid, "status": "running", "cmd": p.args}
-
-        if not psutil.pid_exists(pid):
-            # Check if an .exit file exists
-            exit_file = Path(f"{pid}.exit")
-            if exit_file.exists():
                 return {
                     "pid": pid,
-                    "status": exit_file.read_text().strip(),
+                    "status": "exited",
+                    "return_code": p.returncode,
                 }
-            return {"pid": pid, "status": "not running"}
+            return {"pid": pid, "status": "running", "cmd": p.args}
+
+        # Check if we have exit info in memory
+        if pid in _exit_info:
+            info = _exit_info[pid]
+            return {
+                "pid": pid,
+                "status": info["status"],
+                "return_code": info["return_code"],
+            }
+
+        # Check if process exists in the OS
+        if not psutil.pid_exists(pid):
+            return {"pid": pid, "status": "not running", "return_code": None}
 
         p = psutil.Process(pid)
         if not p.is_running() or p.status() == psutil.STATUS_ZOMBIE:
-            return {"pid": pid, "status": "not running"}
+            return {"pid": pid, "status": "not running", "return_code": None}
 
         return {"pid": pid, "status": "running", "cmd": p.cmdline()}
 
     except (psutil.NoSuchProcess, psutil.ZombieProcess):
-        return {"pid": pid, "status": "not running"}
-
+        return {"pid": pid, "status": "not running", "return_code": None}
     except psutil.AccessDenied:
-        return {"pid": pid, "status": "unknown"}
+        return {"pid": pid, "status": "unknown", "return_code": None}
+
 
 
 @router.post("/stop")

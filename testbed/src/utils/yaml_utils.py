@@ -3,6 +3,38 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+import os
+
+def resolve_project_path(path: str) -> str:
+    """
+    Normalize a config or data path so it works both locally and inside Docker.
+
+    - On the host: uses absolute or existing paths as-is.
+    - Inside Docker: maps host-style paths (/home/.../config) to mounted volumes (/config, /data).
+    """
+    p = Path(path).expanduser()
+
+    # If path already exists, no need to modify
+    if p.exists():
+        return str(p.resolve())
+
+    # Detect if running inside a Docker container
+    in_docker = Path("/.dockerenv").exists() or os.getenv("RUNNING_IN_DOCKER") == "1"
+    if not in_docker:
+        # On the host, try to resolve relative to project root
+        project_root = Path(__file__).resolve().parents[3]
+        candidate = (project_root / p).resolve()
+        return str(candidate) if candidate.exists() else str(p)
+
+    # Inside Docker: remap known prefixes
+    path_str = str(p)
+    if "config" in path_str:
+        return str(Path("/config" + path_str.split("config", 1)[1]).resolve())
+    if "data" in path_str:
+        return str(Path("/data" + path_str.split("data", 1)[1]).resolve())
+
+    # Fallback: just return the same
+    return str(p)
 
 
 def load_yaml_file(file_path: str, logger: Logger) -> Any:
