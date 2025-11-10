@@ -20,8 +20,19 @@ from models.experiment import ExperimentSuiteResponse, ExperimentSuiteStatus
 PROJECT_DIR = Path(__file__).resolve().parents[3]
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
-DATA_DIR = PROJECT_DIR / "data" / "experiments"
-DB_PATH = BACKEND_DIR / "experiment_suites.db"
+def _get_data_dir() -> Path:
+    in_docker = (
+            Path("/.dockerenv").exists()
+            or str(os.getenv("RUNNING_IN_DOCKER", "")).lower() in ("1", "true", "yes")
+    )
+
+    if in_docker:
+        return Path("/data/experiments")
+    project_root = Path(__file__).resolve().parents[3]
+    return project_root / "data" / "experiments"
+
+DATA_DIR = _get_data_dir()
+DB_PATH = DATA_DIR / "experiment_suites.db"
 
 POLL_INTERVAL = 5
 
