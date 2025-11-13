@@ -40,6 +40,8 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   statusLoading,
   statusError,
 }) => {
+  const allAreNull = progressEntries?.every((entry) => entry === null) ?? false
+
   const showTensorboardRow = Boolean(tensorboard)
   const isTensorboardRunning = tensorboard?.isRunning ?? false
 
@@ -142,7 +144,11 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
             style={topRowWidth ? { width: `${topRowWidth}px` } : undefined}
           >
             <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full gap-2">
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                disabled={allAreNull && status === 'Running'}
+              >
                 {detailsOpen ? (
                   <ChevronUp className="size-4" />
                 ) : (
