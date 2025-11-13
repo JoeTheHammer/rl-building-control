@@ -209,7 +209,7 @@ def _is_process_alive(pid: int) -> bool:
 
 
 class TensorBoardManager:
-    HOST = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
+    HOST = "0.0.0.0"
     DEFAULT_TTL = timedelta(hours=1)
     REAPER_INTERVAL = 60
     STOP_TIMEOUT = 10
@@ -354,8 +354,9 @@ class TensorBoardManager:
 
         # ✅ Pick a free port in the exposed range
         port = self._allocate_port(start=6006, end=6100)
-        host = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
-        url = f"http://{host}:{port}/"
+        host = "0.0.0.0"
+        url_host = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
+        url = f"http://{url_host}:{port}/"
 
         # ✅ Run TensorBoard and bind to all interfaces
         command = [

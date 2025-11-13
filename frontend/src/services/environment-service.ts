@@ -4,8 +4,9 @@ import type { EnvironmentGeneralSettings } from '@/components/configurator/envir
 import type { EnvironmentStateSpaceSettings } from '@/components/configurator/environment/env-state-space-tab.tsx'
 import type { EnvActionSpaceSettings } from '@/components/configurator/environment/env-action-space-tab.tsx'
 import type { EnvironmentRewardSettings } from '@/components/configurator/environment/env-reward-tab.tsx'
+import { getBaseHost } from '@/services/api-service.ts'
 
-const API_BASE = 'http://127.0.0.1:8000/api/environment'
+const API_BASE = `${getBaseHost()}:8000/api/environment`
 const DEFAULT_DIRECTORY = './config/environments'
 
 export interface EnvironmentConfigFileList {
