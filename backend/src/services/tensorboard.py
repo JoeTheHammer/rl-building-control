@@ -354,7 +354,8 @@ class TensorBoardManager:
 
         # ✅ Pick a free port in the exposed range
         port = self._allocate_port(start=6006, end=6100)
-        host = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
+        host = "0.0.0.0"
+        url_host = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
         url = f"http://{host}:{port}/"
 
         # ✅ Run TensorBoard and bind to all interfaces
@@ -394,7 +395,7 @@ class TensorBoardManager:
                 pid=process.pid,
                 port=port,
                 logdir=str(log_dir),
-                url=url,
+                url=url_host,
                 owner=owner or "api",
                 status="running",
                 started_at=started_at,
