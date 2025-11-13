@@ -3,7 +3,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 ENV NODE_ENV=development \
-    VITE_BACKEND_URL=http://backend:8000
+    VITE_BACKEND_URL=http://backend \
+
 
 COPY package.json package-lock.json ./
 

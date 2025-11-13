@@ -22,6 +22,7 @@ services:
       DATA_PATH: /data
       TENSORBOARD_HOST: 0.0.0.0
       RUNNING_IN_DOCKER: true
+      TESTBED_HOST: ${TESTBED_HOST}
     ports:
       - "8000:8000"
       - "6006-6100:6006-6100"
@@ -36,7 +37,7 @@ services:
       context: ./frontend
     container_name: frontend
     environment:
-      VITE_BACKEND_URL: http://backend:8000
+      VITE_BACKEND_URL: ${BACKEND_HOST}
     ports:
       - "5173:5173"
     depends_on:

@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { getBaseHost } from '@/services/api-service.ts'
 
-const API_BASE = 'http://127.0.0.1:8000/api/analytics'
+const API_BASE = `${getBaseHost()}:8000/api/analytics`
 
 export type NumericSeries = number[]
 
@@ -80,8 +81,12 @@ const getFileNameFromDisposition = (header?: string | null): string | null => {
   }
 }
 
-export const fetchAnalyticsSuites = async (): Promise<AnalyticsSuiteSummary[]> => {
-  const response = await axios.get<AnalyticsSuiteSummary[]>(`${API_BASE}/suites`)
+export const fetchAnalyticsSuites = async (): Promise<
+  AnalyticsSuiteSummary[]
+> => {
+  const response = await axios.get<AnalyticsSuiteSummary[]>(
+    `${API_BASE}/suites`,
+  )
   return response.data
 }
 

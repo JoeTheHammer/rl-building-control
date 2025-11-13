@@ -77,7 +77,7 @@ def get_testbed_base_url() -> str:
     - On the host:   http://127.0.0.1:8001
     """
     in_docker = Path("/.dockerenv").exists() or os.getenv("RUNNING_IN_DOCKER") == "1"
-    host = "testbed" if in_docker else "127.0.0.1"
+    host = "testbed" if in_docker else os.getenv("TESTBED_HOST", "127.0.0.1")
     return f"http://{host}:8001"
 
 def _sanitize_name(name: str) -> str:
