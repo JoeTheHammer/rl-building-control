@@ -209,7 +209,7 @@ def _is_process_alive(pid: int) -> bool:
 
 
 class TensorBoardManager:
-    HOST = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
+    HOST = "0.0.0.0"
     DEFAULT_TTL = timedelta(hours=1)
     REAPER_INTERVAL = 60
     STOP_TIMEOUT = 10
