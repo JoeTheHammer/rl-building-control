@@ -49,6 +49,9 @@ RUN apt-get update && \
 # ------------------------------------------------------------
 COPY Pipfile Pipfile.lock ./
 
+# This avoids incomplete-download errors because pipenv cannot resume large downloads.
+RUN python3.12 -m pip install --no-cache-dir nvidia-cudnn-cu12==9.10.2.21
+
 RUN python3.12 -m pip install --no-cache-dir pipenv && \
     pipenv install --system --deploy
 
