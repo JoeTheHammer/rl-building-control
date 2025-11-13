@@ -2,9 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-ENV NODE_ENV=development \
-    VITE_BACKEND_URL=http://backend \
-
+ENV NODE_ENV=development
 
 COPY package.json package-lock.json ./
 
