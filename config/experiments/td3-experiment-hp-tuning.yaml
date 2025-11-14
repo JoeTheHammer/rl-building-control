@@ -1,0 +1,10 @@
+experiments:
+  - name: "td3-experiment-hp-tuning"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    controller: "td3"
+    controller_config: /config/controllers/td3_controller_hp_tuning.yaml
+    episodes: 1
+    reporting:
+      denormalize_state: true
