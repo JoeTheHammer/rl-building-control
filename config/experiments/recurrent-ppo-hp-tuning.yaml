@@ -1,0 +1,11 @@
+experiments:
+  - name: "recurrent-ppo-hp-tuning"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    controller: "recurrent-ppo"
+    controller_config: 
+      /config/controllers/recurrent_ppo_controller_hp_tuning.yaml
+    episodes: 1
+    reporting:
+      denormalize_state: true

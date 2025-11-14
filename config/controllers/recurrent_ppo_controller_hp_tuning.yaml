@@ -1,19 +1,18 @@
 training:
+  timesteps: 20000
   report_training: false
   report_denormalized_state: false
   tensorboard_logs: true
-  timesteps: 300000
+hyperparameters: {}
 environment_wrapper:
   normalize_state: true
   normalize_reward: false
   normalize_action: true
   continuous_action: true
   discrete_action: false
-hyperparameters:
-  learning_rate: 0.0005207571095105136
-  gamma: 0.9007828633715415
-  buffer_size: 100000
-  tau: 0.01987085103434955
-  batch_size: 32
-  train_freq: 1
-  gradient_steps: 2
+hyperparameter_tuning:
+  enabled: true
+  num_trials: 2
+  num_episodes: 1
+  sampler: tpe
+  training_timesteps: 20000
