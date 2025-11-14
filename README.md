@@ -23,9 +23,11 @@ cd deep-reinforcement-learning
 docker-compose up --build
 ```
 
-Services: - Frontend: http://localhost:5173 - Backend:
-http://localhost:8000/docs - Testbed:
-http://localhost:8001/api/testbed/status/
+Services: 
+- Frontend: http://localhost:5173 
+- Backend: http://localhost:8000/docs
+- Testbed: http://localhost:8001/api/testbed/status/
+
 
 Stop:
 
@@ -34,6 +36,12 @@ CTRL + C
 docker-compose down
 docker-compose down -v   # wipe volumes
 ```
+
+## 4. Remote access
+
+If you want to access the system from remote, make sure to set the host environment variables in the `.env` file in the project root. The hostnames should correstpond to the host system.
+
+This is only needed for remote access, as the default hostname is `localhost`. 
 
 ------------------------------------------------------------------------
 
@@ -125,6 +133,8 @@ npm run dev
 -   Add controllers via `testbed/src/controllers/`
 -   Add backend endpoints under `backend/src/api/`
 -   Add frontend routes under `frontend/src/lib/routes.tsx`
+
+When more information about adding additional controllers or enviornments can be found in the README of the testbed (testbed/README). 
 
 ## Additional resources
 

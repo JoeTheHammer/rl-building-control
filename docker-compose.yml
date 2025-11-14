@@ -17,9 +17,6 @@ services:
       context: ./backend
     container_name: backend
     environment:
-      TESTBED_URL: http://testbed:8001
-      CONFIG_PATH: /config
-      DATA_PATH: /data
       TENSORBOARD_HOST: ${TENSORBOARD_HOST}
       RUNNING_IN_DOCKER: true
       TESTBED_HOST: ${TESTBED_HOST}

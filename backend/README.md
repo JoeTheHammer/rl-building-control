@@ -30,15 +30,11 @@ spec.
 ### Environment variables
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `TESTBED_URL` | Base URL for the testbed FastAPI service. | `http://127.0.0.1:8001` |
-| `CONFIG_PATH` | Directory containing YAML configs. | `<repo>/config` |
-| `DATA_PATH` | Directory where experiment outputs are stored. | `<repo>/data` |
 | `TENSORBOARD_HOST` | Hostname embedded in TensorBoard links. | `localhost` |
 | `TESTBED_HOST` | Hostname to reach the testbed when spawned via Docker. | `testbed` inside containers |
 | `RUNNING_IN_DOCKER` | Set automatically by the Docker image to adjust path logic. | `false` |
 
-When running outside Docker you typically only need to set `TESTBED_URL` if the
-testbed service listens on a non-default host/port.
+When running outside Docker you typically only need to set any environment variables. When running in docker, make sure to provide a `.env` file with the the correct variables set in the project root.
 
 ### Database
 Experiment suite metadata is persisted in
