@@ -6,7 +6,7 @@ training:
 hyperparameters:
   n_steps: 8192
   batch_size: 512
-  learning_rate: 0.000004864615842116885
+  learning_rate: 4.864615842116885e-06
   n_epochs: 9
   gamma: 0.9703306184103292
   gae_lambda: 0.9748729292733853
