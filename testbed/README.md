@@ -54,14 +54,6 @@ The backend container interacts solely with these HTTP endpoints.
 - **Reporting** – Extend `reporting/` handlers to add new datasets or metadata to
   the HDF5 files. Hooks exist for training/evaluation episodes and context files.
 
-## Tests
-```bash
-cd testbed
-pipenv install --dev
-pipenv run pytest
-```
-Unit tests live under `tests/` and exercise parsers, wrappers, and reporting
-utilities.
 
 ## Docker notes
 The `Dockerfile` builds on the official EnergyPlus base image, compiles Python

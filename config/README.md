@@ -6,9 +6,9 @@ endpoints, and the testbed runtime reads them when launching experiments.
 
 ```
 config/
-├── controllers/   # Controller hyperparameters (per algorithm)
-├── environments/  # Environment definitions (engine, building, weather)
-└── experiments/   # Experiment suites referencing controller/environment files
+├── controllers/   
+├── environments/  
+└── experiments/  
 ```
 
 ## Conventions
@@ -17,14 +17,12 @@ config/
 - Paths inside experiment YAML files may be absolute or relative. When executed
   inside Docker, the backend remaps host-style paths into `/config` and `/data`
   using the helpers in `backend/src/services/experiment_suite.py`.
-- Version control only sample or template configurations. Generated files (e.g.,
-  autosaved drafts) should be ignored or cleaned up before committing.
 
 ## Creating new assets
 1. Use the frontend configurators to author YAML interactively, or craft them by
    hand following the examples in this directory.
 2. Save the files under the appropriate subfolder.
-3. Reference them in experiment suites via relative paths, e.g.:
+3. Reference them in experiment suites via relative or aboslute paths, e.g.
    ```yaml
    experiments:
      - name: data-center-sac
