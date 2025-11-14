@@ -6,9 +6,10 @@ from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from controllers.base_controller import IController
+from controllers.base_rl_controller import IRLController
 
 
-class OnPolicyAdapter(gym.Wrapper, IController):
+class OnPolicyAdapter(gym.Wrapper, IRLController):
     """
     A generic adapter for any Stable Baselines3 on-policy algorithm (like PPO or A2C),
     with action logging on predict and on environment step.
