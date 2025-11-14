@@ -54,6 +54,8 @@ The backend container interacts solely with these HTTP endpoints.
 - **Reporting** – Extend `reporting/` handlers to add new datasets or metadata to
   the HDF5 files. Hooks exist for training/evaluation episodes and context files.
 
+To make new controllers available in the frontend, a new entry in the file `controllers.json` in the frontend (folder `/frontend/public`) nust be created.
+
 
 ## Docker notes
 The `Dockerfile` builds on the official EnergyPlus base image, compiles Python
