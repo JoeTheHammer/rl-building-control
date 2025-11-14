@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="858px" preserveAspectRatio="none" style="width:1391px;height:858px;background:#FFFFFF;" version="1.1" viewBox="0 0 1391 858" width="1391px" zoomAndPan="magnify"><defs/><g><!--MD5=[fe9987087bca403180c76f6de47dcf06]
+cluster Experiment Orchestration--><g id="cluster_Experiment Orchestration"><path d="M356.5,6 L560.5,6 A3.75,3.75 0 0 1 563,8.5 L570,28.2969 L908.5,28.2969 A2.5,2.5 0 0 1 911,30.7969 L911,301.5 A2.5,2.5 0 0 1 908.5,304 L356.5,304 A2.5,2.5 0 0 1 354,301.5 L354,8.5 A2.5,2.5 0 0 1 356.5,6 " fill="none" style="stroke:#000000;stroke-width:1.5;"/><line style="stroke:#000000;stroke-width:1.5;" x1="354" x2="570" y1="28.2969" y2="28.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="203" x="358" y="20.9951">Experiment Orchestration</text></g><!--MD5=[0ee4bd6038ad3dcd505849bd4f57a5fa]
+cluster Environment Provision--><g id="cluster_Environment Provision"><path d="M937.5,353 L1115.5,353 A3.75,3.75 0 0 1 1118,355.5 L1125,375.2969 L1381.5,375.2969 A2.5,2.5 0 0 1 1384,377.7969 L1384,737.5 A2.5,2.5 0 0 1 1381.5,740 L937.5,740 A2.5,2.5 0 0 1 935,737.5 L935,355.5 A2.5,2.5 0 0 1 937.5,353 " fill="none" style="stroke:#000000;stroke-width:1.5;"/><line style="stroke:#000000;stroke-width:1.5;" x1="935" x2="1125" y1="375.2969" y2="375.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="177" x="939" y="367.9951">Environment Provision</text></g><!--MD5=[8476a6e9b9406ff6ebbabeec4ae3c201]
+cluster Controller Provision--><g id="cluster_Controller Provision"><path d="M228.5,353 L386.5,353 A3.75,3.75 0 0 1 389,355.5 L396,375.2969 L837.5,375.2969 A2.5,2.5 0 0 1 840,377.7969 L840,737.5 A2.5,2.5 0 0 1 837.5,740 L228.5,740 A2.5,2.5 0 0 1 226,737.5 L226,355.5 A2.5,2.5 0 0 1 228.5,353 " fill="none" style="stroke:#000000;stroke-width:1.5;"/><line style="stroke:#000000;stroke-width:1.5;" x1="226" x2="396" y1="375.2969" y2="375.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="157" x="230" y="367.9951">Controller Provision</text></g><!--MD5=[7ff817392d3586ff4bd254f6888fffd3]
+cluster Reporting & Storage--><g id="cluster_Reporting &amp; Storage"><path d="M8.5,657 L171.5,657 A3.75,3.75 0 0 1 174,659.5 L181,679.2969 L199.5,679.2969 A2.5,2.5 0 0 1 202,681.7969 L202,848.5 A2.5,2.5 0 0 1 199.5,851 L8.5,851 A2.5,2.5 0 0 1 6,848.5 L6,659.5 A2.5,2.5 0 0 1 8.5,657 " fill="none" style="stroke:#000000;stroke-width:1.5;"/><line style="stroke:#000000;stroke-width:1.5;" x1="6" x2="181" y1="679.2969" y2="679.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="162" x="10" y="671.9951">Reporting &amp; Storage</text></g><!--MD5=[3e96dd66dd64ae2e61f50c8668a6b0a4]
+class ExperimentManager--><g id="elem_ExperimentManager"><rect codeLine="6" fill="#F1F1F1" height="88.8906" id="ExperimentManager" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="336" x="559" y="41"/><ellipse cx="653.75" cy="57" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M656.7188,62.6406 Q656.1406,62.9375 655.5,63.0781 Q654.8594,63.2344 654.1563,63.2344 Q651.6563,63.2344 650.3281,61.5938 Q649.0156,59.9375 649.0156,56.8125 Q649.0156,53.6875 650.3281,52.0313 Q651.6563,50.375 654.1563,50.375 Q654.8594,50.375 655.5,50.5313 Q656.1563,50.6875 656.7188,50.9844 L656.7188,53.7031 Q656.0938,53.125 655.5,52.8594 Q654.9063,52.5781 654.2813,52.5781 Q652.9375,52.5781 652.25,53.6563 Q651.5625,54.7188 651.5625,56.8125 Q651.5625,58.9063 652.25,59.9844 Q652.9375,61.0469 654.2813,61.0469 Q654.9063,61.0469 655.5,60.7813 Q656.0938,60.5 656.7188,59.9219 L656.7188,62.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="138" x="674.25" y="61.8467">ExperimentManager</text><line style="stroke:#181818;stroke-width:0.5;" x1="560" x2="894" y1="73" y2="73"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="324" x="565" y="89.9951">+register_environment_factory(engine, factory)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="319" x="565" y="106.292">+register_controller_factory(controller, factory)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="146" x="565" y="122.5889">+run_all(config_path)</text></g><!--MD5=[2a9217e8f2d7f96589335d2c6f09894a]
+class Experiment--><g id="elem_Experiment"><rect codeLine="12" fill="#F1F1F1" height="80.5938" id="Experiment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="198" x="628" y="207"/><ellipse cx="683.75" cy="223" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M686.7188,228.6406 Q686.1406,228.9375 685.5,229.0781 Q684.8594,229.2344 684.1563,229.2344 Q681.6563,229.2344 680.3281,227.5938 Q679.0156,225.9375 679.0156,222.8125 Q679.0156,219.6875 680.3281,218.0313 Q681.6563,216.375 684.1563,216.375 Q684.8594,216.375 685.5,216.5313 Q686.1563,216.6875 686.7188,216.9844 L686.7188,219.7031 Q686.0938,219.125 685.5,218.8594 Q684.9063,218.5781 684.2813,218.5781 Q682.9375,218.5781 682.25,219.6563 Q681.5625,220.7188 681.5625,222.8125 Q681.5625,224.9063 682.25,225.9844 Q682.9375,227.0469 684.2813,227.0469 Q684.9063,227.0469 685.5,226.7813 Q686.0938,226.5 686.7188,225.9219 L686.7188,228.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="78" x="704.25" y="227.8467">Experiment</text><line style="stroke:#181818;stroke-width:0.5;" x1="629" x2="825" y1="239" y2="239"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="186" x="634" y="255.9951">+status: ExperimentStatus</text><line style="stroke:#181818;stroke-width:0.5;" x1="629" x2="825" y1="263.2969" y2="263.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="82" x="634" y="280.292">+run(): void</text></g><!--MD5=[e91c523f8d7dd94a4e9260e7eb441913]
+class ExperimentStatus--><g id="elem_ExperimentStatus"><rect codeLine="17" fill="#F1F1F1" height="88.8906" id="ExperimentStatus" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="154" x="370" y="41"/><ellipse cx="385" cy="57" fill="#EB937F" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M389.1094,63 L381.3906,63 L381.3906,50.6094 L389.1094,50.6094 L389.1094,52.7656 L383.8438,52.7656 L383.8438,55.4375 L388.6094,55.4375 L388.6094,57.5938 L383.8438,57.5938 L383.8438,60.8438 L389.1094,60.8438 L389.1094,63 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="122" x="399" y="61.8467">ExperimentStatus</text><line style="stroke:#181818;stroke-width:0.5;" x1="371" x2="523" y1="73" y2="73"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63" x="376" y="89.9951">PENDING</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="64" x="376" y="106.292">RUNNING</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="63" x="376" y="122.5889">FINISHED</text></g><!--MD5=[af85ab1bbcce263cd0dd87a7e85b3dfd]
+class IEnvironmentFactory--><g id="elem_IEnvironmentFactory"><rect codeLine="26" fill="#F1F1F1" height="56.2969" id="IEnvironmentFactory" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="351" x="1016.5" y="388"/><ellipse cx="1117.75" cy="404" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1113.6719,399.7656 L1113.6719,397.6094 L1121.0625,397.6094 L1121.0625,399.7656 L1118.5938,399.7656 L1118.5938,407.8438 L1121.0625,407.8438 L1121.0625,410 L1113.6719,410 L1113.6719,407.8438 L1116.1406,407.8438 L1116.1406,399.7656 L1113.6719,399.7656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="140" x="1138.25" y="408.8467">IEnvironmentFactory</text><line style="stroke:#181818;stroke-width:0.5;" x1="1017.5" x2="1366.5" y1="420" y2="420"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="339" x="1022.5" y="436.9951">+create_environment(config_path): IEnvironment</text></g><!--MD5=[e3c565211456ad2dabb0f70601bb8c20]
+class IEnvironment--><g id="elem_IEnvironment"><rect codeLine="30" fill="#F1F1F1" height="72.5938" id="IEnvironment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="236" x="951" y="521"/><ellipse cx="1019.75" cy="537" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1015.6719,532.7656 L1015.6719,530.6094 L1023.0625,530.6094 L1023.0625,532.7656 L1020.5938,532.7656 L1020.5938,540.8438 L1023.0625,540.8438 L1023.0625,543 L1015.6719,543 L1015.6719,540.8438 L1018.1406,540.8438 L1018.1406,532.7656 L1015.6719,532.7656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="90" x="1040.25" y="541.8467">IEnvironment</text><line style="stroke:#181818;stroke-width:0.5;" x1="952" x2="1186" y1="553" y2="553"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="103" x="957" y="569.9951">+reset(): State</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="224" x="957" y="586.292">+step(action: Action): Transition</text></g><!--MD5=[0325391b3dc87093258c63fe9d8c71ca]
+class SinergymFactory--><g id="elem_SinergymFactory"><rect codeLine="35" fill="#F1F1F1" height="32" id="SinergymFactory" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="146" x="1222" y="541.5"/><ellipse cx="1237" cy="557.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1239.9688,563.1406 Q1239.3906,563.4375 1238.75,563.5781 Q1238.1094,563.7344 1237.4063,563.7344 Q1234.9063,563.7344 1233.5781,562.0938 Q1232.2656,560.4375 1232.2656,557.3125 Q1232.2656,554.1875 1233.5781,552.5313 Q1234.9063,550.875 1237.4063,550.875 Q1238.1094,550.875 1238.75,551.0313 Q1239.4063,551.1875 1239.9688,551.4844 L1239.9688,554.2031 Q1239.3438,553.625 1238.75,553.3594 Q1238.1563,553.0781 1237.5313,553.0781 Q1236.1875,553.0781 1235.5,554.1563 Q1234.8125,555.2188 1234.8125,557.3125 Q1234.8125,559.4063 1235.5,560.4844 Q1236.1875,561.5469 1237.5313,561.5469 Q1238.1563,561.5469 1238.75,561.2813 Q1239.3438,561 1239.9688,560.4219 L1239.9688,563.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="114" x="1251" y="562.3467">SinergymFactory</text></g><!--MD5=[30d24cbeb4efcde6f77e634e6bd714f2]
+class SinergymEnvironment--><g id="elem_SinergymEnvironment"><rect codeLine="36" fill="#F1F1F1" height="32" id="SinergymEnvironment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="183" x="1090.5" y="692"/><ellipse cx="1105.5" cy="708" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1108.4688,713.6406 Q1107.8906,713.9375 1107.25,714.0781 Q1106.6094,714.2344 1105.9063,714.2344 Q1103.4063,714.2344 1102.0781,712.5938 Q1100.7656,710.9375 1100.7656,707.8125 Q1100.7656,704.6875 1102.0781,703.0313 Q1103.4063,701.375 1105.9063,701.375 Q1106.6094,701.375 1107.25,701.5313 Q1107.9063,701.6875 1108.4688,701.9844 L1108.4688,704.7031 Q1107.8438,704.125 1107.25,703.8594 Q1106.6563,703.5781 1106.0313,703.5781 Q1104.6875,703.5781 1104,704.6563 Q1103.3125,705.7188 1103.3125,707.8125 Q1103.3125,709.9063 1104,710.9844 Q1104.6875,712.0469 1106.0313,712.0469 Q1106.6563,712.0469 1107.25,711.7813 Q1107.8438,711.5 1108.4688,710.9219 L1108.4688,713.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="151" x="1119.5" y="712.8467">SinergymEnvironment</text></g><!--MD5=[bd571520ce57ba8fc108ce35545cd758]
+class IController--><g id="elem_IController"><rect codeLine="41" fill="#F1F1F1" height="56.2969" id="IController" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="193" x="630.5" y="388"/><ellipse cx="687.75" cy="404" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M683.6719,399.7656 L683.6719,397.6094 L691.0625,397.6094 L691.0625,399.7656 L688.5938,399.7656 L688.5938,407.8438 L691.0625,407.8438 L691.0625,410 L683.6719,410 L683.6719,407.8438 L686.1406,407.8438 L686.1406,399.7656 L683.6719,399.7656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="70" x="708.25" y="408.8467">IController</text><line style="stroke:#181818;stroke-width:0.5;" x1="631.5" x2="822.5" y1="420" y2="420"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="181" x="636.5" y="436.9951">+get_action(state): Action</text></g><!--MD5=[8725de94097440526973142c2bda5a56]
+class IControllerFactory--><g id="elem_IControllerFactory"><rect codeLine="45" fill="#F1F1F1" height="56.2969" id="IControllerFactory" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="353" x="242.5" y="388"/><ellipse cx="354.75" cy="404" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M350.6719,399.7656 L350.6719,397.6094 L358.0625,397.6094 L358.0625,399.7656 L355.5938,399.7656 L355.5938,407.8438 L358.0625,407.8438 L358.0625,410 L350.6719,410 L350.6719,407.8438 L353.1406,407.8438 L353.1406,399.7656 L350.6719,399.7656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="120" x="375.25" y="408.8467">IControllerFactory</text><line style="stroke:#181818;stroke-width:0.5;" x1="243.5" x2="594.5" y1="420" y2="420"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="341" x="248.5" y="436.9951">+create_controller(env: IEnvironment): IController</text></g><!--MD5=[14256ebc46bc50d3820e4aa624b6c281]
+class IRLController--><g id="elem_IRLController"><rect codeLine="49" fill="#F1F1F1" height="56.2969" id="IRLController" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="133" x="490.5" y="529.5"/><ellipse cx="511.8" cy="545.5" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M507.7219,541.2656 L507.7219,539.1094 L515.1125,539.1094 L515.1125,541.2656 L512.6438,541.2656 L512.6438,549.3438 L515.1125,549.3438 L515.1125,551.5 L507.7219,551.5 L507.7219,549.3438 L510.1906,549.3438 L510.1906,541.2656 L507.7219,541.2656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="87" x="527.2" y="550.3467">IRLController</text><line style="stroke:#181818;stroke-width:0.5;" x1="491.5" x2="622.5" y1="561.5" y2="561.5"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="121" x="496.5" y="578.4951">+train(timesteps)</text></g><!--MD5=[eaf7de0538c0ece421c87c7e9082976f]
+class SACFactory--><g id="elem_SACFactory"><rect codeLine="53" fill="#F1F1F1" height="32" id="SACFactory" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="110" x="345" y="541.5"/><ellipse cx="360" cy="557.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M362.9688,563.1406 Q362.3906,563.4375 361.75,563.5781 Q361.1094,563.7344 360.4063,563.7344 Q357.9063,563.7344 356.5781,562.0938 Q355.2656,560.4375 355.2656,557.3125 Q355.2656,554.1875 356.5781,552.5313 Q357.9063,550.875 360.4063,550.875 Q361.1094,550.875 361.75,551.0313 Q362.4063,551.1875 362.9688,551.4844 L362.9688,554.2031 Q362.3438,553.625 361.75,553.3594 Q361.1563,553.0781 360.5313,553.0781 Q359.1875,553.0781 358.5,554.1563 Q357.8125,555.2188 357.8125,557.3125 Q357.8125,559.4063 358.5,560.4844 Q359.1875,561.5469 360.5313,561.5469 Q361.1563,561.5469 361.75,561.2813 Q362.3438,561 362.9688,560.4219 L362.9688,563.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="78" x="374" y="562.3467">SACFactory</text></g><!--MD5=[3c760cb6921be40f0166f8c2e00f3583]
+class SACController--><g id="elem_SACController"><rect codeLine="54" fill="#F1F1F1" height="32" id="SACController" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="127" x="336.5" y="692"/><ellipse cx="351.5" cy="708" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M354.4688,713.6406 Q353.8906,713.9375 353.25,714.0781 Q352.6094,714.2344 351.9063,714.2344 Q349.4063,714.2344 348.0781,712.5938 Q346.7656,710.9375 346.7656,707.8125 Q346.7656,704.6875 348.0781,703.0313 Q349.4063,701.375 351.9063,701.375 Q352.6094,701.375 353.25,701.5313 Q353.9063,701.6875 354.4688,701.9844 L354.4688,704.7031 Q353.8438,704.125 353.25,703.8594 Q352.6563,703.5781 352.0313,703.5781 Q350.6875,703.5781 350,704.6563 Q349.3125,705.7188 349.3125,707.8125 Q349.3125,709.9063 350,710.9844 Q350.6875,712.0469 352.0313,712.0469 Q352.6563,712.0469 353.25,711.7813 Q353.8438,711.5 354.4688,710.9219 L354.4688,713.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="95" x="365.5" y="712.8467">SACController</text></g><!--MD5=[dcc2f53f329fb052a6f45cfd9829f02e]
+class ReportingWrapper--><g id="elem_ReportingWrapper"><rect codeLine="59" fill="#F1F1F1" height="32" id="ReportingWrapper" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="158" x="26" y="803"/><ellipse cx="41" cy="819" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M43.9688,824.6406 Q43.3906,824.9375 42.75,825.0781 Q42.1094,825.2344 41.4063,825.2344 Q38.9063,825.2344 37.5781,823.5938 Q36.2656,821.9375 36.2656,818.8125 Q36.2656,815.6875 37.5781,814.0313 Q38.9063,812.375 41.4063,812.375 Q42.1094,812.375 42.75,812.5313 Q43.4063,812.6875 43.9688,812.9844 L43.9688,815.7031 Q43.3438,815.125 42.75,814.8594 Q42.1563,814.5781 41.5313,814.5781 Q40.1875,814.5781 39.5,815.6563 Q38.8125,816.7188 38.8125,818.8125 Q38.8125,820.9063 39.5,821.9844 Q40.1875,823.0469 41.5313,823.0469 Q42.1563,823.0469 42.75,822.7813 Q43.3438,822.5 43.9688,821.9219 L43.9688,824.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126" x="55" y="823.8467">ReportingWrapper</text></g><!--MD5=[f705b9614a6e8d8adc315de185164542]
+class ExperimentStorage--><g id="elem_ExperimentStorage"><rect codeLine="60" fill="#F1F1F1" height="32" id="ExperimentStorage" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="164" x="22" y="692"/><ellipse cx="37" cy="708" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M39.9688,713.6406 Q39.3906,713.9375 38.75,714.0781 Q38.1094,714.2344 37.4063,714.2344 Q34.9063,714.2344 33.5781,712.5938 Q32.2656,710.9375 32.2656,707.8125 Q32.2656,704.6875 33.5781,703.0313 Q34.9063,701.375 37.4063,701.375 Q38.1094,701.375 38.75,701.5313 Q39.4063,701.6875 39.9688,701.9844 L39.9688,704.7031 Q39.3438,704.125 38.75,703.8594 Q38.1563,703.5781 37.5313,703.5781 Q36.1875,703.5781 35.5,704.6563 Q34.8125,705.7188 34.8125,707.8125 Q34.8125,709.9063 35.5,710.9844 Q36.1875,712.0469 37.5313,712.0469 Q38.1563,712.0469 38.75,711.7813 Q39.3438,711.5 39.9688,710.9219 L39.9688,713.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="132" x="51" y="712.8467">ExperimentStorage</text></g><!--MD5=[f89f56c3f58488c464c31da1d9197c47]
+link ExperimentManager to Experiment--><g id="link_ExperimentManager_Experiment"><path codeLine="64" d="M727,130.22 C727,152.41 727,179.31 727,201.66 " fill="none" id="ExperimentManager-to-Experiment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="727,206.94,731,197.94,727,201.94,723,197.94,727,206.94" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="81" x="728" y="173.0669">orchestrates</text></g><!--MD5=[15d7e4be280620cadd89e755b7ef981a]
+link Experiment to IEnvironment--><g id="link_Experiment_IEnvironment"><path codeLine="65" d="M778.51,288.16 C798.65,304.74 821.34,324.83 840,345 C876.94,384.94 873.39,405.66 912,444 C940.12,471.92 975.74,498.04 1005.94,518.07 " fill="none" id="Experiment-to-IEnvironment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1010.35,520.98,1005.0276,512.6931,1006.1722,518.233,1000.6324,519.3776,1010.35,520.98" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="85" x="913" y="420.5669">interacts with</text></g><!--MD5=[256f23329fb1a2403b66eea0c995fb44]
+link Experiment to IController--><g id="link_Experiment_IController"><path codeLine="66" d="M727,288.38 C727,317.24 727,355.75 727,382.7 " fill="none" id="Experiment-to-IController" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="727,387.92,731,378.92,727,382.92,723,378.92,727,387.92" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="67" x="728" y="333.0669">drives with</text></g><!--MD5=[c897525cbcacd1adddf68e05d0f4b918]
+link Experiment to ExperimentStorage--><g id="link_Experiment_ExperimentStorage"><path codeLine="67" d="M670.4,288.15 C654.45,297.52 636.62,306.4 619,312 C535.47,338.54 298.93,296.4 226,345 C108.17,423.51 102.02,622.85 103.23,686.87 " fill="none" id="Experiment-to-ExperimentStorage" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="103.35,691.94,107.1433,682.8509,103.2357,686.9413,99.1454,683.0338,103.35,691.94" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="65" x="134" y="487.0669">records to</text></g><!--MD5=[e1fef4f6f15ff353d1f17f7c52f2fd42]
+link ExperimentStorage to ReportingWrapper--><g id="link_ExperimentStorage_ReportingWrapper"><path codeLine="68" d="M104.14,724.16 C104.32,743.35 104.62,776.5 104.81,797.82 " fill="none" id="ExperimentStorage-to-ReportingWrapper" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="104.86,802.97,108.7827,793.936,104.8171,797.9702,100.783,794.0046,104.86,802.97" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="80" x="105" y="769.0669">formats logs</text></g><!--MD5=[fbf5a98823a7b93b2384c1bea443f1f6]
+link ExperimentManager to IEnvironmentFactory--><g id="link_ExperimentManager_IEnvironmentFactory"><path codeLine="70" d="M788.75,130.12 C884.62,197.85 1066.81,326.56 1149.4,384.91 " fill="none" id="ExperimentManager-to-IEnvironmentFactory" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1153.74,387.97,1148.6905,379.5141,1149.654,385.0883,1144.0798,386.0517,1153.74,387.97" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="45" x="1044" y="252.0669">selects</text></g><!--MD5=[9e83f74cfdec28293281c72188294942]
+link ExperimentManager to IControllerFactory--><g id="link_ExperimentManager_IControllerFactory"><path codeLine="71" d="M658,130.05 C627.35,151.2 591.97,178.24 564,207 C509.81,262.72 461.39,340.52 436.57,383.44 " fill="none" id="ExperimentManager-to-IControllerFactory" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="433.95,387.99,441.8923,382.166,436.4338,383.6505,434.9492,378.192,433.95,387.99" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="45" x="565" y="252.0669">selects</text></g><!--MD5=[b096cdf32fb812dafeca3cc65e390bbb]
+reverse link IEnvironmentFactory to SinergymFactory--><g id="link_IEnvironmentFactory_SinergymFactory"><path codeLine="73" d="M1224.05,460.41 C1244.46,488.04 1269.63,522.15 1283.85,541.4 " fill="none" id="IEnvironmentFactory-backto-SinergymFactory" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="1218.35,464.48,1212.1,444.23,1229.62,456.16,1218.35,464.48" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[82eaf6a95d86626cb89873fe7ff7c058]
+reverse link IEnvironment to SinergymEnvironment--><g id="link_IEnvironment_SinergymEnvironment"><path codeLine="74" d="M1108.43,610.32 C1130.36,639.14 1156.08,672.94 1170.57,691.98 " fill="none" id="IEnvironment-backto-SinergymEnvironment" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="1102.61,614.22,1096.07,594.07,1113.75,605.75,1102.61,614.22" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[22b422b0363f3a5ed2bdf3a78e06e38a]
+link SinergymFactory to SinergymEnvironment--><g id="link_SinergymFactory_SinergymEnvironment"><path codeLine="75" d="M1283.54,573.56 C1262.9,600.68 1219.49,657.73 1196.7,687.69 " fill="none" id="SinergymFactory-to-SinergymEnvironment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1193.49,691.9,1202.1091,687.1345,1196.506,687.912,1195.7284,682.3089,1193.49,691.9" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="48" x="1242" y="637.0669">creates</text></g><!--MD5=[8185987d5aceb551a470cbaa55da56a1]
+reverse link IController to IRLController--><g id="link_IController_IRLController"><path codeLine="77" d="M611.07,446.94 C588.42,455.05 569.37,464.29 562,474 C550.2,489.54 549.53,511.86 551.49,529.36 " fill="none" id="IController-backto-IRLController" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="none" points="609.12,440.22,630.3,440.56,613.53,453.5,609.12,440.22" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[634cae0c12250613e2a59d44f63be73d]
+reverse link IControllerFactory to SACFactory--><g id="link_IControllerFactory_SACFactory"><path codeLine="78" d="M412.55,464.36 C408.89,491.23 404.56,523.05 402.06,541.4 " fill="none" id="IControllerFactory-backto-SACFactory" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="405.66,463.1,415.29,444.23,419.53,464.99,405.66,463.1" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[d0be73045e954824ed4cc0ce3b168591]
+reverse link IRLController to SACController--><g id="link_IRLController_SACController"><path codeLine="79" d="M513.26,599.87 C480.96,630.43 438.81,670.3 416.13,691.75 " fill="none" id="IRLController-backto-SACController" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="508.86,594.4,528.2,585.74,518.48,604.57,508.86,594.4" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[c2d7c7a90ca5ebd2e74636eddc42f990]
+link SACFactory to SACController--><g id="link_SACFactory_SACController"><path codeLine="80" d="M400,573.56 C400,600.35 400,656.33 400,686.57 " fill="none" id="SACFactory-to-SACController" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="400,691.9,404,682.9,400,686.9,396,682.9,400,691.9" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="48" x="401" y="637.0669">creates</text></g><!--MD5=[b5cd2f0b9528aff1c34b8bcabd1f0bdb]
+link SACController to ReportingWrapper--><g id="link_SACController_ReportingWrapper"><path codeLine="81" d="M359.29,724.04 C304.56,744.26 207.55,780.11 150.48,801.2 " fill="none" id="SACController-to-ReportingWrapper" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="145.76,802.94,155.5875,803.5876,150.4527,801.2141,152.8261,796.0793,145.76,802.94" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="85" x="271" y="769.0669">optional wrap</text></g><!--MD5=[07f7da9e53d36906d113af265755d540]
+link IControllerFactory to IEnvironment--><g id="link_IControllerFactory_IEnvironment"><path codeLine="83" d="M478.34,444.08 C515.68,460.07 565.3,479.38 611,491 C710.48,516.3 738.39,506.47 840,521 C874.35,525.91 911.56,531.54 945.79,536.85 " fill="none" id="IControllerFactory-to-IEnvironment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="950.81,537.63,942.5345,532.29,945.8698,536.859,941.3008,540.1943,950.81,537.63" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="130" x="612" y="487.0669">configures controller</text></g><!--MD5=[9521550349ee69d8d77c5605f0c9a3a3]
+link IController to IEnvironment--><g id="link_IController_IEnvironment"><path codeLine="84" d="M735.22,444.12 C741.44,460.11 751.59,479.42 767,491 C795.43,512.36 875.4,529.16 945.91,540.4 " fill="none" id="IController-to-IEnvironment" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="950.97,541.2,942.6945,535.86,946.0298,540.429,941.4608,543.7643,950.97,541.2" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="99" x="768" y="487.0669">uses during run</text></g><!--MD5=[a47c511a082c2d52ddb1ccc501ce9b36]
+@startuml
+skinparam classAttributeIconSize 0
+hide empty members
+
+' ───── Orchestration ─────
+package "Experiment Orchestration" {
+  class ExperimentManager {
+    +register_environment_factory(engine, factory)
+    +register_controller_factory(controller, factory)
+    +run_all(config_path)
+  }
+
+  class Experiment {
+    +status: ExperimentStatus
+    +run(): void
+  }
+
+  enum ExperimentStatus {
+    PENDING
+    RUNNING
+    FINISHED
+  }
+}
+
+' ───── Environment Provision ─────
+package "Environment Provision" {
+  interface IEnvironmentFactory {
+    +create_environment(config_path): IEnvironment
+  }
+
+  interface IEnvironment {
+    +reset(): State
+    +step(action: Action): Transition
+  }
+
+  class SinergymFactory
+  class SinergymEnvironment
+}
+
+' ───── Controller Provision ─────
+package "Controller Provision" {
+  interface IController {
+    +get_action(state): Action
+  }
+
+  interface IControllerFactory {
+    +create_controller(env: IEnvironment): IController
+  }
+
+  interface IRLController {
+    +train(timesteps)
+  }
+
+  class SACFactory
+  class SACController
+}
+
+' ───── Reporting & Storage ─────
+package "Reporting & Storage" {
+  class ReportingWrapper
+  class ExperimentStorage
+}
+
+' ───── Relationships ─────
+ExperimentManager - -> Experiment : orchestrates
+Experiment - -> IEnvironment : interacts with
+Experiment - -> IController : drives with
+Experiment - -> ExperimentStorage : records to
+ExperimentStorage - -> ReportingWrapper : formats logs
+
+ExperimentManager - -> IEnvironmentFactory : selects
+ExperimentManager - -> IControllerFactory : selects
+
+IEnvironmentFactory <|.. SinergymFactory
+IEnvironment <|.. SinergymEnvironment
+SinergymFactory - -> SinergymEnvironment : creates
+
+IController <|- - IRLController
+IControllerFactory <|.. SACFactory
+IRLController <|.. SACController
+SACFactory - -> SACController : creates
+SACController - -> ReportingWrapper : optional wrap
+
+IControllerFactory - -> IEnvironment : configures controller
+IController - -> IEnvironment : uses during run
+@enduml
+
+@startuml
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "Experiment Orchestration" {
+  class ExperimentManager {
+    +register_environment_factory(engine, factory)
+    +register_controller_factory(controller, factory)
+    +run_all(config_path)
+  }
+
+  class Experiment {
+    +status: ExperimentStatus
+    +run(): void
+  }
+
+  enum ExperimentStatus {
+    PENDING
+    RUNNING
+    FINISHED
+  }
+}
+
+package "Environment Provision" {
+  interface IEnvironmentFactory {
+    +create_environment(config_path): IEnvironment
+  }
+
+  interface IEnvironment {
+    +reset(): State
+    +step(action: Action): Transition
+  }
+
+  class SinergymFactory
+  class SinergymEnvironment
+}
+
+package "Controller Provision" {
+  interface IController {
+    +get_action(state): Action
+  }
+
+  interface IControllerFactory {
+    +create_controller(env: IEnvironment): IController
+  }
+
+  interface IRLController {
+    +train(timesteps)
+  }
+
+  class SACFactory
+  class SACController
+}
+
+package "Reporting & Storage" {
+  class ReportingWrapper
+  class ExperimentStorage
+}
+
+ExperimentManager - -> Experiment : orchestrates
+Experiment - -> IEnvironment : interacts with
+Experiment - -> IController : drives with
+Experiment - -> ExperimentStorage : records to
+ExperimentStorage - -> ReportingWrapper : formats logs
+
+ExperimentManager - -> IEnvironmentFactory : selects
+ExperimentManager - -> IControllerFactory : selects
+
+IEnvironmentFactory <|.. SinergymFactory
+IEnvironment <|.. SinergymEnvironment
+SinergymFactory - -> SinergymEnvironment : creates
+
+IController <|- - IRLController
+IControllerFactory <|.. SACFactory
+IRLController <|.. SACController
+SACFactory - -> SACController : creates
+SACController - -> ReportingWrapper : optional wrap
+
+IControllerFactory - -> IEnvironment : configures controller
+IController - -> IEnvironment : uses during run
+@enduml
+
+PlantUML version 1.2022.7(Mon Aug 22 17:01:30 UTC 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>
