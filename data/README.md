@@ -4,6 +4,8 @@ Artifacts produced by the testbed runtime are written here. Enviornment related 
 mounted into both the backend and testbed containers so experiments persist
 across runs.
 
+Weather data must be stored in an own folder, including a `.epw` and `.ddy` file. Building models are stored directly in `/buildings` and must be `epJSON` files. 
+
 ## Layout
 ```
 data/
