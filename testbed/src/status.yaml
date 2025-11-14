@@ -1,8 +1,0 @@
-experiments:
-- id: 1
-  name: ppo-experiment
-  status: training
-  total_training_episodes: 9
-  current_training_episode: 4
-  total_evaluation_episodes: 1
-  current_evaluation_episode: 0
