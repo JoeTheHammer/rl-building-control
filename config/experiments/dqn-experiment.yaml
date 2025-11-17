@@ -1,8 +1,7 @@
 experiments:
   - name: "dqn-experiment"
     engine: "sinergym"
-    environment_config: 
-      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    environment_config: /config/environments/sinergym-data-center-discrete.yaml
     controller: "dqn"
     controller_config: 
       /home/johannes/workspace/rl-building-control/config/controllers/dqn_controller.yaml
