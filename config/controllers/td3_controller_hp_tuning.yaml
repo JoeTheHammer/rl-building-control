@@ -3,7 +3,8 @@ training:
   report_training: false
   report_denormalized_state: false
   tensorboard_logs: true
-hyperparameters: {}
+hyperparameters:
+  device: "cuda"
 environment_wrapper:
   normalize_state: true
   normalize_reward: false
@@ -12,7 +13,7 @@ environment_wrapper:
   discrete_action: false
 hyperparameter_tuning:
   enabled: true
-  num_trials: 20
+  num_trials: 7
   num_episodes: 1
   sampler: tpe
   training_timesteps: 300000
