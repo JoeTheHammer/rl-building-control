@@ -6,7 +6,6 @@ import gymnasium as gym
 from environments.base_factory import IEnvironmentFactory
 
 from reporting.hdf5_storage import ExperimentStorage
-from utils.yaml_utils import resolve_project_path
 
 
 class IController(ABC):

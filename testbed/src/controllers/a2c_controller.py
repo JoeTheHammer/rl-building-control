@@ -10,7 +10,6 @@ from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
 from controllers.base_rl_controller import load_rl_controller_config
-from controllers.utils import add_squash_output_to_hp
 from tuning.hp_tuning import tune_hp
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.manager import EnvWrapperManager
@@ -53,9 +52,6 @@ class A2CFactory(IHPTunableControllerFactory):
         }
 
     def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
-
-        # Add this to ensure that output of controller is in defined (tanh) range.
-        hyper_params = add_squash_output_to_hp(hyper_params)
 
         return OnPolicyAdapter(
             env=env,

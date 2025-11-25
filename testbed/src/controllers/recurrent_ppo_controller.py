@@ -10,7 +10,6 @@ from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
 from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
 from controllers.base_rl_controller import load_rl_controller_config
-from controllers.utils import add_squash_output_to_hp, stabilize_training
 from tuning.hp_tuning import tune_hp
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.manager import EnvWrapperManager
@@ -47,9 +46,7 @@ class RecurrentPPOFactory(IHPTunableControllerFactory):
             "nstep_batch": nstep_batch_pairs,
         }
 
-    def suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
+    def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
 
         if trial is None:
             return {
@@ -75,7 +72,6 @@ class RecurrentPPOFactory(IHPTunableControllerFactory):
         return {
             "n_steps": n_steps,
             "batch_size": batch_size,
-
             "learning_rate": trial.suggest_float("learning_rate", 1e-6, 1e-3, log=True),
             "n_epochs": trial.suggest_int("n_epochs", 5, 20),
             "gamma": trial.suggest_float("gamma", 0.90, 0.999, log=True),
@@ -87,13 +83,7 @@ class RecurrentPPOFactory(IHPTunableControllerFactory):
             "target_kl": trial.suggest_float("target_kl", 0.002, 0.02, log=True),
         }
 
-    # -------------------------------------------------------------
-    # Build Controller
-    # -------------------------------------------------------------
     def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> OnPolicyAdapter:
-        # Important: apply your stabilizers
-        hyper_params = add_squash_output_to_hp(hyper_params)
-        hyper_params = stabilize_training(hyper_params)
 
         return OnPolicyAdapter(
             env=env,

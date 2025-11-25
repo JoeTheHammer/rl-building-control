@@ -5,7 +5,6 @@ import numpy as np
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
-from controllers.base_controller import IController
 from controllers.base_rl_controller import IRLController
 
 

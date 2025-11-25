@@ -38,9 +38,6 @@ class TD3Factory(IHPTunableControllerFactory):
     TD3 controller factory with full Optuna/grid-search hyperparameter tuning support.
     """
 
-    # --------------------------
-    # Grid Search (Discrete)
-    # --------------------------
     def get_grid_search_space(self) -> Dict[str, List[Any]]:
         return {
             "learning_rate": [1e-5, 5e-5, 1e-4, 3e-4, 1e-3],
@@ -55,9 +52,7 @@ class TD3Factory(IHPTunableControllerFactory):
             "target_noise_clip": [0.3, 0.5],
         }
 
-    def suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
+    def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
 
         # Default fallback (your current configuration)
         if trial is None:
@@ -78,16 +73,12 @@ class TD3Factory(IHPTunableControllerFactory):
             "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
             "gamma": trial.suggest_float("gamma", 0.90, 0.999, log=True),
             "batch_size": trial.suggest_categorical("batch_size", [64, 128, 256, 512]),
-            "buffer_size": trial.suggest_categorical(
-                "buffer_size", [200_000, 500_000, 1_000_000]
-            ),
+            "buffer_size": trial.suggest_categorical("buffer_size", [200_000, 500_000, 1_000_000]),
             "tau": trial.suggest_float("tau", 0.001, 0.02, log=True),
             "train_freq": trial.suggest_categorical("train_freq", [1, 2, 4, 8]),
             "gradient_steps": trial.suggest_categorical("gradient_steps", [1, 2, 4, 8]),
             "policy_delay": trial.suggest_int("policy_delay", 1, 3),
-            "target_policy_noise": trial.suggest_float(
-                "target_policy_noise", 0.05, 0.3
-            ),
+            "target_policy_noise": trial.suggest_float("target_policy_noise", 0.05, 0.3),
             "target_noise_clip": trial.suggest_float("target_noise_clip", 0.2, 0.6),
         }
 

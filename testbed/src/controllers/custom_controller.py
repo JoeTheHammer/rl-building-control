@@ -6,7 +6,6 @@ import yaml
 from pydantic import BaseModel
 
 from controllers.base_controller import ControllerSetup, IController, IControllerFactory
-from environments.base_factory import IEnvironmentFactory
 
 
 class CustomControllerConfig(BaseModel):
