@@ -21,12 +21,14 @@ yaml.representer.add_representer(float, float_representer)
 
 
 def _convert_value(val):
-    """Convert string to int/float if possible, else keep string quoted."""
-    if isinstance(val, int):
-        return val
-    if isinstance(val, float):
+    """Convert string to int/float/bool if possible, else keep string quoted."""
+    if isinstance(val, (int, float, bool)):
         return val
     if isinstance(val, str):
+        if val.lower() == 'true':
+            return True
+        if val.lower() == 'false':
+            return False
         if val.isdigit():
             return int(val)
         try:
@@ -34,6 +36,31 @@ def _convert_value(val):
         except ValueError:
             return DoubleQuotedScalarString(val)
     return DoubleQuotedScalarString(str(val))
+
+
+def _build_nested_dict(items: list) -> dict:
+    """
+    Converts a list of key-value pairs with dot-separated keys into a nested dict.
+    Raises ValueError if a key conflicts with an existing nested structure.
+    """
+    result = {}
+    for item in items:
+        keys = item.key.split('.')
+        d = result
+        for i, key in enumerate(keys[:-1]):
+            path = '.'.join(keys[:i+1])
+            if key not in d:
+                d[key] = {}
+            d = d[key]
+            if not isinstance(d, dict):
+                raise ValueError(f"Key conflict: '{path}' is a leaf node and cannot have sub-keys.")
+
+        leaf_key = keys[-1]
+        if leaf_key in d and isinstance(d[leaf_key], dict):
+            raise ValueError(f"Key conflict: '{item.key}' is a parent node and cannot be assigned a value.")
+
+        d[leaf_key] = _convert_value(item.value)
+    return result
 
 
 def save_controller(req: SaveControllerRequest) -> str:
@@ -75,9 +102,7 @@ def save_controller(req: SaveControllerRequest) -> str:
 
         doc = {
             "training": training,
-            "hyperparameters": {
-                kv.key: _convert_value(kv.value) for kv in s.hyperparameters
-            },
+            "hyperparameters": _build_nested_dict(s.hyperparameters),
         }
 
         doc["environment_wrapper"] = {

@@ -1,6 +1,6 @@
 import { Checkbox } from '../../ui/checkbox.tsx'
 import { Input } from '../../ui/input.tsx'
-import KeyValueList, { type KeyValue } from '../../shared/key-value-list.tsx'
+import NestedKeyValueList, { type KeyValue } from '@/components/shared/nested-key-value-list.tsx'
 import type { ControllerSettings } from './controller-types.ts'
 import {
   Select,
@@ -268,7 +268,7 @@ const ReinforcementLearningSection = ({
         <h2 className="text-primary text-base font-semibold">
           Hyperparameters
         </h2>
-        <KeyValueList
+        <NestedKeyValueList
           values={settings.hyperparameters}
           onChange={onHyperparametersChange}
           emptyKeyLabel="Hyperparameter"
