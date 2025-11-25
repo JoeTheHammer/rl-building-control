@@ -1,0 +1,11 @@
+experiments:
+  - name: "pure-ppo-experiment"
+    engine: "sinergym"
+    environment_config: 
+      /home/johannes/workspace/rl-building-control/config/environments/sinergym-data-center.yaml
+    controller: "ppo"
+    controller_config: 
+      /home/johannes/workspace/rl-building-control/config/controllers/pure-ppo-controller.yaml
+    episodes: 1
+    reporting:
+      denormalize_state: true
