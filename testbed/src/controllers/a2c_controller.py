@@ -83,4 +83,4 @@ class A2CFactory(IHPTunableControllerFactory):
             # This controller supports hp tuning so we can use it.
             hp = tune_hp(self, hp_tuning_config, env_wrap_manager, hp, is_env_adapter=True)
 
-        return super().create_rl_controller_setup(hp, env_wrap_manager, is_env_adapter=True)
+        return super().create_rl_controller_setup(hp, env_wrap_manager, is_adapter=True)

@@ -106,4 +106,4 @@ class PPOFactory(IHPTunableControllerFactory):
         if hp_tuning_config is not None and hp_tuning_config.enabled:
             hp = tune_hp(self, hp_tuning_config, env_wrap_manager, hp, is_env_adapter=True)
 
-        return super().create_rl_controller_setup(hp, env_wrap_manager, is_env_adapter=True)
+        return super().create_rl_controller_setup(hp, env_wrap_manager, is_adapter=True)

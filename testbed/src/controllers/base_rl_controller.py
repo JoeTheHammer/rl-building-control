@@ -87,16 +87,14 @@ class IRLControllerFactory(IControllerFactory, ABC):
         self,
         hp: Optional[Dict[str, Any]],
         env_wrap_manager: EnvWrapperManager,
-        is_env_adapter: bool = False,
+        is_adapter: bool = False,
     ) -> ControllerSetup:
         """
         Builds, trains, and sets up a reinforcement learning controller.
         """
         hp_map = dict(hp) if hp else {}
 
-        logger.info(
-            f"\033[92mCreate controller with hyperparameters: {hp_map}\033[0m"
-        )
+        logger.info(f"\033[92mCreate controller with hyperparameters: {hp_map}\033[0m")
 
         env = self.env_factory.create_environment()
         env = env_wrap_manager.apply_wrappers(env)
@@ -113,15 +111,19 @@ class IRLControllerFactory(IControllerFactory, ABC):
             env = ReportingWrapper(env, denorm_state=training_conf.report_denormalized_state)
             if self.experiment_storage:
                 training_handler = self.experiment_storage.create_training_handler()
-                training_handler.set_metadata({
-                    "phase": "training",
-                    "denormalized": training_conf.report_denormalized_state,
-                })
+                training_handler.set_metadata(
+                    {
+                        "phase": "training",
+                        "denormalized": training_conf.report_denormalized_state,
+                    }
+                )
                 env.configure_storage(training_handler, flush_interval=self.storage_flush_interval)
 
         controller = self.build_controller(env, hp_map)
 
-        env_config_path = getattr(self.env_factory, "config_path", None) if self.env_factory else None
+        env_config_path = (
+            getattr(self.env_factory, "config_path", None) if self.env_factory else None
+        )
         total_training_episodes = calculate_total_training_episodes(
             training_conf.timesteps, env_config_path
         )
@@ -141,7 +143,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 reporting_wrapper.end_recording()
                 reporting_wrapper.export_to_hdf5(file_path="./training_data.h5")
 
-        if is_env_adapter:
+        if is_adapter:
             if isinstance(controller, gym.Env) and isinstance(controller, IController):
                 return ControllerSetup(controller, cast(gym.Env, controller))
             raise RuntimeError("Adapter must be both a Controller and an Environment.")

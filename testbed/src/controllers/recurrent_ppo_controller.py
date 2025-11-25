@@ -123,4 +123,4 @@ class RecurrentPPOFactory(IHPTunableControllerFactory):
             )
             logger.info(f"Finished Recurrent PPO tuning. Best HP: {hp}")
 
-        return super().create_rl_controller_setup(hp, env_wrap_manager, is_env_adapter=True)
+        return super().create_rl_controller_setup(hp, env_wrap_manager, is_adapter=True)
