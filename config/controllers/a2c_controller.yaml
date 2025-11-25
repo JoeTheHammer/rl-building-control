@@ -11,6 +11,8 @@ hyperparameters:
   gamma: 0.995
   gae_lambda: 0.95
   vf_coef: 0.5
+  policy_kwargs.squash_output: "True"
+  use_sde: "True"
 environment_wrapper:
   normalize_state: true
   normalize_reward: false
