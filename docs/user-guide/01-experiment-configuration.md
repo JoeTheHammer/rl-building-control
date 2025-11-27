@@ -379,3 +379,58 @@ args:
 ```
 
 ## Experiment suite configuration
+
+In the menubar at the top, navigate to `Configurators` / `Experiment`. You will see the same controls for switching to dev mode, open a experiment suite, import an experiment suite and save an experiment suite as for environment and controller configuration.
+
+You can add/remove an experiment to/from an experiment suite by using the corresponding buttons as shown in this screenshot:
+
+![alt text](images/experiment_configurator.png)
+
+Per experiment, you can configure:
+
+- Name: Internal name of the experiment
+- Engine: Engine on which the experiment runs. At the moment, the only supported engine is [sinergym](https://github.com/ugr-sail/sinergym)
+- Environment config: `.yaml` configuration file of the environment
+- Controller: Type of the controller. For Reinforcement Learning Controllers, this correspond to the used model. At the moment, the following controller types are available:
+    - Custom
+    - Random (just chooses random actions)
+    - Rule based
+    - SAC
+    - PPO
+    - Recurrent PPO
+    - A2C
+    - DQN
+    - DDPG
+    - TD3
+- Controller Config: `.yaml` configuration file of the controller. Make sure that the hyperparameter used in the `.yaml` file match the supported hyperparameters of the chosen RL model.
+- Episodes: Number of episodes used during evaluation.
+- Denormalize State in collected data: If ticket, denormalized state and action space will be recorded during evaluation. The recommendation is to tick this
+
+### Example Config:
+
+Using the GUI:
+
+![alt text](images/experiment_configurator_1.png)
+
+Resulting `.yaml` file:
+
+```yaml
+experiments:
+  - name: dqn-experiment
+    engine: sinergym
+    environment_config: sinergym-data-center.yaml
+    controller: dqn
+    controller_config: dqn_controller.yaml
+    episodes: 1
+    reporting:
+      denormalize_state: true
+  - name: ppo-experiment
+    engine: sinergym
+    environment_config: sinergym-data-center.yaml
+    controller: ppo
+    controller_config: ppo_controller.yaml
+    episodes: 2
+    reporting:
+      denormalize_state: true
+```
+
