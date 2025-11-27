@@ -109,7 +109,10 @@ Example of an expression reward configuration:
 
 #### Python Reward
 
-To overcome the limitations of expression rewards, custom Python rewards can be used. Specify the Python module name and the class name of the reward implementation. For details on adding a custom reward, refer to [Extending the System](04-extending-the-system#custom-reward.md).
+To overcome the limitations of expression rewards, custom Python rewards can be used. Specify the Python module name and the class name of the reward implementation. Furthermore, you can define Initial Arguments that are passed to the custom reward class. For details on adding a custom reward, refer to [Extending the System](04-extending-the-system#custom-reward.md).
+
+![alt text](images/environment_configurator_4.png)
+
 
 ### Example YAML File
 
