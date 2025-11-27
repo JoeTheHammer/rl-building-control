@@ -118,9 +118,264 @@ Example of an expression reward:
 
 To overcome limitations of expression rewards, you can also use code based rewards. For this, you can give the python module name and the python class name of your reward class. More information about how to add such a customized reward can be found here [05-extending-the-system](05-extending-the-system.md)
 
+### Example YAML file
+
+```yaml
+building_model: >-
+  /home/johannes/workspace/rl-building-control/data/environment/buildings/2ZoneDataCenterHVAC_wEconomizer.epJSON
+weather_data: >-
+  /home/johannes/workspace/rl-building-control/data/environment/weather/ny_jfkl/USA_NY_New.York-J.F.Kennedy.Intl.AP.744860_TMY3.epw
+state_space:
+  variables:
+    Outdoor Temperature:
+      type: Site Outdoor Air Drybulb Temperature
+      zone: Environment
+    East_Zone_Temperature:
+      type: Zone Air Temperature
+      zone: East Zone
+    Outdoor Humidity:
+      type: Site Outdoor Air Relative Humidity
+      zone: Environment
+    Wind Speed:
+      type: Site Wind Speed
+      zone: Environment
+    Diffuse Solar Radiation:
+      type: Site Diffuse Solar Radiation Rate per Area
+      zone: Environment
+    Direct Solar Radiation:
+      type: Site Direct Solar Radiation Rate per Area
+      zone: Environment
+    West_Zone_Temperature:
+      type: Zone Air Temperature
+      zone: West Zone
+    East Humidity:
+      type: Zone Air Relative Humidity
+      zone: East Zone
+    West Humidity:
+      type: Zone Air Relative Humidity
+      zone: West Zone
+    West Mean Radiant Temp:
+      type: Zone Thermal Comfort Mean Radiant Temperature
+      zone: West Zone PEOPLE
+    East Mean Radiant Temp:
+      type: Zone Thermal Comfort Mean Radiant Temperature
+      zone: East Zone PEOPLE
+    Fanger West:
+      type: Zone Thermal Comfort Fanger Model PPD
+      zone: West Zone PEOPLE
+    Fanger East:
+      type: Zone Thermal Comfort Fanger Model PPD
+      zone: West Zone PEOPLE
+    People Air Temp West:
+      type: People Air Temperature
+      zone: West Zone PEOPLE
+    People Air Temp East:
+      type: People Air Temperature
+      zone: East Zone PEOPLE
+    East Zone People:
+      type: Zone People Occupant Count
+      zone: East Zone
+    West Zone People:
+      type: Zone People Occupant Count
+      zone: West Zone
+    Facility_Total_HVAC_Electric_Demand_Rate:
+      type: Facility Total HVAC Electricity Demand Rate
+      zone: Whole Building
+    Cooling_Setpoint:
+      type: Zone Thermostat Cooling Setpoint Temperature
+      zone: West Zone
+    Heating_Setpoint:
+      type: Zone Thermostat Heating Setpoint Temperature
+      zone: West Zone
+    Fanger Model Clothing Value:
+      type: Schedule Value
+      zone: Clothing Sch
+  time_info:
+    day_of_month:
+      cyclic: false
+    month:
+      cyclic: true
+    day_of_week:
+      cyclic: false
+    hour:
+      cyclic: false
+action_space:
+  actuators:
+    Cooling Setpoint:
+      type: continuous
+      range:
+        - 22
+        - 30
+      component: Schedule:Constant
+      control_type: Schedule Value
+      actuator_key: Cooling Setpoint RL
+    Heating Setpoint:
+      type: continuous
+      range:
+        - 15
+        - 22
+      component: Schedule:Constant
+      control_type: Schedule Value
+      actuator_key: Heating Setpoint RL
+reward_function:
+  type: expression
+  variables:
+    - East_Zone_Temperature
+    - West_Zone_Temperature
+    - Facility_Total_HVAC_Electric_Demand_Rate
+  expression: >-
+    - energy_weight * lambda_energy * Facility_Total_HVAC_Electric_Demand_Rate -
+    (1 - energy_weight) * lambda_temperature * (max(0, ((East_Zone_Temperature +
+    West_Zone_Temperature) / 2) - comfort_high) + max(0, comfort_low -
+    ((East_Zone_Temperature + West_Zone_Temperature) / 2)))
+  params:
+    energy_weight: 0.5
+    lambda_energy: 0.00005
+    lambda_temperature: 1
+    comfort_high: 27
+    comfort_low: 18
+episode:
+  timesteps_per_hour: 4
+  period:
+    - 1
+    - 1
+    - 2025
+    - 31
+    - 12
+    - 2025
+```
+
 ## Controller configuration
 
+In the menubar at the top, navigate to `Configurators` / `Controller` and you will see this screen:
+
+![alt text](images/controller_configurator.png)
+
+You can use the same controls as in the environment configurator to switch to dev mode, open a configuration, import a configuration and save a configuration.
+
+You can choose between three different types of controllers: Reinforcement learning, Rule based and custom
+
+### Reinforcement Learning Controller
+
+#### Training options
+
+You can configure the following training option:
+
+- Total Training Timesteps: The total number of training timesteps the agent will do in the training phase.
+- Report Training: If this it ticket, data is collected during training and is available in the final dataset.
+- Denormalize: If state or action normalization is ticket, you can control with denormalize of the values are stored in the final dataset in denormalized form.
+- Tensorboard Logs: Defines if during training, data is sent to [Tensorboard](https://www.tensorflow.org/tensorboard) for monitoring the training process. If this is ticket, you can open tensorboard and see the training metrics during training. More information you can get [here](02-running-experiments.md).
+
+#### Hyperparameter tuning
+
+If `Activate Hyperparameter tuning` is ticket, hyperparameter tuning using [Optuna](https://optuna.org/) is activated. You have to specify the following options:
+
+- Num episodes: Total number of episodes are used for evaluation during hyperparameter tuning.
+- Num trails: The number of different trials used during hyperparameter tuning.
+- Sampler: You can choose the (sampler used by Optuna)[https://optuna.readthedocs.io/en/stable/reference/samplers/index.html]. The options are `TPE`, `Random`, `Grid`, `CMAES`, and `NSGAII`. Note that the chosen RL algorithm must support hyperparameter tuning. More information on this can be found [here](05-extending-the-system.md).
+- Training timesteps: The total number of training timesteps used during hyperparameter tuning.
+
+#### Environment wrapper
+
+You can choose different environment wrappers 
+
+- Normalize state: Determines if the state space is normalized
+- Normalize reward: Determines if the reward value is normalized
+- Normalize action: Determines if the action space is normalized
+- Continuous action: Determines if the action space is continuous - must be ticket for controllers that support a continuous action space
+- Discrete action:  Determines if the action space is discrete - must be ticket for controllers that support a discrete action space (e.g. DQN)
+
+#### Hyperparameters
+
+Lets you specify a hyperparameter name and it's value.
+You can also give nested hyperparameters, for example `policy_kwargs.squash_output`.
+
+#### Example
+
+Here is an example configuration of a A2C reinforcement learning controller.
+
+![alt text](images/controller_configurator_1.png)
 
 
+Example yaml file:
 
-## Experiment configuration
+```yaml
+training:
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
+  timesteps: 300000
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false
+hyperparameters:
+  tensorboard_log: logs/
+  ent_coef: 0.01
+  learning_rate: 0.00005
+  n_steps: 512
+  gae_lambda: 0.95
+  vf_coef: 0.5
+  policy_kwargs.squash_output: true
+```
+
+### Rule based Controller
+
+For rule-based controllers, you must provide the following configuration:
+
+- Custom Variables: You can add a list of key value pairs, that you can later use in your rules and actions
+- State Space: If you are **NOT** using a sinergym environment, you must add **all** variables names of the state space. At the moment, the platform supports only sinergym environments, so **you do not have to add anything here**.
+- Rules: You must provide conditions and actions by using **Python-like syntax** and which is evaluated safely using the **[asteval](https://newville.github.io/asteval/)** library
+    - Condition: Condition that evaluates to a boolean value
+    - Action: If the corresponding condition evaluates to `true`, this action is returned and send to the actuators. Make sure that the dimension of the action matches your action space
+
+#### Examples:
+
+![alt text](images/controller_configurator_2.png.png)
+
+Resulting yaml file:
+
+```yaml
+custom_variables:
+  high: 27
+  low: 18
+  cooling_min: 22
+  cooling_max: 27
+  heating_min: 18
+  heating_max: 22
+rules:
+  - condition: ((East_Zone_Temperature + West_Zone_Temperature) / 2) > high
+    action: >-
+      [clip(Cooling_Setpoint - 1, cooling_min, cooling_max),
+      clip(Heating_Setpoint - 1, heating_min, heating_max)]
+  - condition: ((East_Zone_Temperature + West_Zone_Temperature) / 2) < low
+    action: >-
+      [clip(Cooling_Setpoint + 1, cooling_min, cooling_max),
+      clip(Heating_Setpoint + 1, heating_min, heating_max)]
+  - condition: 'True'
+    action: >-
+      [clip(Cooling_Setpoint, cooling_min, cooling_max), clip(Heating_Setpoint,
+      heating_min, heating_max)]
+```
+
+### Custom controller
+
+To overcome possible limitations, you can use your own custom implementation of a controller. For this, you can specify the python module name and the python class name of your controller class. In addition, you can define in `init arguments` key value pairs that are passed to your custom controller.
+
+ More information about how to add such a customized reward can be found here [05-extending-the-system](05-extending-the-system.md)
+
+Example yaml file: 
+
+```yaml
+class_name: MyCustomController
+module: controllers.custom.my_custom_controller
+args:
+  factor: 1
+  lower_bound: 20
+  upper_bound: 25
+
+```
+
+## Experiment suite configuration
