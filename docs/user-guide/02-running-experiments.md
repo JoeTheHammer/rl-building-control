@@ -43,7 +43,9 @@ Upon completion, experiments appear in the **Completed Experiment Suites** secti
 
 ![alt text](images/execution_5.png)
 
-Experiments can be archived to remove them from the dashboard (they remain accessible in the `Archive` section). TensorBoard logs remain available and can be viewed in [TensorBoard](https://www.tensorflow.org/tensorboard). Clicking `Show results` navigates to the `Data Analysis` page, which provides a detailed analysis of the results (described [here](03-data-analysis.md)).
+Experiments can be archived to remove them from the dashboard (they remain accessible in the `Archive` section). From the archive section, you can either see their data again or delete them.
+
+TensorBoard logs remain available and can be viewed in [TensorBoard](https://www.tensorflow.org/tensorboard). Clicking `Show results` navigates to the `Data Analysis` page, which provides a detailed analysis of the results (described [here](03-data-analysis.md)).
 
 Clicking `Show Details` provides options to view individual `.yaml` configuration files or execution logs.
 
