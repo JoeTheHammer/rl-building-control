@@ -134,7 +134,7 @@ npm run dev
 -   Add backend endpoints under `backend/src/api/`
 -   Add frontend routes under `frontend/src/lib/routes.tsx`
 
-When more information about adding additional controllers or enviornments can be found in the README of the testbed (testbed/README). 
+When more information about adding additional controllers or enviornments can be found in the README of the testbed (testbed/README) or in the [user guide](docs/user-guide/04-extending-the-system.md). 
 
 # User Guide
 

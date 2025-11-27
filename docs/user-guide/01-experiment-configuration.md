@@ -74,15 +74,8 @@ Here is an example of an action space configuration:
 
 ### Reward
 
-In general, you have two different options how to configure a reward: Expression or code base. You can choose the type you want to use in the `Type` combobox
+In general, you have two different options how to configure a reward: Expression or python. You can choose the type you want to use in the `Type` combobox
 
-#### Expression reward
-
-In the `Variables` section, you can give a list of state space variable names. These variables are then available in the `Expression` section and their value will be used by the reward function at each timestep.
-
-In the `Parameter` section, you can define custom parameters. There value will be used by the reward function at each timestep.
-
-Finally, you have to define a custom expression in the `Expression` section.
 
 #### Expression reward
 
@@ -113,9 +106,9 @@ Example of an expression reward:
 
 ![alt text](images/environment_configurator_3.png)
 
-#### Code-based reward
+#### Python reward
 
-To overcome limitations of expression rewards, you can also use code based rewards. For this, you can give the python module name and the python class name of your reward class. More information about how to add such a customized reward can be found here [05-extending-the-system](05-extending-the-system.md)
+To overcome limitations of expression rewards, you can also use python rewards. For this, you can give the python module name and the python class name of your reward class. More information about how to add such a customized reward can be found here [04-extending-the-system](04-extending-the-system#custom-reward.md)
 
 ### Example YAML file
 
@@ -271,7 +264,7 @@ If `Activate Hyperparameter tuning` is ticket, hyperparameter tuning using [Optu
 
 - Num episodes: Total number of episodes are used for evaluation during hyperparameter tuning.
 - Num trails: The number of different trials used during hyperparameter tuning.
-- Sampler: You can choose the (sampler used by Optuna)[https://optuna.readthedocs.io/en/stable/reference/samplers/index.html]. The options are `TPE`, `Random`, `Grid`, `CMAES`, and `NSGAII`. Note that the chosen RL algorithm must support hyperparameter tuning. More information on this can be found [here](05-extending-the-system.md).
+- Sampler: You can choose the (sampler used by Optuna)[https://optuna.readthedocs.io/en/stable/reference/samplers/index.html]. The options are `TPE`, `Random`, `Grid`, `CMAES`, and `NSGAII`. Note that the chosen RL algorithm must support hyperparameter tuning. More information on this can be found [here](04-extending-the-system#tunable-rl-controller.md).
 - Training timesteps: The total number of training timesteps used during hyperparameter tuning.
 
 #### Environment wrapper
@@ -363,7 +356,7 @@ rules:
 
 To overcome possible limitations, you can use your own custom implementation of a controller. For this, you can specify the python module name and the python class name of your controller class. In addition, you can define in `init arguments` key value pairs that are passed to your custom controller.
 
- More information about how to add such a customized reward can be found here [05-extending-the-system](05-extending-the-system.md)
+ More information about how to add such a customized controller can be found here [04-extending-the-system](04-extending-the-system.md#custom-controller)
 
 Example yaml file: 
 
@@ -374,7 +367,6 @@ args:
   factor: 1
   lower_bound: 20
   upper_bound: 25
-
 ```
 
 ## Experiment suite configuration

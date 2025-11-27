@@ -42,7 +42,7 @@ You can export data to a `.csv` file by clicking on `Export CSV` on the top of t
 
 ## Download .h5
 
-YOu can export the underlying `.h5` file ([HDF 5 - based file](https://www.hdfgroup.org/solutions/hdf5/)) that contains all information of the experiment, including
+You can export the underlying `.h5` file ([HDF 5 - based file](https://www.hdfgroup.org/solutions/hdf5/)) that contains all information of the experiment, including
 
 - Context data
     - All `.yaml` files used for configuration
