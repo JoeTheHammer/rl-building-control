@@ -1,60 +1,59 @@
 # Data Analysis
 
-To access the frontend, start the application via Docker (see README in project root) and access `http://localhost:5173/`. Navigate via the top bar to `Data Analysis` or open click on `Show Results` in the `Experiments` dashboard ([more information](02-running-experiments.md)):
+To access the frontend, start the application via Docker (refer to the README in the project root) and navigate to `http://localhost:5173/`. Select `Data Analysis` from the top navigation bar or click `Show Results` in the `Experiments` dashboard ([more information](02-running-experiments.md)).
 
 ## Data Analysis in GUI
 
-You can open experiment data via the button `Load Data`. For each experiment in the experiment suite, you will get an overview on the results:
+Experiment data can be loaded by clicking `Load Data`. An overview of the results for each experiment in the suite will be displayed:
 
 ![alt text](images/data-analysis-1.png)
 
-On the top of the card, you can see some information for the experiment, like the config `.yaml` files used or the total reward collected during evaluation.
+At the top of the card, experiment details are provided, such as the configuration `.yaml` files used and the total reward collected during evaluation.
 
-For each experiment, you have four buttons:
+Four options are available for each experiment:
 
-- Show Experiment Config: Shows the experiment config used
-- Show Environment Config: Shows the environment config used
-- Show Controller Config: Shows the controller config used
-- Reproduce: Creates a new experiment in the `Experiments` section, with exactly the same configuration and environment data (building model, weather data). This allows to reproduce the experiment. 
+- **Show Experiment Config**: Displays the experiment configuration.
+- **Show Environment Config**: Displays the environment configuration.
+- **Show Controller Config**: Displays the controller configuration.
+- **Reproduce**: Creates a new experiment in the `Experiments` section with the exact same configuration and environment data (building model, weather data), facilitating experiment reproduction.
 
-For each episode, you see some general information including the created timestamp, finished timestamp and total reward. Below, you see a visualization of the data. You can choose, which variable is shown in the data visualization. There are three categories:
-- Reward: Shows the reward for each timestep in the episode.
-- Actions: Allows you investigate for each actuator the taken action per timestep.
-- States: Allows you to investigate for each variable in the state space the measured value for each timestep.
-You can also control how smooth the chart looks by adjusting the averaging frequency. You can set this to occur every 5, 10, 20, 50, 100, 200, or 500 timesteps. In addition, you can choose if the data is presented in a line chart, a bar chart or in a table view.
+For each episode, general information including the creation timestamp, completion timestamp, and total reward is displayed. Below this, a data visualization interface is provided. Users can select which variable to visualize from three categories:
+- **Reward**: Displays the reward for each timestep in the episode.
+- **Actions**: Displays the action taken by each actuator at each timestep.
+- **States**: Displays the measured value for each variable in the state space at each timestep.
 
-This screenshot shows the same data as in the screenshot before but this time presented as bar chart with averaging every 200 timesteps.
+Chart smoothing can be adjusted by modifying the averaging frequency. Options include every 5, 10, 20, 50, 100, 200, or 500 timesteps. Additionally, data can be presented as a line chart, bar chart, or table view.
+
+The following screenshot demonstrates the same data presented as a bar chart with averaging every 200 timesteps.
 
 ![alt text](images/data-analysis-2.png)
 
-You can also adjust the range of the y-axis and x-axis to investigate a data section in more detail. Here, we only look at cooling setpoints between 25.3 and 25.94 degrees for timesteps between 7150 and 7250 :
+The y-axis and x-axis ranges can be adjusted to investigate specific data sections in greater detail. The example below focuses on cooling setpoints between 25.3 and 25.94 degrees for timesteps between 7150 and 7250:
 ![alt text](images/data-analysis-3.png)
 
-The same data analysis tool is also available for the data collected during the training process (if this was enabled in the config file).
-
+This data analysis tool is also available for data collected during the training process, provided this feature was enabled in the configuration file.
 
 ## CSV Export
 
-You can export data to a `.csv` file by clicking on `Export CSV` on the top of the screen. A dialog opens in which you can choose which variables you want to be included in the resulting dataset:
+Data can be exported to a `.csv` file by clicking `Export CSV` at the top of the screen. A dialog will appear allowing users to select which variables to include in the dataset:
 
 ![alt text](images/data-analysis-5.png)
 
-
 ## Download .h5
 
-You can export the underlying `.h5` file ([HDF 5 - based file](https://www.hdfgroup.org/solutions/hdf5/)) that contains all information of the experiment, including
+The underlying `.h5` file ([HDF5-based file](https://www.hdfgroup.org/solutions/hdf5/)) containing comprehensive experiment information can be exported. This file includes:
 
-- Context data
-    - All `.yaml` files used for configuration
-    - The used building model `.epJSON`
-    - The used weather data (`.ddy` and `.epw`) files
-- Evaluation data
-    - Action taken by all actuators at each timestep
+- **Context data**
+    - All `.yaml` configuration files
+    - The building model (`.epJSON`)
+    - The weather data (`.ddy` and `.epw`) files
+- **Evaluation data**
+    - Actions taken by all actuators at each timestep
     - Reward for each timestep
-    - Values for all variables configured in the state of the environment
-- Training data
-    - Action taken by all actuators at each timestep
+    - Values for all variables configured in the environment state
+- **Training data**
+    - Actions taken by all actuators at each timestep
     - Reward for each timestep
-    - Values for all variables configured in the state of the environment
+    - Values for all variables configured in the environment state
 
-By also containing context information, the `.h5` file does not only contain all results but also the information needed to reproduce them. We can view it as "self contained experiment data".
+By including context information, the `.h5` file serves as a "self-contained experiment data" package, containing both the results and the information necessary to reproduce them.
