@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import gymnasium as gym
 
 
-class IEnvironmentFactory(ABC):
+class EnvironmentFactory(ABC):
     """
     Abstract factory interface for creating experiment environments.
 

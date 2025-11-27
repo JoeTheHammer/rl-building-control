@@ -16,7 +16,7 @@ import numpy as np
 from gymnasium.wrappers import NormalizeObservation
 from sinergym import BaseReward
 
-from environments.base_factory import IEnvironmentFactory
+from environments.base_factory import EnvironmentFactory
 from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.expression_reward import ExpressionReward
@@ -45,6 +45,7 @@ class EnvironmentElements:
 
 EXPRESSION_REWARD_TYPE = "expression"
 PYTHON_REWARD_TYPE = "python"
+CODE_BASED_REWARD_TYPE = "code based"
 
 
 def _resolve_paths(config: SinergymEnvironmentConfig) -> Tuple[str, str]:
@@ -198,7 +199,7 @@ def _build_reward_function(
             reward_variables,
         )
 
-    elif reward_cfg.type == PYTHON_REWARD_TYPE:
+    elif reward_cfg.type == PYTHON_REWARD_TYPE or reward_cfg.type == CODE_BASED_REWARD_TYPE:
         try:
             module = importlib.import_module(reward_cfg.module)
             cls = getattr(module, reward_cfg.class_name)
@@ -241,7 +242,7 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
     )
 
 
-class SinergymFactory(IEnvironmentFactory):
+class SinergymFactory(EnvironmentFactory):
 
     def create_environment(self) -> SinergymEnvironment | NormalizeObservation:
         config = parse_sinergym_environment_config(self.config_path)

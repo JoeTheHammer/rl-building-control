@@ -2,7 +2,7 @@ from typing import List
 
 import gymnasium as gym
 
-from controllers.base_controller import IController
+from controllers.base_controller import Controller
 from custom_loggers.experiment_logger import logger
 from reporting.hdf5_storage import ExperimentStorage
 from wrappers.normalization_utils import denormalize_reward
@@ -20,7 +20,7 @@ class Experiment:
         self,
         name: str,
         env: gym.Env,
-        controller: IController,
+        controller: Controller,
         experiment_id: int,
         experiment_storage: ExperimentStorage | None = None,
         episodes: int = 1,

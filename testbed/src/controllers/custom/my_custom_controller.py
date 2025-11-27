@@ -2,10 +2,10 @@ from typing import Any
 
 import numpy as np
 
-from controllers.base_controller import IController
+from controllers.base_controller import Controller
 
 
-class MyCustomController(IController):
+class MyCustomController(Controller):
     """
     Example custom controller, that scales the action by a given factor while respecting given bounds
     """

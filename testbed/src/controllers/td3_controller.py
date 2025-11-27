@@ -6,9 +6,9 @@ from gymnasium import Env
 from stable_baselines3 import TD3
 
 from controllers.base_controller import ControllerSetup
-from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
+from controllers.base_hp_tunable_controller import HPTunableControllerFactory
 from controllers.base_rl_controller import (
-    IRLController,
+    RLController,
     load_rl_controller_config,
 )
 from tuning.hp_tuning import tune_hp
@@ -16,7 +16,7 @@ from wrappers.manager import EnvWrapperManager
 from custom_loggers.setup_logger import logger
 
 
-class TD3Controller(IRLController):
+class TD3Controller(RLController):
     """
     Controller for the Twin Delayed Deep Deterministic Policy Gradient (TD3) algorithm.
     """
@@ -33,7 +33,7 @@ class TD3Controller(IRLController):
         self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
-class TD3Factory(IHPTunableControllerFactory):
+class TD3Factory(HPTunableControllerFactory):
     """
     TD3 controller factory with full Optuna/grid-search hyperparameter tuning support.
     """

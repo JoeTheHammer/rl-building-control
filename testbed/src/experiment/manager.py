@@ -1,9 +1,9 @@
 from datetime import datetime, UTC
 from typing import Dict
 
-from controllers.base_controller import ControllerSetup, IControllerFactory
+from controllers.base_controller import ControllerSetup, ControllerFactory
 from custom_loggers.setup_logger import logger as setup_logger
-from environments.base_factory import IEnvironmentFactory
+from environments.base_factory import EnvironmentFactory
 from experiment.experiment import Experiment
 from experiment.experiment_config import ExperimentConfig, ReportingConfig
 from experiment.status import initialize_status, set_current_experiment
@@ -15,8 +15,8 @@ from utils.yaml_utils import resolve_project_path
 
 class ExperimentManager:
     def __init__(self, storage_path: str | None = None, flush_interval: int = 1024):
-        self._env_factories: Dict[str, IEnvironmentFactory] = {}
-        self._controller_factories: Dict[str, IControllerFactory] = {}
+        self._env_factories: Dict[str, EnvironmentFactory] = {}
+        self._controller_factories: Dict[str, ControllerFactory] = {}
         timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         default_storage = f"data-{timestamp}.h5"
         self._storage_path = storage_path or str(default_storage)
@@ -58,7 +58,9 @@ class ExperimentManager:
                     },
                 )
 
-                context = collect_experiment_context(resolve_project_path(config_path), experiment_config)
+                context = collect_experiment_context(
+                    resolve_project_path(config_path), experiment_config
+                )
                 experiment_storage.store_context(context)
                 self._storage_manager.flush()
 
@@ -118,7 +120,7 @@ class ExperimentManager:
 
     def _create_environment_factory(
         self, experiment_config: ExperimentConfig
-    ) -> IEnvironmentFactory | None:
+    ) -> EnvironmentFactory | None:
         env_factory = self._env_factories.get(experiment_config.engine)
         env_factory.set_config_path(resolve_project_path(experiment_config.environment_config))
         if env_factory is None:
@@ -131,7 +133,7 @@ class ExperimentManager:
     def _create_controller(
         self,
         experiment_config: ExperimentConfig,
-        env_factory: IEnvironmentFactory,
+        env_factory: EnvironmentFactory,
         experiment_id: int,
         experiment_storage: ExperimentStorage,
     ) -> ControllerSetup | None:
@@ -143,14 +145,16 @@ class ExperimentManager:
             return None
 
         controller_factory.set_env_factory(env_factory)
-        controller_factory.set_config_path(resolve_project_path(experiment_config.controller_config))
+        controller_factory.set_config_path(
+            resolve_project_path(experiment_config.controller_config)
+        )
         controller_factory.set_experiment_storage(experiment_storage, self._flush_interval)
 
         set_current_experiment(experiment_id)
         return controller_factory.create_controller_setup()
 
-    def register_controller_factory(self, controller: str, factory: IControllerFactory) -> None:
+    def register_controller_factory(self, controller: str, factory: ControllerFactory) -> None:
         self._controller_factories[controller] = factory
 
-    def register_environment_factory(self, engine: str, factory: IEnvironmentFactory):
+    def register_environment_factory(self, engine: str, factory: EnvironmentFactory):
         self._env_factories[engine] = factory

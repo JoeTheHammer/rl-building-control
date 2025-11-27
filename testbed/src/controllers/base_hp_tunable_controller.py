@@ -3,10 +3,10 @@ from typing import Optional, Dict, Any, List
 
 import optuna
 
-from controllers.base_rl_controller import IRLControllerFactory
+from controllers.base_rl_controller import RLControllerFactory
 
 
-class IHPTunableControllerFactory(IRLControllerFactory, ABC):
+class HPTunableControllerFactory(RLControllerFactory, ABC):
     """
     Abstract base class for reinforcement learning (RL) controller factories that
     support hyperparameter tuning via Optuna.

@@ -3,12 +3,12 @@ from typing import Any, NamedTuple
 
 import gymnasium as gym
 
-from environments.base_factory import IEnvironmentFactory
+from environments.base_factory import EnvironmentFactory
 
 from reporting.hdf5_storage import ExperimentStorage
 
 
-class IController(ABC):
+class Controller(ABC):
     """
     Abstract base class for controllers that produce actions based on the environment.
     """
@@ -43,22 +43,22 @@ class IController(ABC):
 
 
 class ControllerSetup(NamedTuple):
-    controller: IController
+    controller: Controller
     environment: gym.Env
 
 
-class IControllerFactory(ABC):
+class ControllerFactory(ABC):
 
     def __init__(self):
         self.config_path: str = ""
-        self.env_factory: IEnvironmentFactory | None = None
+        self.env_factory: EnvironmentFactory | None = None
         self.experiment_storage: ExperimentStorage | None = None
         self.storage_flush_interval: int = 1024
 
     def set_config_path(self, config_path: str):
         self.config_path = config_path
 
-    def set_env_factory(self, env_factory: IEnvironmentFactory):
+    def set_env_factory(self, env_factory: EnvironmentFactory):
         self.env_factory = env_factory
 
     def set_experiment_storage(
@@ -75,6 +75,6 @@ class IControllerFactory(ABC):
         Create and return a new controller instance.
 
         Returns:
-            IController: A controller instance.
+            Controller: A controller instance.
         """
         pass

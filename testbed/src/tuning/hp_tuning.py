@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional
 import numpy as np
 import optuna
 
-from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
+from controllers.base_hp_tunable_controller import HPTunableControllerFactory
 from controllers.config import HyperparameterTuning
 from custom_loggers.setup_logger import logger
 from experiment.experiment import Experiment
@@ -12,7 +12,7 @@ from wrappers.manager import EnvWrapperManager
 
 
 def _suggest_hyperparameters(
-    controller_factory: IHPTunableControllerFactory,
+    controller_factory: HPTunableControllerFactory,
     trial: Optional[optuna.Trial] = None,
     fixed_params: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
@@ -26,7 +26,7 @@ def _suggest_hyperparameters(
 
 
 def tune_hp(
-    controller_factory: IHPTunableControllerFactory,
+    controller_factory: HPTunableControllerFactory,
     hp_tuning_config: HyperparameterTuning,
     env_wrapper_manager: EnvWrapperManager,
     hp: Dict[str, Any],

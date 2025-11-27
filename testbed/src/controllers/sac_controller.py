@@ -6,17 +6,16 @@ from gymnasium import Env
 from stable_baselines3 import SAC
 
 from controllers.base_controller import ControllerSetup
-from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
+from controllers.base_hp_tunable_controller import HPTunableControllerFactory
 from controllers.base_rl_controller import (
-    IRLController,
+    RLController,
     load_rl_controller_config,
 )
 from tuning.hp_tuning import tune_hp
 from wrappers.manager import EnvWrapperManager
-from custom_loggers.setup_logger import logger
 
 
-class SACController(IRLController):
+class SACController(RLController):
 
     def __init__(self, env: gym.Env, params: Dict):
         super().__init__(env)
@@ -32,7 +31,7 @@ class SACController(IRLController):
         self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
-class SACFactory(IHPTunableControllerFactory):
+class SACFactory(HPTunableControllerFactory):
 
     def get_grid_search_space(self) -> Dict[str, List[Any]]:
         return {
@@ -49,10 +48,10 @@ class SACFactory(IHPTunableControllerFactory):
     def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
         if trial is None:
             return {
-                "ent_coef": "auto_2.0",  # Chosen based on previous experiments.
-                "learning_rate": 0.0009851008761417273,  # Chosen based on previous experiments.
-                "gamma": 0.9305074409820552,  # Chosen based on previous experiments.
-                "batch_size": 32,  # Chosen based on previous experiments.
+                "ent_coef": "auto_2.0",
+                "learning_rate": 0.0009851008761417273,
+                "gamma": 0.9305074409820552,
+                "batch_size": 32,
                 "tau": 0.005,
                 "train_freq": 1,
                 "gradient_steps": 1,

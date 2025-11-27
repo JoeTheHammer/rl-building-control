@@ -8,7 +8,7 @@ from sb3_contrib import RecurrentPPO
 
 from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
-from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
+from controllers.base_hp_tunable_controller import HPTunableControllerFactory
 from controllers.base_rl_controller import load_rl_controller_config
 from tuning.hp_tuning import tune_hp
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
@@ -16,7 +16,7 @@ from wrappers.manager import EnvWrapperManager
 from custom_loggers.setup_logger import logger
 
 
-class RecurrentPPOFactory(IHPTunableControllerFactory):
+class RecurrentPPOFactory(HPTunableControllerFactory):
     """
     Factory for Recurrent PPO with Optuna-based hyperparameter tuning.
     """

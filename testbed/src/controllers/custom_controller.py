@@ -5,7 +5,7 @@ from typing import Dict, Optional, Union
 import yaml
 from pydantic import BaseModel
 
-from controllers.base_controller import ControllerSetup, IController, IControllerFactory
+from controllers.base_controller import ControllerSetup, Controller, ControllerFactory
 
 
 class CustomControllerConfig(BaseModel):
@@ -24,7 +24,7 @@ def parse_custom_controller_config(config_path: str) -> CustomControllerConfig:
     return CustomControllerConfig(**data)
 
 
-class CustomControllerFactory(IControllerFactory):
+class CustomControllerFactory(ControllerFactory):
     def create_controller_setup(self) -> ControllerSetup:
 
         if self.config_path == "":
@@ -42,7 +42,7 @@ class CustomControllerFactory(IControllerFactory):
             ) from e
 
         # Check if passed controller class inherits from IController.
-        if not issubclass(controller_class, IController):
+        if not issubclass(controller_class, Controller):
             raise TypeError(
                 f"The class '{controller_class.__name__}' in module "
                 f"'{controller_config.module}' must inherit from 'IController'."

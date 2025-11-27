@@ -6,9 +6,9 @@ from gymnasium import Env
 from stable_baselines3 import DQN
 
 from controllers.base_controller import ControllerSetup
-from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
+from controllers.base_hp_tunable_controller import HPTunableControllerFactory
 from controllers.base_rl_controller import (
-    IRLController,
+    RLController,
     load_rl_controller_config,
 )
 from tuning.hp_tuning import tune_hp
@@ -16,7 +16,7 @@ from wrappers.manager import EnvWrapperManager
 from custom_loggers.setup_logger import logger
 
 
-class DQNController(IRLController):
+class DQNController(RLController):
     """
     Controller for the Deep Q-Network (DQN) algorithm.
     SB3 DQN is Double-DQN by default.
@@ -34,7 +34,7 @@ class DQNController(IRLController):
         self.model.learn(total_timesteps=timesteps, log_interval=1)
 
 
-class DQNFactory(IHPTunableControllerFactory):
+class DQNFactory(HPTunableControllerFactory):
     """
     Factory for DQN with hyperparameter tuning support.
     """
@@ -53,10 +53,7 @@ class DQNFactory(IHPTunableControllerFactory):
             "exploration_final_eps": [0.01, 0.05, 0.1],
         }
 
-    def suggest_hyperparameters_space(
-        self, trial: Optional[optuna.Trial] = None
-    ) -> Dict[str, Any]:
-
+    def suggest_hyperparameters_space(self, trial: Optional[optuna.Trial] = None) -> Dict[str, Any]:
 
         if trial is None:
             return {
@@ -73,36 +70,23 @@ class DQNFactory(IHPTunableControllerFactory):
                 "gradient_steps": 1,
             }
 
-
         return {
             "learning_rate": trial.suggest_float("learning_rate", 1e-5, 1e-3, log=True),
             "gamma": trial.suggest_float("gamma", 0.90, 0.999, log=True),
-
             "buffer_size": trial.suggest_categorical(
                 "buffer_size", [50_000, 100_000, 200_000, 500_000]
             ),
-
             "learning_starts": trial.suggest_int("learning_starts", 500, 5000),
-            "batch_size": trial.suggest_categorical(
-                "batch_size", [32, 64, 128, 256]
-            ),
-
+            "batch_size": trial.suggest_categorical("batch_size", [32, 64, 128, 256]),
             "target_update_interval": trial.suggest_categorical(
                 "target_update_interval", [500, 1000, 2500, 5000]
             ),
-
             "train_freq": trial.suggest_categorical("train_freq", [1, 4, 8]),
             "gradient_steps": trial.suggest_categorical("gradient_steps", [1, 2, 4]),
-
-            "exploration_fraction": trial.suggest_float(
-                "exploration_fraction", 0.05, 0.3
-            ),
+            "exploration_fraction": trial.suggest_float("exploration_fraction", 0.05, 0.3),
             "exploration_initial_eps": 1.0,  # Always stays 1.0
-            "exploration_final_eps": trial.suggest_float(
-                "exploration_final_eps", 0.01, 0.1
-            ),
+            "exploration_final_eps": trial.suggest_float("exploration_final_eps", 0.01, 0.1),
         }
-
 
     def build_controller(self, env: Env, hyper_params: Dict, **kwargs) -> DQNController:
         return DQNController(env, hyper_params)
@@ -120,7 +104,6 @@ class DQNFactory(IHPTunableControllerFactory):
         env_wrap_manager = EnvWrapperManager([], config.environment_wrapper)
 
         hp = config.hyperparameters
-
 
         if config.hyperparameter_tuning is not None and config.hyperparameter_tuning.enabled:
             logger.info("Starting hyperparameter tuning for DQN...")

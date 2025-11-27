@@ -8,14 +8,14 @@ from stable_baselines3 import PPO
 
 from adapters.on_policy_adapter import OnPolicyAdapter
 from controllers.base_controller import ControllerSetup
-from controllers.base_hp_tunable_controller import IHPTunableControllerFactory
+from controllers.base_hp_tunable_controller import HPTunableControllerFactory
 from controllers.base_rl_controller import load_rl_controller_config
 from tuning.hp_tuning import tune_hp
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 from wrappers.manager import EnvWrapperManager
 
 
-class PPOFactory(IHPTunableControllerFactory):
+class PPOFactory(HPTunableControllerFactory):
     """Factory for the PPO controller, including Optuna-based hyperparameter tuning."""
 
     def __init__(self):

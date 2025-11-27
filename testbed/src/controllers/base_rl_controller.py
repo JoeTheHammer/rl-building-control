@@ -5,7 +5,7 @@ import gymnasium as gym
 import yaml
 from stable_baselines3.common.monitor import Monitor
 
-from controllers.base_controller import ControllerSetup, IController, IControllerFactory
+from controllers.base_controller import ControllerSetup, Controller, ControllerFactory
 from controllers.config import RLControllerConfig
 from custom_loggers.setup_logger import logger
 from wrappers.manager import EnvWrapperManager
@@ -14,7 +14,7 @@ from wrappers.reporting_wrapper import ReportingWrapper
 from experiment.status import calculate_total_training_episodes, set_training_status
 
 
-class IRLController(IController, ABC):
+class RLController(Controller, ABC):
     """
     Base interface for a Reinforcement Learning (IRL) controller.
     """
@@ -63,14 +63,14 @@ def find_reporting_wrapper(env: gym.Env) -> Optional[ReportingWrapper]:
     return None
 
 
-class IRLControllerFactory(IControllerFactory, ABC):
+class RLControllerFactory(ControllerFactory, ABC):
     """
     Factory for IRLController instances, including hyperparameter tuning
     and controller creation logic.
     """
 
     @abstractmethod
-    def build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> IRLController:
+    def build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> RLController:
         """
         Construct an IRLController with the given environment and hyperparameters.
 
@@ -79,7 +79,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
             hyper_params (Dict): Mapping of hyperparameter names to values.
 
         Returns:
-            IRLController: A new, untrained controller instance.
+            RLController: A new, untrained controller instance.
         """
         pass
 
@@ -144,7 +144,7 @@ class IRLControllerFactory(IControllerFactory, ABC):
                 reporting_wrapper.export_to_hdf5(file_path="./training_data.h5")
 
         if is_adapter:
-            if isinstance(controller, gym.Env) and isinstance(controller, IController):
+            if isinstance(controller, gym.Env) and isinstance(controller, Controller):
                 return ControllerSetup(controller, cast(gym.Env, controller))
             raise RuntimeError("Adapter must be both a Controller and an Environment.")
 

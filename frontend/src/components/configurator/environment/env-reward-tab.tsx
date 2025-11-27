@@ -14,7 +14,7 @@ import NumericalKeyValueList, {
 import KeyValueList, { type KeyValue } from '@/components/shared/key-value-list'
 import { Input } from '../../ui/input.tsx'
 
-export type EnvironmentRewardType = 'expression' | 'code based'
+export type EnvironmentRewardType = 'expression' | 'python'
 
 export interface EnvironmentRewardSettings {
   type: EnvironmentRewardType
@@ -111,7 +111,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
           </SelectTrigger>
           <SelectContent className="bg-background">
             <SelectItem value="expression">expression</SelectItem>
-            <SelectItem value="code based">code based</SelectItem>
+            <SelectItem value="python">python</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -161,7 +161,7 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
       )}
 
       {/* Code based mode */}
-      {settings.type === 'code based' && (
+      {settings.type === 'python' && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className={fieldContainerStyles}>
             <label htmlFor="reward-module" className={fieldLabelStyles}>

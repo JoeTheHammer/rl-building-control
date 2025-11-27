@@ -2,11 +2,11 @@ from typing import Any
 
 import gymnasium as gym
 
-from controllers.base_controller import ControllerSetup, IController, IControllerFactory
-from environments.base_factory import IEnvironmentFactory
+from controllers.base_controller import ControllerSetup, Controller, ControllerFactory
+from environments.base_factory import EnvironmentFactory
 
 
-class RandomController(IController):
+class RandomController(Controller):
     """
     A controller that randomly selects a valid action from the environment's action space.
     """
@@ -27,7 +27,7 @@ class RandomController(IController):
         return self.env.action_space.sample()
 
 
-class RandomControllerFactory(IControllerFactory):
+class RandomControllerFactory(ControllerFactory):
     """
     Factory for creating instances of RandomController.
     """

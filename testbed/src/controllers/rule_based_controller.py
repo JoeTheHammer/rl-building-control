@@ -6,7 +6,7 @@ import yaml
 from asteval import Interpreter
 from pydantic import BaseModel
 
-from controllers.base_controller import ControllerSetup, IController, IControllerFactory
+from controllers.base_controller import ControllerSetup, Controller, ControllerFactory
 from environments.sinergym_factory import SinergymFactory
 from parser.config_parser import parse_sinergym_environment_config
 from reward.expression_reward import within
@@ -56,7 +56,7 @@ def load_rule_based_controller_config(path: str) -> RuleBasedControllerConfig:
     return RuleBasedControllerConfig(**raw_data)
 
 
-class RuleBasedController(IController):
+class RuleBasedController(Controller):
     """
     Rule-based controller that selects actions by evaluating user-defined rules using current environment state.
 
@@ -157,7 +157,6 @@ class RuleBasedController(IController):
         # Prepare evaluator context
         self.aeval.symtable.clear()
 
-
         self.aeval = Interpreter(
             usersyms={
                 "abs": abs,
@@ -200,13 +199,12 @@ class RuleBasedController(IController):
                         + "\n".join(err.get_error() for err in self.aeval.error)
                     )
 
-
                 # Ensure numeric numpy array output
                 return np.array(action_result, dtype=np.float32)
         return None
 
 
-class RuleBasedControllerFactory(IControllerFactory):
+class RuleBasedControllerFactory(ControllerFactory):
     def create_controller_setup(self) -> ControllerSetup:
         if not self.config_path:
             raise ValueError("A config_path is required for RuleBasedController.")
@@ -218,7 +216,9 @@ class RuleBasedControllerFactory(IControllerFactory):
         # For sinergym environment, state space can be read out of config.
         if isinstance(self.env_factory, SinergymFactory):
             env_config = parse_sinergym_environment_config(self.env_factory.config_path)
-            state_space = list(env_config.state_space.variables.keys()) + list(env_config.state_space.meters.keys())
+            state_space = list(env_config.state_space.variables.keys()) + list(
+                env_config.state_space.meters.keys()
+            )
         else:
             # For other (future) environments: state space can be passed.
             state_space = controller_config.state_space
