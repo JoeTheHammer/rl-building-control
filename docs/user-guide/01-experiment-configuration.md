@@ -1,6 +1,5 @@
 # Overview
 
-
 Experiment configuration relies on `.yaml` files. To define an experiment, the following components are required:
 
 -   **Controller config** (`.yaml`)
@@ -333,7 +332,7 @@ For rule-based controllers, you must provide the following configuration:
 
 #### Examples:
 
-![alt text](images/controller_configurator_2.png.png)
+![alt text](images/controller_configurator_2.png)
 
 Resulting yaml file:
 
