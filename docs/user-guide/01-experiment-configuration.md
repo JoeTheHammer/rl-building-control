@@ -12,61 +12,61 @@ The building model and weather data must be provided by the user as external ass
 
 # Configuration with Frontend
 
-To access the frontend, start the application via Docker (see README in project root) and access `http://localhost:5173/`. To create 
+To access the frontend, start the application via Docker (see README in project root) and access `http://localhost:5173/`.
 
 ## Environment Configuration
 
-In the menubar at the top, navigate to `Configurators` / `Environment` and you will see this screen:
+In the menu bar at the top, navigate to `Configurators` / `Environment` and you will see this screen:
 
 ![alt text](images/enviornment_configurator.png)
 
 On the top, you have a bar with different options:
 
-- Switch to Dev Mode: Opens the plain yaml file that you are updating under the hood. You can switch between Dev Mode and GUI mode without loosing your current progress, are changes are reflected in both views
-- Open Configuration: Opens a dialog that allows you to previous created environment configuration
-- Import Configuration: Allows you to import a configuration from any location of you system into the project.
-- Save Configuration: Allows you to store the configuration in the system. 
+- **Switch to Dev Mode**: Opens the plain YAML file that you are updating under the hood. You can switch between Dev Mode and GUI mode without losing your current progress; changes are reflected in both views.
+- **Open Configuration**: Opens a dialog that allows you to open a previously created environment configuration.
+- **Import Configuration**: Allows you to import a configuration from any location on your system into the project.
+- **Save Configuration**: Allows you to store the configuration in the system.
 
 ### General
 
 In the general tab, you can configure general environment properties:
 
-- Building Model: Click on the button `Select Building Model` to select a building model. You select building models (`.epJSON` files) that have previously been placed in the folder `data/environment/buildings`. 
-- Weather Data: Click on the button `Select Weather Data` to select weather data. You can select wather data that have previously been placed in the folder `data/environment/weather` in it's own folder. Every weather data folder must contain a `.ddy` and `epw` file.
-- Start Date Episode: Selects the date on which each experiment episodes will start.
-- End Date Episode: Selects the date on which each experiment episode will end.
-- Timesteps per hour: Select how many timesteps per hour are simulated.
+- **Building Model**: Click on the button `Select Building Model` to select a building model. You can select building models (`.epJSON` files) that have previously been placed in the folder `data/environment/buildings`.
+- **Weather Data**: Click on the button `Select Weather Data` to select weather data. You can select weather data that have previously been placed in the folder `data/environment/weather` in its own folder. Every weather data folder must contain a `.ddy` and `.epw` file.
+- **Start Date Episode**: Selects the date on which each experiment episode will start.
+- **End Date Episode**: Selects the date on which each experiment episode will end.
+- **Timesteps per hour**: Select how many timesteps per hour are simulated.
 
 ### State Space
 
-In the state space tab, you can configure your state space. On the top, you can choose if you want to add time information and specify which information you want. Furthermore, you can choose if the time information should be cyclic. For information on cyclic time data can be found [here](https://towardsdatascience.com/how-to-handle-cyclical-data-in-machine-learning-3e0336f7f97c/).
+In the state space tab, you can configure your state space. On the top, you can choose if you want to add time information and specify which information you want. Furthermore, you can choose if the time information should be cyclic. Information on cyclic time data can be found [here](https://towardsdatascience.com/how-to-handle-cyclical-data-in-machine-learning-3e0336f7f97c/).
 
-In the `Variables` section, you can define the variables that are present in your state  space. They are mapped to a sinergym state space and have to be present as output variables in the `epJSON` energy plus building model file. More information can be found [here](https://ugr-sail.github.io/sinergym/compilation/main/pages/environments)
+In the `Variables` section, you can define the variables that are present in your state space. They are mapped to a Sinergym state space and have to be present as output variables in the `epJSON` EnergyPlus building model file. More information can be found [here](https://ugr-sail.github.io/sinergym/compilation/main/pages/environments).
 
- You can specify
-- Variable Name: The internal name used in the platform for this variable
-- The type: `Variable` or `Meter`. If you choose `Meter`, the only thing that is needed in addition is the meter name. If you choose `Variable` you must also give the EnergyPlus Name and the Zone 
-- EnergyPlus Name: The variable name in EnergyPlus. This variable has to be present to make the framework work.
-- Zone: EnergyPlus Zone (or object) in which the variable is. This must map to the value `key_value` in output variables in the `epJSON` building model.
-- Exclude from state space: It this is ticket, the value of this variable will not be forwarded to the agent as part of the state space. However, the value is measured and is present in the resulting dataset.
+You can specify:
+- **Variable Name**: The internal name used in the platform for this variable.
+- **The type**: `Variable` or `Meter`. If you choose `Meter`, the only thing that is needed in addition is the meter name. If you choose `Variable`, you must also give the EnergyPlus Name and the Zone.
+- **EnergyPlus Name**: The variable name in EnergyPlus. This variable has to be present to make the framework work.
+- **Zone**: EnergyPlus Zone (or object) in which the variable is. This must map to the value `key_value` in output variables in the `epJSON` building model.
+- **Exclude from state space**: If this is ticked, the value of this variable will not be forwarded to the agent as part of the state space. However, the value is measured and is present in the resulting dataset.
 
-You can add and remove state space variable by clicking on the corresponding buttons:
+You can add and remove state space variables by clicking on the corresponding buttons:
 
 ![alt text](images/environment_configurator_1.png)
 
 ### Action space
 
-For the action space, you can define actuators. They are mapped to a sinergym action space and have to be present as in the `epJSON` energy plus building model file. More information can be found [here](https://ugr-sail.github.io/sinergym/compilation/main/pages/environments)
+For the action space, you can define actuators. They are mapped to a Sinergym action space and have to be present in the `epJSON` EnergyPlus building model file. More information can be found [here](https://ugr-sail.github.io/sinergym/compilation/main/pages/environments).
 
 You must specify:
 
-- Actuator Name: The internal name used in the platform for this actuator
-- Component: Energy plus component name
-- Control Type: The Energy Plus control type
-- Actuator Key: The Energy Plus key for this actuator
-- Type: Here you can either choose `Continuous` or `Discrete`
-    - For `Continuous`, you can choose Min and Max value. A value out of the continuous range [min, max] will then be applied at each timestep by the agent for this actuator. Values outside will be clipped to this range.
-    - For `Discrete`, you can choose for the mode `Values` or `Ranges`. If you choose values, you can give a list of values from which the agent might choose it's action. If you choose `Range`, you can give a `Min` and `Max` values and a step size. So for example the values min = 20, max = 21, range = 0.2 will result in [20, 20.2, 20.4, 20.6, 20.8, 21]
+- **Actuator Name**: The internal name used in the platform for this actuator.
+- **Component**: EnergyPlus component name.
+- **Control Type**: The EnergyPlus control type.
+- **Actuator Key**: The EnergyPlus key for this actuator.
+- **Type**: Here you can either choose `Continuous` or `Discrete`.
+    - For `Continuous`, you can choose Min and Max values. A value out of the continuous range [min, max] will then be applied at each timestep by the agent for this actuator. Values outside will be clipped to this range.
+    - For `Discrete`, you can choose the mode `Values` or `Ranges`. If you choose `Values`, you can give a list of values from which the agent might choose its action. If you choose `Ranges`, you can give `Min` and `Max` values and a step size. So for example the values min = 20, max = 21, range = 0.2 will result in [20, 20.2, 20.4, 20.6, 20.8, 21].
 
 Here is an example of an action space configuration:
 
@@ -74,8 +74,7 @@ Here is an example of an action space configuration:
 
 ### Reward
 
-In general, you have two different options how to configure a reward: Expression or python. You can choose the type you want to use in the `Type` combobox
-
+In general, you have two different options for how to configure a reward: Expression or Python. You can choose the type you want to use in the `Type` combo box.
 
 #### Expression reward
 
@@ -108,7 +107,7 @@ Example of an expression reward:
 
 #### Python reward
 
-To overcome limitations of expression rewards, you can also use python rewards. For this, you can give the python module name and the python class name of your reward class. More information about how to add such a customized reward can be found here [04-extending-the-system](04-extending-the-system#custom-reward.md)
+To overcome limitations of expression rewards, you can also use Python rewards. For this, you can give the Python module name and the Python class name of your reward class. More information about how to add such a customized reward can be found here [04-extending-the-system](04-extending-the-system#custom-reward.md).
 
 ### Example YAML file
 
@@ -239,57 +238,57 @@ episode:
 
 ## Controller configuration
 
-In the menubar at the top, navigate to `Configurators` / `Controller` and you will see this screen:
+In the menu bar at the top, navigate to `Configurators` / `Controller` and you will see this screen:
 
 ![alt text](images/controller_configurator.png)
 
-You can use the same controls as in the environment configurator to switch to dev mode, open a configuration, import a configuration and save a configuration.
+You can use the same controls as in the environment configurator to switch to dev mode, open a configuration, import a configuration, and save a configuration.
 
-You can choose between three different types of controllers: Reinforcement learning, Rule based and custom
+You can choose between three different types of controllers: Reinforcement Learning, Rule Based, and Custom.
 
 ### Reinforcement Learning Controller
 
 #### Training options
 
-You can configure the following training option:
+You can configure the following training options:
 
-- Total Training Timesteps: The total number of training timesteps the agent will do in the training phase.
-- Report Training: If this it ticket, data is collected during training and is available in the final dataset.
-- Denormalize: If state or action normalization is ticket, you can control with denormalize of the values are stored in the final dataset in denormalized form.
-- Tensorboard Logs: Defines if during training, data is sent to [Tensorboard](https://www.tensorflow.org/tensorboard) for monitoring the training process. If this is ticket, you can open tensorboard and see the training metrics during training. More information you can get [here](02-running-experiments.md).
+- **Total Training Timesteps**: The total number of training timesteps the agent will do in the training phase.
+- **Report Training**: If this is ticked, data is collected during training and is available in the final dataset.
+- **Denormalize**: If state or action normalization is ticked, you can control whether the values stored in the final dataset are in denormalized form.
+- **Tensorboard Logs**: Defines if during training, data is sent to [Tensorboard](https://www.tensorflow.org/tensorboard) for monitoring the training process. If this is ticked, you can open Tensorboard and see the training metrics during training. More information can be found [here](02-running-experiments.md).
 
 #### Hyperparameter tuning
 
-If `Activate Hyperparameter tuning` is ticket, hyperparameter tuning using [Optuna](https://optuna.org/) is activated. You have to specify the following options:
+If `Activate Hyperparameter tuning` is ticked, hyperparameter tuning using [Optuna](https://optuna.org/) is activated. You have to specify the following options:
 
-- Num episodes: Total number of episodes are used for evaluation during hyperparameter tuning.
-- Num trails: The number of different trials used during hyperparameter tuning.
-- Sampler: You can choose the (sampler used by Optuna)[https://optuna.readthedocs.io/en/stable/reference/samplers/index.html]. The options are `TPE`, `Random`, `Grid`, `CMAES`, and `NSGAII`. Note that the chosen RL algorithm must support hyperparameter tuning. More information on this can be found [here](04-extending-the-system#tunable-rl-controller.md).
-- Training timesteps: The total number of training timesteps used during hyperparameter tuning.
+- **Num episodes**: Total number of episodes used for evaluation during hyperparameter tuning.
+- **Num trials**: The number of different trials used during hyperparameter tuning.
+- **Sampler**: You can choose the [sampler used by Optuna](https://optuna.readthedocs.io/en/stable/reference/samplers/index.html). The options are `TPE`, `Random`, `Grid`, `CMAES`, and `NSGAII`. Note that the chosen RL algorithm must support hyperparameter tuning. More information on this can be found [here](04-extending-the-system#tunable-rl-controller.md).
+- **Training timesteps**: The total number of training timesteps used during hyperparameter tuning.
 
 #### Environment wrapper
 
-You can choose different environment wrappers 
+You can choose different environment wrappers:
 
-- Normalize state: Determines if the state space is normalized
-- Normalize reward: Determines if the reward value is normalized
-- Normalize action: Determines if the action space is normalized
-- Continuous action: Determines if the action space is continuous - must be ticket for controllers that support a continuous action space
-- Discrete action:  Determines if the action space is discrete - must be ticket for controllers that support a discrete action space (e.g. DQN)
+- **Normalize state**: Determines if the state space is normalized.
+- **Normalize reward**: Determines if the reward value is normalized.
+- **Normalize action**: Determines if the action space is normalized.
+- **Continuous action**: Determines if the action space is continuous - must be ticked for controllers that support a continuous action space.
+- **Discrete action**:  Determines if the action space is discrete - must be ticked for controllers that support a discrete action space (e.g. DQN).
 
 #### Hyperparameters
 
-Lets you specify a hyperparameter name and it's value.
+Lets you specify a hyperparameter name and its value.
 You can also give nested hyperparameters, for example `policy_kwargs.squash_output`.
 
 #### Example
 
-Here is an example configuration of a A2C reinforcement learning controller.
+Here is an example configuration of an A2C reinforcement learning controller.
 
 ![alt text](images/controller_configurator_1.png)
 
 
-Example yaml file:
+Example YAML file:
 
 ```yaml
 training:
@@ -317,17 +316,17 @@ hyperparameters:
 
 For rule-based controllers, you must provide the following configuration:
 
-- Custom Variables: You can add a list of key value pairs, that you can later use in your rules and actions
-- State Space: If you are **NOT** using a sinergym environment, you must add **all** variables names of the state space. At the moment, the platform supports only sinergym environments, so **you do not have to add anything here**.
-- Rules: You must provide conditions and actions by using **Python-like syntax** and which is evaluated safely using the **[asteval](https://newville.github.io/asteval/)** library
-    - Condition: Condition that evaluates to a boolean value
-    - Action: If the corresponding condition evaluates to `true`, this action is returned and send to the actuators. Make sure that the dimension of the action matches your action space
+- **Custom Variables**: You can add a list of key-value pairs that you can later use in your rules and actions.
+- **State Space**: If you are **NOT** using a Sinergym environment, you must add **all** variables names of the state space. At the moment, the platform supports only Sinergym environments, so **you do not have to add anything here**.
+- **Rules**: You must provide conditions and actions by using **Python-like syntax**, which is evaluated safely using the **[asteval](https://newville.github.io/asteval/)** library.
+    - **Condition**: Condition that evaluates to a boolean value.
+    - **Action**: If the corresponding condition evaluates to `true`, this action is returned and sent to the actuators. Make sure that the dimension of the action matches your action space.
 
 #### Examples:
 
 ![alt text](images/controller_configurator_2.png)
 
-Resulting yaml file:
+Resulting YAML file:
 
 ```yaml
 custom_variables:
@@ -354,11 +353,11 @@ rules:
 
 ### Custom controller
 
-To overcome possible limitations, you can use your own custom implementation of a controller. For this, you can specify the python module name and the python class name of your controller class. In addition, you can define in `init arguments` key value pairs that are passed to your custom controller.
+To overcome possible limitations, you can use your own custom implementation of a controller. For this, you can specify the Python module name and the Python class name of your controller class. In addition, you can define in `init arguments` key-value pairs that are passed to your custom controller.
 
- More information about how to add such a customized controller can be found here [04-extending-the-system](04-extending-the-system.md#custom-controller)
+More information about how to add such a customized controller can be found here [04-extending-the-system](04-extending-the-system.md#custom-controller).
 
-Example yaml file: 
+Example YAML file:
 
 ```yaml
 class_name: MyCustomController
@@ -371,7 +370,7 @@ args:
 
 ## Experiment suite configuration
 
-In the menubar at the top, navigate to `Configurators` / `Experiment`. You will see the same controls for switching to dev mode, open a experiment suite, import an experiment suite and save an experiment suite as for environment and controller configuration.
+In the menu bar at the top, navigate to `Configurators` / `Experiment`. You will see the same controls for switching to dev mode, opening an experiment suite, importing an experiment suite, and saving an experiment suite as for environment and controller configuration.
 
 You can add/remove an experiment to/from an experiment suite by using the corresponding buttons as shown in this screenshot:
 
@@ -379,10 +378,10 @@ You can add/remove an experiment to/from an experiment suite by using the corres
 
 Per experiment, you can configure:
 
-- Name: Internal name of the experiment
-- Engine: Engine on which the experiment runs. At the moment, the only supported engine is [sinergym](https://github.com/ugr-sail/sinergym)
-- Environment config: `.yaml` configuration file of the environment
-- Controller: Type of the controller. For Reinforcement Learning Controllers, this correspond to the used model. At the moment, the following controller types are available:
+- **Name**: Internal name of the experiment.
+- **Engine**: Engine on which the experiment runs. At the moment, the only supported engine is [Sinergym](https://github.com/ugr-sail/sinergym).
+- **Environment config**: `.yaml` configuration file of the environment.
+- **Controller**: Type of the controller. For Reinforcement Learning Controllers, this corresponds to the used model. At the moment, the following controller types are available:
     - Custom
     - Random (just chooses random actions)
     - Rule based
@@ -393,9 +392,9 @@ Per experiment, you can configure:
     - DQN
     - DDPG
     - TD3
-- Controller Config: `.yaml` configuration file of the controller. Make sure that the hyperparameter used in the `.yaml` file match the supported hyperparameters of the chosen RL model.
-- Episodes: Number of episodes used during evaluation.
-- Denormalize State in collected data: If ticket, denormalized state and action space will be recorded during evaluation. The recommendation is to tick this
+- **Controller Config**: `.yaml` configuration file of the controller. Make sure that the hyperparameters used in the `.yaml` file match the supported hyperparameters of the chosen RL model.
+- **Episodes**: Number of episodes used during evaluation.
+- **Denormalize State in collected data**: If ticked, denormalized state and action space will be recorded during evaluation. The recommendation is to tick this.
 
 ### Example Config:
 
@@ -427,4 +426,4 @@ experiments:
 
 # Configuration without frontend
 
-You can create the `.yaml` files that are described in this document also without using the frontend. You can then execute the experiment suite by using the testbed as described [here](../../testbed/README.md)
+You can create the `.yaml` files that are described in this document also without using the frontend. You can then execute the experiment suite by using the testbed as described [here](../../testbed/README.md).

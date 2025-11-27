@@ -1,10 +1,10 @@
 # General Overview
 
-Here you can see a general overview of the base classes to gain an understanding how the individual parts work together:
+Here you can see a general overview of the base classes to gain an understanding of how the individual parts work together:
 
 ![alt text](images/example_structure.png)
 
-Nte, that this is not a detailed view on all interfaces available, it should give you a basic idea of the architecture. For controllers, it shows an exemplary SAC controller.
+Note that this is not a detailed view of all interfaces available; it should give you a basic idea of the architecture. For controllers, it shows an exemplary SAC controller.
 
 # Environment
 
@@ -14,7 +14,7 @@ To add a new environment, you must inherit from the abstract class `IEnvironment
  def create_environment(self) -> gym.Env:
 ```
 
-The framework passes the path to a given config file automatically to the `EnvironmentFactory` class. You can access it with `self.config_path`. 
+The framework passes the path to a given config file automatically to the `EnvironmentFactory` class. You can access it with `self.config_path`.
 
 The environment that is returned must follow the [Gymnasium Env API](https://gymnasium.farama.org/api/env/).
 
@@ -26,9 +26,9 @@ To add a new controller, you must inherit from the `ControllerFactory` abstract 
 def create_controller_setup(self) -> ControllerSetup:
 ```
 
-The framework passes the path to a given config file automatically to the `ControllerFactory` class. You can access it with `self.config_path`. 
+The framework passes the path to a given config file automatically to the `ControllerFactory` class. You can access it with `self.config_path`.
 
-The ControllerSetup object looks like this:
+The `ControllerSetup` object looks like this:
 
 ```python
 class ControllerSetup(NamedTuple):
@@ -46,7 +46,7 @@ def get_action(self, state: Any) -> Any:
 
 ## RL Controller
 
-If you want to create a Reinforcement Learning based controller, you can inherit from the abstract class `RLControllerFactory` that return as controller a `RLController` instance.  
+If you want to create a Reinforcement Learning based controller, you can inherit from the abstract class `RLControllerFactory` that returns an `RLController` instance as the controller.
 
 For the `RLControllerFactory`, you must implement in addition the method `build_controller`:
 
@@ -54,7 +54,7 @@ For the `RLControllerFactory`, you must implement in addition the method `build_
 def build_controller(self, env: gym.Env, hyper_params: Dict, **kwargs) -> RLController:
 ```
 
-For `RLController`, you must implement in addition the method contains in addition the method `train`:
+For `RLController`, you must implement in addition the method `train`:
 
 ```python
 def train(self, timesteps: int):
@@ -71,7 +71,7 @@ def create_rl_controller_setup(
 ) -> ControllerSetup:
 ```
 
-to automate the environment wrapping, hyperparameter tuning and training steps.
+to automate the environment wrapping, hyperparameter tuning, and training steps.
 
 ## Tunable RL Controller 
 
@@ -90,7 +90,7 @@ Once you have implemented the Controller Factory, you must register the class in
 experiment_manager.register_controller_factory("sac", SACFactory())
 ```
 
-To make the controller also available in the frontend, add a entry in the file `controllers.json` in the folder `frontend/public` like this:
+To make the controller also available in the frontend, add an entry in the file `controllers.json` in the folder `frontend/public` like this:
 
 ```json
 {
@@ -99,7 +99,7 @@ To make the controller also available in the frontend, add a entry in the file `
 },
 ```
 
-The key must match the key you passed to the experiment manger.
+The key must match the key you passed to the experiment manager.
 
 ## Example of a tunable RL controller:
 
@@ -209,7 +209,7 @@ class SACFactory(HPTunableControllerFactory):
 
 # Custom Controller
 
-In contrast do adding a controller permanently, you can also provide a implementation of the `Controller` abstract class. This is much faster than providing the full factory. This is also explained [here](01-experiment-configuration.md#custom-controller). An example of such an controller could be like this:
+In contrast to adding a controller permanently, you can also provide an implementation of the `Controller` abstract class. This is much faster than providing the full factory. This is also explained [here](01-experiment-configuration.md#custom-controller). An example of such a controller could be like this:
 
 ```python
 class MyCustomController(Controller):
@@ -250,7 +250,7 @@ args:
 
 # Custom Reward
 
-To add a custom reward, you must implement the `BaseReward` interface form [sinergym](https://ugr-sail.github.io/sinergym/compilation/main/pages/rewards.html). As you can see, this reward concept for the moment only working when using a sinergym environment.
+To add a custom reward, you must implement the `BaseReward` interface from [sinergym](https://ugr-sail.github.io/sinergym/compilation/main/pages/rewards.html). As you can see, this reward concept for the moment only works when using a Sinergym environment.
 
 An example implementation of a custom reward could look like this:
 
@@ -293,4 +293,3 @@ reward_function:
     smooth_action_penalty: 0.05
 
 ```
-
