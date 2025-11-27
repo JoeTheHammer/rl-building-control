@@ -135,3 +135,12 @@ npm run dev
 -   Add frontend routes under `frontend/src/lib/routes.tsx`
 
 When more information about adding additional controllers or enviornments can be found in the README of the testbed (testbed/README). 
+
+# User Guide
+
+A user guide can be found here: 
+
+- [Experiment Configuration](docs/user-guide/01-experiment-configuration.md)
+- [Running Experiments](docs/user-guide/02-running-experiments.md)
+- [Data Analysis](docs/user-guide/03-data-analysis.md)
+- [Extending the system](docs/user-guide/04-extending-the-system.md)

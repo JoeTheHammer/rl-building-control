@@ -433,3 +433,6 @@ experiments:
       denormalize_state: true
 ```
 
+# Configuration without frontend
+
+You can create the `.yaml` files that are described in this document also without using the frontend. You can then execute the experiment suite by using the testbed as described [here](../../testbed/README.md)
