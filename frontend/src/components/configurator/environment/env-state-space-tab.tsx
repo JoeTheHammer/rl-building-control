@@ -94,7 +94,10 @@ const EnvStateSpaceTab = ({
     const updatedVariables = settings.variables.map(
       (variable, variableIndex) =>
         variableIndex === index
-          ? ({ ...variable, [field]: value } as EnvironmentStateSpaceVariableSettings)
+          ? ({
+              ...variable,
+              [field]: value,
+            } as EnvironmentStateSpaceVariableSettings)
           : variable,
     ) as EnvironmentStateSpaceVariableSettings[]
     onSettingsChange({ variables: updatedVariables })
@@ -237,7 +240,7 @@ const EnvStateSpaceTab = ({
                           className={fieldLabelStyles}
                           htmlFor={`variable-energy-${index}`}
                         >
-                          EnergyPlus Type
+                          EnergyPlus Name
                         </label>
                         <Input
                           id={`variable-energy-${index}`}
@@ -249,7 +252,7 @@ const EnvStateSpaceTab = ({
                               event.target.value,
                             )
                           }
-                          placeholder="Enter EnergyPlus type"
+                          placeholder="Enter EnergyPlus name"
                         />
                       </div>
 
@@ -299,7 +302,7 @@ const EnvStateSpaceTab = ({
                     </div>
                   )}
                   <div className={cn(fieldContainerStyles, 'md:col-span-1')}>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <label className="text-primary flex items-center gap-2 text-sm font-semibold">
                       <Checkbox
                         checked={variable.excludeFromState}
                         onCheckedChange={(checked) =>
