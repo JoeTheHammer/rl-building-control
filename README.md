@@ -53,7 +53,7 @@ This repository hosts a complete reinforcement-learning platform for
 building control.
 
 -   **Testbed runtime** -- executes experiment suites via
-    Sinergym/EnergyPlus.
+    [Sinergym](https://github.com/ugr-sail/sinergym)/EnergyPlus.
 -   **Backend API** -- manages configurations, experiments, TensorBoard.
 -   **Frontend UI** -- configure experiments, monitor progress, analyze
     results.
