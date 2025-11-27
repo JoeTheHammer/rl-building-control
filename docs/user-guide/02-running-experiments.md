@@ -1,52 +1,52 @@
-# Experiment execution using GUI
+# Experiment Execution using GUI
 
-To access the frontend, start the application via Docker (see README in project root) and access `http://localhost:5173/`. Navigate on the top bar to `Experiments`:
+To access the frontend, start the application via Docker (refer to the README in the project root) and navigate to `http://localhost:5173/`. Select `Experiments` from the top navigation bar:
 
 ![alt text](images/execution_1.png)
 
-On the page, there are three sections:
-- New Experiment Suites: Shows experiment suites, that have been scheduled but are not executed yet.
-- Running Experiment Suites: Shows experiment suites that are currently running.
-- Completed Experiment Suites: Show experiments that have completed (finished or aborted).
+The page is divided into three sections:
+- **New Experiment Suites**: Displays experiment suites that have been scheduled but not yet executed.
+- **Running Experiment Suites**: Displays experiment suites that are currently in progress.
+- **Completed Experiment Suites**: Displays experiments that have finished or were aborted.
 
-## Scheduling an experiment suite
+## Scheduling an Experiment Suite
 
-You can schedule a new experiment by clicking on `Schedule Experiment Suite`. A popup dialog opens that shows all stored experiment suites. Experiment suites can be created as described [here](01-experiment-configuration.md).
+To schedule a new experiment, click `Schedule Experiment Suite`. A dialog will appear displaying all stored experiment suites. Experiment suites can be created as described [here](01-experiment-configuration.md).
 
-Once you have scheduled a experiment suite, you can see additional details (by clicking on `Show details`) of the individual experiments used in this experiment suite including their `.yaml` configuration files. When investigating `.yaml` files, you can use the corresponding buttons on the bottom to navigate to the corresponding configurator page and change them:
+After scheduling an experiment suite, additional details, including the `.yaml` configuration files for individual experiments, can be viewed by clicking `Show details`. When reviewing `.yaml` files, use the buttons at the bottom to navigate to the respective configurator page for modifications:
 
 ![alt text](images/execution_2.png)
 
-You can start the experiment suite by clicking on `Run`.
+To commence the experiment suite, click `Run`.
 
-## Running an experiment
+## Running an Experiment
 
-Once the experiment is started by using the `Run` button, an overview appears showing the current status:
+Upon starting an experiment via the `Run` button, an overview displaying the current status will appear:
 
 ![alt text](images/execution_3.png)
 
-When clicking on `Show details`, additional information is shown:
+Clicking `Show details` reveals additional information:
 
 ![alt text](images/execution_4.png)
 
-For each experiment, you see detailed information like the configuration files, their status and the live logs of the current execution. `Open Tensorboard` will open the corresponding [tensorboard](https://www.tensorflow.org/tensorboard) and you can view live training metrics:
+For each experiment, detailed information is provided, including configuration files, status, and live execution logs. Clicking `Open Tensorboard` launches the corresponding [TensorBoard](https://www.tensorflow.org/tensorboard) instance for viewing live training metrics:
 
 ![alt text](images/tensorboard.png)
 
-Once a tensorboard is opened, you can stop the tensorboard execution by clicking on `Stop Tensorboard`. 
+To terminate a TensorBoard instance, click `Stop Tensorboard`.
 
-You can stop the experiment suite execution by clicking on `Stop Experiment Suite`. 
+To halt the entire experiment suite, click `Stop Experiment Suite`.
 
-## Completed an experiments
+## Completed Experiments
 
-Once a experiment has completed it will appear in the Completed Experiment Suites section. 
+Upon completion, experiments appear in the **Completed Experiment Suites** section.
 
 ![alt text](images/execution_5.png)
 
-You can now archive the experiment, such that it is not on your dashboard anymore (but still accessible in the section `Archive`.) The tensorboard logs are still available and can be viewed in [tensorboard](https://www.tensorflow.org/tensorboard). `Show results` open the `Data Analysis` page with the corresponding results, which is described in more detail [here](03-data-analysis.md).
+Experiments can be archived to remove them from the dashboard (they remain accessible in the `Archive` section). TensorBoard logs remain available and can be viewed in [TensorBoard](https://www.tensorflow.org/tensorboard). Clicking `Show results` navigates to the `Data Analysis` page, which provides a detailed analysis of the results (described [here](03-data-analysis.md)).
 
-After clicking on `Show Details` you see option see options to open the individual `.yaml` configuration files or the logs.
+Clicking `Show Details` provides options to view individual `.yaml` configuration files or execution logs.
 
-# Configuration execution without
+# Execution without GUI
 
-You can execute the experiment suite by using the testbed as described [here](../../testbed/README.md).
+Experiment suites can also be executed using the testbed, as described [here](../../testbed/README.md).
