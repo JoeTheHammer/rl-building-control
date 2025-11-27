@@ -6,6 +6,8 @@ The following diagram provides a high-level overview of the base classes, illust
 
 Note that this diagram is not an exhaustive representation of all available interfaces but serves to provide a foundational understanding of the architecture. The controller section depicts an exemplary SAC controller.
 
+A more detailed view can be found at the end of this document.
+
 # Environment
 
 To add a new environment, inherit from the abstract class `IEnvironmentFactory` and implement the following method:
@@ -292,3 +294,7 @@ reward_function:
     smooth_action_penalty: 0
 
 ```
+
+# Detailed Testbed Class Diagram
+
+![alt text](../technical-documentation/testbed/uml/Datailed_Class_Diagram.svg)
