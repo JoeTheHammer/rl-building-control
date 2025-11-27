@@ -1,9 +1,0 @@
-experiments:
-  - name: "test-custom-controller"
-    engine: "sinergym"
-    environment_config: /config/environments/hotel.yaml
-    controller: "custom"
-    controller_config: /config/controllers/custom_controller.yaml
-    episodes: 1
-    reporting:
-      denormalize_state: true

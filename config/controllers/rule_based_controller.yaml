@@ -1,17 +1,18 @@
-# Must be available in action space of environment
-state_space:
-  - air_temp_101
-  - humidity_101
-  - gas
-  - electricity
-
+state_space: []
 custom_variables:
-  target_temp: 23.0
-
+  high: 27
+  low: 18
+  cooling_min: 22
+  cooling_max: 27
+  heating_min: 18
+  heating_max: 22
 rules:
-  - condition: "air_temp_101 < target_temp"
-    action: "[air_temp_101 + 1, air_temp_101 + 1]"
-  - condition: "air_temp_101 > target_temp"
-    action: "[air_temp_101 - 1, air_temp_101 - 1]"
+  - condition: "((East_Zone_Temperature + West_Zone_Temperature) / 2) > high"
+    action: "[clip(Cooling_Setpoint - 1, cooling_min, cooling_max), clip(Heating_Setpoint
+      - 1, heating_min, heating_max)]"
+  - condition: "((East_Zone_Temperature + West_Zone_Temperature) / 2) < low"
+    action: "[clip(Cooling_Setpoint + 1, cooling_min, cooling_max), clip(Heating_Setpoint
+      + 1, heating_min, heating_max)]"
   - condition: "True"
-    action: "[target_temp, target_temp]"
+    action: "[clip(Cooling_Setpoint, cooling_min, cooling_max), clip(Heating_Setpoint,
+      heating_min, heating_max)]"

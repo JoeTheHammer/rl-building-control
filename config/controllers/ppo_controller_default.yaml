@@ -1,6 +1,0 @@
-training:
-  timesteps: 600000
-  report_training: true
-  report_denormalized_state: true
-  tensorboard_logs: true
-hyperparameters: {}

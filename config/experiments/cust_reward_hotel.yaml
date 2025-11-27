@@ -1,9 +1,0 @@
-experiments:
-  - name: "cust_reward"
-    engine: "sinergym"
-    environment_config: /config/environments/hotel_cust_reward.yaml
-    controller: "td3"
-    controller_config: /config/controllers/td3_controller.yaml
-    episodes: 1
-    reporting:
-      denormalize_state: true
