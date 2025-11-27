@@ -18,6 +18,22 @@ WEATHER_DIR = BASE_DIR / "data" / "environment" / "weather"
 BUILDING_DIR = BASE_DIR / "data" / "environment" / "buildings"
 
 
+def try_parse_number(value: str):
+    # Try integer
+    try:
+        return int(value)
+    except ValueError:
+        pass
+
+    # Try float
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
+    # Return original string if not a number
+    return value
+
 def build_environment_yaml(cfg: EnvironmentConfig) -> str:
     # Building model path
     building_path = BUILDING_DIR / cfg.generalSettings.buildingModelFile
@@ -128,17 +144,36 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
     # --- Reward function ---
     reward_params: dict[str, Any] = {p.key: p.value for p in cfg.rewardSettings.parameters}
 
+    init_args: dict[str, Any] = {}
+    if cfg.rewardSettings.init_args:
+        for arg in cfg.rewardSettings.init_args:
+            if arg.key and arg.key.strip():
+                # UPDATED LINE: Parse string to number if possible
+                init_args[arg.key] = try_parse_number(arg.value)
+
     var_seq = CommentedSeq(
         [DoubleQuotedScalarString(v.strip('"')) for v in cfg.rewardSettings.variables]
     )
     var_seq.fa.set_flow_style()
 
-    doc["reward_function"] = {
+    # Construct the base dictionary
+    reward_dict = {
         "type": DoubleQuotedScalarString(cfg.rewardSettings.type.strip('"')),
         "variables": var_seq,
         "expression": FoldedScalarString(cfg.rewardSettings.expression),
         "params": reward_params,
     }
+
+    if cfg.rewardSettings.module:
+        reward_dict["module"] = DoubleQuotedScalarString(cfg.rewardSettings.module.strip('"'))
+
+    if cfg.rewardSettings.class_name:
+        reward_dict["class_name"] = DoubleQuotedScalarString(cfg.rewardSettings.class_name.strip('"'))
+
+    if init_args:
+        reward_dict["init_args"] = init_args
+
+    doc["reward_function"] = reward_dict
 
     # --- Episode ---
     episode: dict[str, Any] = {"timesteps_per_hour": cfg.generalSettings.timestepsPerHour}

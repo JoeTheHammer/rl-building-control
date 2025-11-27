@@ -1,0 +1,59 @@
+building_model: "/home/johannes/workspace/rl-building-control/data/environment/buildings/ASHRAE901_HotelSmall_STD2019_Denver.epJSON"
+weather_data: "/home/johannes/workspace/rl-building-control/data/environment/weather/chicago-ohare/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"
+state_space:
+  variables:
+    air_temp_101:
+      type: "Zone Mean Air Temperature"
+      zone: "GuestRoom101"
+    air_temp_104:
+      type: "Zone Mean Air Temperature"
+      zone: "GuestRoom104"
+    outdoor_temp:
+      type: "Site Outdoor Air Drybulb Temperature"
+      zone: "Environment"
+    humidity_101:
+      type: "Zone Mean Air Humidity Ratio"
+      zone: "GuestRoom101"
+    humidity_104:
+      type: "Zone Mean Air Humidity Ratio"
+      zone: "GuestRoom104"
+  meters:
+    electricity: "Electricity:Facility"
+    gas: "NaturalGas:Facility"
+  time_info:
+    day_of_month:
+      cyclic: true
+    month:
+      cyclic: true
+    day_of_week:
+      cyclic: true
+    hour:
+      cyclic: false
+action_space:
+  actuators:
+    setpoint_temp:
+      type: "continuous"
+      range: [16.0, 28.0]
+      component: "Schedule:Constant"
+      control_type: "Schedule Value"
+      actuator_key: "PythonControlledSetpoint"
+    setpoint_temp_2:
+      type: "continuous"
+      range: [16.0, 28.0]
+      component: "Schedule:Constant"
+      control_type: "Schedule Value"
+      actuator_key: "PythonControlledSetpoint_2"
+reward_function:
+  type: "python"
+  variables: []
+  expression: >
+  params: {}
+  module: "reward.custom_reward"
+  class_name: "MyReward"
+  init_args:
+    target_temp: 23
+    sigma: 1
+    smooth_action_penalty: 0
+episode:
+  timesteps_per_hour: 4
+  period: [1, 1, 2025, 31, 12, 2025]

@@ -59,8 +59,14 @@ export const buildEnvironmentYaml = (
   action: EnvActionSpaceSettings,
   reward: EnvironmentRewardSettings,
 ): string => {
-  const variables: Record<string, { type: string; zone: string; exclude_from_state?: boolean }> = {}
-  const meters: Record<string, string | { name: string; exclude_from_state?: boolean }> = {}
+  const variables: Record<
+    string,
+    { type: string; zone: string; exclude_from_state?: boolean }
+  > = {}
+  const meters: Record<
+    string,
+    string | { name: string; exclude_from_state?: boolean }
+  > = {}
 
   state.variables.forEach((v) => {
     if (v.variableType === 'meter') {
@@ -154,6 +160,16 @@ export const buildEnvironmentYaml = (
       params: Object.fromEntries(
         reward.parameters.map((p) => [p.key, p.value]),
       ),
+      // UPDATED: Filter out entries with empty keys to prevent overwriting
+      init_args: reward.init_args
+        ? Object.fromEntries(
+            reward.init_args
+              .filter((p) => p.key && p.key.trim() !== '') // Only keep valid keys
+              .map((p) => [p.key, p.value]),
+          )
+        : undefined,
+      module: reward.module,
+      class_name: reward.class_name,
     },
     episode: {
       timesteps_per_hour: general.timestepsPerHour,
@@ -168,8 +184,14 @@ interface ParsedDoc {
   building_model?: string
   weather_data?: string
   state_space?: {
-    variables?: Record<string, { type: string; zone: string; exclude_from_state?: boolean }>
-    meters?: Record<string, string | { name: string; exclude_from_state?: boolean }>
+    variables?: Record<
+      string,
+      { type: string; zone: string; exclude_from_state?: boolean }
+    >
+    meters?: Record<
+      string,
+      string | { name: string; exclude_from_state?: boolean }
+    >
     time_info?: {
       day_of_month?: { cyclic: boolean }
       month?: { cyclic: boolean }
@@ -209,9 +231,9 @@ interface ParsedDoc {
     variables?: string[]
     expression?: string
     params?: Record<string, number | string>
-    moduleName?: string
-    className?: string
-    codeParameters?: unknown[]
+    module?: string
+    class_name?: string
+    init_args?: Record<string, unknown>
   }
   episode?: {
     timesteps_per_hour?: number
@@ -349,17 +371,23 @@ export const parseEnvironmentYaml = (yamlStr: string): EnvironmentConfig => {
       : [],
 
     parameters: Object.entries(doc.reward_function?.params ?? {})
-      .filter(([, value]) => typeof value === 'number') // only keep numeric values
+      .filter(([, value]) => typeof value === 'number')
       .map(([key, value]) => ({ key, value: value as number })),
+
     expression: doc.reward_function?.expression ?? '',
-    moduleName: doc.reward_function?.moduleName ?? '',
-    className: doc.reward_function?.className ?? '',
-    codeParameters: Array.isArray(doc.reward_function?.codeParameters)
-      ? (doc.reward_function?.codeParameters as {
-          key: string
-          value: string
-        }[])
-      : [],
+    module: doc.reward_function?.module ?? '',
+    class_name: doc.reward_function?.class_name ?? '',
+
+    init_args:
+      doc.reward_function?.init_args &&
+      typeof doc.reward_function.init_args === 'object' &&
+      !Array.isArray(doc.reward_function.init_args)
+        ? Object.entries(doc.reward_function.init_args).map(([key, value]) => ({
+            key,
+            // Ensure values are converted to strings for the Input fields
+            value: value === null || value === undefined ? '' : String(value),
+          }))
+        : [],
   }
 
   return {
@@ -678,7 +706,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
             ? ''
             : typeof value === 'object'
               ? JSON.stringify(value)
-            : String(value),
+              : String(value),
       }))
     : getDefaultControllerHyperparameters()
 
@@ -706,8 +734,7 @@ export const parseControllerYaml = (yamlStr: string): ControllerSettings => {
   )
 
   if (
-    environmentWrapper.continuousAction ===
-    environmentWrapper.discreteAction
+    environmentWrapper.continuousAction === environmentWrapper.discreteAction
   ) {
     if ('discrete_action' in environmentWrapperDoc) {
       const discretePreferred = resolveControllerBoolean(

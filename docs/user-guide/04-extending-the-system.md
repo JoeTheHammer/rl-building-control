@@ -282,13 +282,13 @@ The corresponding section in the environment configuration:
 
 ```yaml
 
-reward_function:  
+reward_function:
   type: "python"
-  module: "reward.custom_reward"  
-  class_name: "MyReward"  
-  init_args:  
-    target_temp: 23.0  
-    sigma: 1.2  
-    smooth_action_penalty: 0.05
+  module: "reward.custom_reward"
+  class_name: "MyReward"
+  init_args:
+    target_temp: 23
+    sigma: 1
+    smooth_action_penalty: 0
 
 ```

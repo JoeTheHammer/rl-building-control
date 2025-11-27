@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 
-# ----- General -----
 class EnvironmentGeneralSettings(BaseModel):
     buildingModelFile: str | None = None
     weatherDataFile: str | None = None
@@ -8,7 +7,6 @@ class EnvironmentGeneralSettings(BaseModel):
     endDate: str = ""
     timestepsPerHour: int | None = None
 
-# ----- State space -----
 class TimeFlag(BaseModel):
     included: bool = False
     cyclic: bool = False
@@ -30,7 +28,6 @@ class EnvStateSpaceSettings(BaseModel):
     minute: TimeFlag
     variables: list[EnvVariable] = Field(default_factory=list)
 
-# ----- Action space -----
 class Actuator(BaseModel):
     actuatorName: str
     component: str
@@ -46,8 +43,11 @@ class Actuator(BaseModel):
 class EnvActionSpaceSettings(BaseModel):
     actuators: list[Actuator] = Field(default_factory=list)
 
-# ----- Reward -----
 class RewardParameterKV(BaseModel):
+    key: str
+    value: float
+
+class KeyValue(BaseModel):
     key: str
     value: float
 
@@ -57,12 +57,16 @@ class EnvironmentRewardSettings(BaseModel):
     expression: str = ""
     parameters: list[RewardParameterKV] = Field(default_factory=list)
 
-# ----- Full config -----
+    module: str | None = None
+    class_name: str | None = None
+    init_args: list[KeyValue] = Field(default_factory=list)
+
 class EnvironmentConfig(BaseModel):
     generalSettings: EnvironmentGeneralSettings
     stateSpaceSettings: EnvStateSpaceSettings
     actionSpaceSettings: EnvActionSpaceSettings
     rewardSettings: EnvironmentRewardSettings
+
 
 class SaveEnvironmentRequest(BaseModel):
     filename: str

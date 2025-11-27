@@ -18,12 +18,16 @@ export type EnvironmentRewardType = 'expression' | 'python'
 
 export interface EnvironmentRewardSettings {
   type: EnvironmentRewardType
+
+  // Expression Mode Fields
   variables: string[]
   parameters: NumericalKeyValue[]
   expression: string
-  moduleName?: string
-  className?: string
-  codeParameters?: KeyValue[]
+
+  // Python Mode Fields (Renamed to match YAML config)
+  module?: string
+  class_name?: string
+  init_args?: KeyValue[]
 }
 
 interface EnvRewardTabProps {
@@ -67,23 +71,26 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
     [onSettingsChange],
   )
 
-  const handleModuleNameChange = useCallback(
+  // Renamed to match 'module' key
+  const handleModuleChange = useCallback(
     (value: string) => {
-      onSettingsChange({ moduleName: value })
+      onSettingsChange({ module: value })
     },
     [onSettingsChange],
   )
 
+  // Renamed to match 'class_name' key
   const handleClassNameChange = useCallback(
     (value: string) => {
-      onSettingsChange({ className: value })
+      onSettingsChange({ class_name: value })
     },
     [onSettingsChange],
   )
 
-  const handleCodeParametersChange = useCallback(
+  // Renamed to match 'init_args' key
+  const handleInitArgsChange = useCallback(
     (params: KeyValue[]) => {
-      onSettingsChange({ codeParameters: params })
+      onSettingsChange({ init_args: params })
     },
     [onSettingsChange],
   )
@@ -160,38 +167,44 @@ const EnvRewardTab = ({ settings, onSettingsChange }: EnvRewardTabProps) => {
         </>
       )}
 
-      {/* Code based mode */}
+      {/* Code based mode (Python) */}
       {settings.type === 'python' && (
         <div className="grid gap-6 lg:grid-cols-2">
+          {/* Module Input */}
           <div className={fieldContainerStyles}>
             <label htmlFor="reward-module" className={fieldLabelStyles}>
               Module
             </label>
             <Input
               id="reward-module"
-              value={settings.moduleName ?? ''}
-              onChange={(e) => handleModuleNameChange(e.target.value)}
-              placeholder="Module name"
+              // Updated to use settings.module
+              value={settings.module ?? ''}
+              onChange={(e) => handleModuleChange(e.target.value)}
+              placeholder="reward.custom_reward"
             />
           </div>
 
+          {/* Class Name Input */}
           <div className={fieldContainerStyles}>
             <label htmlFor="reward-class" className={fieldLabelStyles}>
               Class
             </label>
             <Input
               id="reward-class"
-              value={settings.className ?? ''}
+              // Updated to use settings.class_name
+              value={settings.class_name ?? ''}
               onChange={(e) => handleClassNameChange(e.target.value)}
-              placeholder="Class name"
+              placeholder="MyReward"
             />
           </div>
 
+          {/* Init Args (Parameters) List */}
           <div className="lg:col-span-2">
-            <h3 className={sectionTitleStyle}>Parameters</h3>
+            <h3 className={sectionTitleStyle}>Initial Arguments</h3>
             <KeyValueList
-              values={settings.codeParameters ?? []}
-              onChange={handleCodeParametersChange}
+              // Updated to use settings.init_args
+              values={settings.init_args ?? []}
+              onChange={handleInitArgsChange}
               emptyKeyLabel="Parameter"
               emptyValueLabel="Value"
             />

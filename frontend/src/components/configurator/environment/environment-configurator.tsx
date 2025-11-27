@@ -85,9 +85,9 @@ const EnvironmentConfigurator = () => {
       variables: [],
       parameters: [],
       expression: '',
-      moduleName: '',
-      className: '',
-      codeParameters: [],
+      module: '',
+      class_name: '',
+      init_args: [],
     })
 
   // Dev mode
@@ -217,9 +217,9 @@ const EnvironmentConfigurator = () => {
   }
 
   useEffect(() => {
-    const state = location.state as
-      | { initialEnvironmentConfig?: ConfigDetailsSection }
-      | null
+    const state = location.state as {
+      initialEnvironmentConfig?: ConfigDetailsSection
+    } | null
     const initialConfig = state?.initialEnvironmentConfig
     if (!initialConfig) return
 
