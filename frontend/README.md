@@ -46,7 +46,7 @@ npm run lint       # ESLint using the repository configuration
 ```
 src/
 ├── app.tsx                  # React Router root and toaster setup
-├── components/              # Feature modules (dashboard, configurators, analytics)
+├── components/              # Feature modules (visible components)
 ├── lib/routes.tsx           # Route registry consumed by the navbar
 ├── services/                # API clients wrapping backend endpoints
 ├── styles/                  # Shared design tokens

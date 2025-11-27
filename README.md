@@ -12,8 +12,8 @@ installed:
 ## 2. Clone the repository
 
 ``` bash
-git clone https://github.com/JoeTheHammer/deep-reinforcement-learning.git
-cd deep-reinforcement-learning
+git clone https://github.com/JoeTheHammer/rl-building-control.git
+cd rl-building-control
 
 ```
 
@@ -25,8 +25,8 @@ docker-compose up --build
 
 Services: 
 - Frontend: http://localhost:5173 
-- Backend: http://localhost:8000/docs
-- Testbed: http://localhost:8001/api/testbed/status/
+- Backend: http://localhost:8000
+- Testbed: http://localhost:8001
 
 
 Stop:
@@ -85,17 +85,17 @@ TB -->|Reads| CFG
 
 ## Component responsibilities
 
--   Frontend: React dashboard, analytics views.
+-   Frontend: React dashboard, configuration creation, analytics views.
 -   Backend: REST API, suite orchestration, YAML config handling.
 -   Testbed: CLI + FastAPI service for experiment execution.
 -   Volumes: `config/` and `data/` shared across backend & testbed.
 
 ## Repository structure
 
-    backend/      FastAPI orchestration
+    backend/      FastAPI orchestration service
     config/       YAML configs
-    data/         Experiment results
-    docs/         UML & documentation
+    data/         Experiment results, Environment data (building model, weather data)
+    docs/         Documentation (in progress)
     frontend/     React UI
     testbed/      Sinergym runtime
     docker-compose.yml
@@ -135,9 +135,3 @@ npm run dev
 -   Add frontend routes under `frontend/src/lib/routes.tsx`
 
 When more information about adding additional controllers or enviornments can be found in the README of the testbed (testbed/README). 
-
-## Additional resources
-
--   UML diagrams: docs/uml
--   Tests: testbed/tests
--   Analytics utils: backend/src/services/analytics.py
