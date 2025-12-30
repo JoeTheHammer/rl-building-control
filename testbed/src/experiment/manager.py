@@ -12,6 +12,8 @@ from reporting.hdf5_storage import ExperimentStorage, HDF5StorageManager
 from parser.config_parser import parse_experiment_list
 from utils.yaml_utils import resolve_project_path
 
+import traceback
+
 
 class ExperimentManager:
     def __init__(self, storage_path: str | None = None, flush_interval: int = 1024):
@@ -42,47 +44,56 @@ class ExperimentManager:
 
         try:
             for index, experiment_config in enumerate(experiment_configs.experiments, start=1):
-
-                setup_logger.info(f"Creating experiment: {experiment_config.name} ---")
-
-                set_current_experiment(index)
-                experiment_storage = self._storage_manager.create_experiment(
-                    index,
-                    experiment_config.name,
-                    metadata={
-                        "engine": experiment_config.engine,
-                        "environment_config": experiment_config.environment_config,
-                        "controller": experiment_config.controller,
-                        "controller_config": experiment_config.controller_config,
-                        "episodes": experiment_config.episodes,
-                    },
-                )
-
-                context = collect_experiment_context(
-                    resolve_project_path(config_path), experiment_config
-                )
-                experiment_storage.store_context(context)
-                self._storage_manager.flush()
-
-                experiment = self._create_experiment(experiment_config, index, experiment_storage)
-
-                if experiment is None:
-                    set_current_experiment(None)
-                    setup_logger.warning(
-                        f"Skipping run for experiment {experiment_config.name} due to creation failure."
-                    )
-                    continue
-
-                # ADDED: Run the experiment immediately after it's created and trained.
-                setup_logger.info(f"Running evaluation for experiment {experiment.name}")
-                set_current_experiment(index)
-                experiment.run()
-                set_current_experiment(None)
-                setup_logger.info(f"--- Finished experiment: {experiment.name} ---")
+                self._run_single_experiment(index, experiment_config, config_path)
         finally:
             if self._storage_manager:
                 self._storage_manager.close()
                 self._storage_manager = None
+
+    def _run_single_experiment(self, index, experiment_config, config_path):
+        try:
+            setup_logger.info(f"Creating experiment: {experiment_config.name} ---")
+
+            set_current_experiment(index)
+            experiment_storage = self._storage_manager.create_experiment(
+                index,
+                experiment_config.name,
+                metadata={
+                    "engine": experiment_config.engine,
+                    "environment_config": experiment_config.environment_config,
+                    "controller": experiment_config.controller,
+                    "controller_config": experiment_config.controller_config,
+                    "episodes": experiment_config.episodes,
+                },
+            )
+
+            context = collect_experiment_context(
+                resolve_project_path(config_path), experiment_config
+            )
+            experiment_storage.store_context(context)
+            self._storage_manager.flush()
+
+            experiment = self._create_experiment(experiment_config, index, experiment_storage)
+
+            if experiment is None:
+                set_current_experiment(None)
+                setup_logger.warning(
+                    f"Skipping run for experiment {experiment_config.name} due to creation failure."
+                )
+                return
+
+            setup_logger.info(f"Running evaluation for experiment {experiment.name}")
+            experiment.run()
+            set_current_experiment(None)
+            setup_logger.info(f"--- Finished experiment: {experiment.name} ---")
+
+        except Exception as e:
+            setup_logger.error(f"CRITICAL FAILURE in experiment {experiment_config.name}: {e}")
+            setup_logger.error(traceback.format_exc())
+            set_current_experiment(None)
+            setup_logger.info(
+                f"--- Skipping to next experiment due to failure in {experiment_config.name} ---"
+            )
 
     def _create_experiment(
         self,
