@@ -14,6 +14,9 @@ state_space:
     Wind Speed:
       type: "Site Wind Speed"
       zone: "Environment"
+    Wind Direction:
+      type: "Site Wind Direction"
+      zone: "Environment"
     Diffuse Solar Radiation:
       type: "Site Diffuse Solar Radiation Rate per Area"
       zone: "Environment"
@@ -40,7 +43,7 @@ state_space:
       zone: "West Zone PEOPLE"
     Fanger East:
       type: "Zone Thermal Comfort Fanger Model PPD"
-      zone: "West Zone PEOPLE"
+      zone: "East Zone PEOPLE"
     People Air Temp West:
       type: "People Air Temperature"
       zone: "West Zone PEOPLE"
@@ -56,12 +59,18 @@ state_space:
     Facility_Total_HVAC_Electric_Demand_Rate:
       type: "Facility Total HVAC Electricity Demand Rate"
       zone: "Whole Building"
-    Cooling_Setpoint:
+    Cooling_Setpoint_WEST:
       type: "Zone Thermostat Cooling Setpoint Temperature"
       zone: "West Zone"
-    Heating_Setpoint:
+    Heating_Setpoint_WEST:
       type: "Zone Thermostat Heating Setpoint Temperature"
       zone: "West Zone"
+    Cooling_Setpoint_EAST:
+      type: "Zone Thermostat Cooling Setpoint Temperature"
+      zone: "East Zone"
+    Heating_Setpoint_EAST:
+      type: "Zone Thermostat Heating Setpoint Temperature"
+      zone: "East Zone"
     Fanger Model Clothing Value:
       type: "Schedule Value"
       zone: "Clothing Sch"
@@ -69,7 +78,7 @@ state_space:
     day_of_month:
       cyclic: false
     month:
-      cyclic: true
+      cyclic: false
     day_of_week:
       cyclic: false
     hour:
@@ -95,9 +104,12 @@ reward_function:
   variables: ["East_Zone_Temperature", "West_Zone_Temperature", "Facility_Total_HVAC_Electric_Demand_Rate"]
   expression: >-
     - energy_weight * lambda_energy * Facility_Total_HVAC_Electric_Demand_Rate - (1
-    - energy_weight) * lambda_temperature * (max(0, ((East_Zone_Temperature + West_Zone_Temperature)
-    / 2) - comfort_high) + max(0, comfort_low - ((East_Zone_Temperature + West_Zone_Temperature)
-    / 2)))
+    - energy_weight) * lambda_temperature * (
+        max(0, East_Zone_Temperature - comfort_high)
+      + max(0, comfort_low - East_Zone_Temperature)
+      + max(0, West_Zone_Temperature - comfort_high)
+      + max(0, comfort_low - West_Zone_Temperature)
+      )
   params:
     energy_weight: 0.5
     lambda_energy: 0.00005
@@ -107,3 +119,5 @@ reward_function:
 episode:
   timesteps_per_hour: 4
   period: [1, 1, 2025, 31, 12, 2025]
+weather_variability:
+  Dry Bulb Temperature: [2.0, 0.5, 24.0]

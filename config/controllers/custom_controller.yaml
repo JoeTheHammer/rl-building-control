@@ -1,6 +1,0 @@
-class_name: "MyCustomController"
-module: "controllers.custom.my_custom_controller"
-args:
-  factor: 1
-  lower_bound: 20
-  upper_bound: 25
