@@ -222,10 +222,10 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
         </div>
       </div>
 
-        <div className="border-input flex flex-col gap-4 rounded-lg border p-4">
-          <label className="flex items-center gap-3">
-            <Checkbox
-              checked={settings.weatherVariabilityEnabled}
+      <div className="border-input flex flex-col gap-4 rounded-lg border p-4">
+        <label className="flex items-center gap-3">
+          <Checkbox
+            checked={settings.weatherVariabilityEnabled}
             onCheckedChange={(checked: boolean) =>
               handleWeatherVariabilityToggle(checked)
             }
@@ -234,50 +234,89 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
         </label>
         <div className="flex flex-col gap-3">
           {settings.weatherVariabilityVariables.map((entry, index) => (
-            <div key={`weather-var-${index}`} className="grid gap-2 md:grid-cols-5">
-              <Input
-                value={entry.key}
-                onChange={(event) =>
-                  handleWeatherVariableChange(index, 'key', event.target.value)
-                }
-                placeholder="Variable key"
-                disabled={!settings.weatherVariabilityEnabled}
-              />
-              <Input
-                type="number"
-                value={entry.sigma}
-                onChange={(event) =>
-                  handleWeatherVariableChange(index, 'sigma', event.target.value)
-                }
-                placeholder="Sigma"
-                disabled={!settings.weatherVariabilityEnabled}
-              />
-              <Input
-                type="number"
-                value={entry.mu}
-                onChange={(event) =>
-                  handleWeatherVariableChange(index, 'mu', event.target.value)
-                }
-                placeholder="Mu"
-                disabled={!settings.weatherVariabilityEnabled}
-              />
-              <Input
-                type="number"
-                value={entry.tau}
-                onChange={(event) =>
-                  handleWeatherVariableChange(index, 'tau', event.target.value)
-                }
-                placeholder="Tau"
-                disabled={!settings.weatherVariabilityEnabled}
-              />
-              <Button
-                size="icon"
-                type="button"
-                onClick={() => handleRemoveWeatherVariable(index)}
-                disabled={!settings.weatherVariabilityEnabled}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            <div
+              key={`weather-var-${index}`}
+              className="grid gap-3 md:grid-cols-5"
+            >
+              <div className="flex flex-col gap-1">
+                <label className="text-primary text-xs font-semibold">
+                  Variable key
+                </label>
+                <Input
+                  value={entry.key}
+                  onChange={(event) =>
+                    handleWeatherVariableChange(
+                      index,
+                      'key',
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Variable key"
+                  disabled={!settings.weatherVariabilityEnabled}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-primary text-xs font-semibold">
+                  Sigma
+                </label>
+                <Input
+                  type="number"
+                  value={entry.sigma}
+                  onChange={(event) =>
+                    handleWeatherVariableChange(
+                      index,
+                      'sigma',
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Sigma"
+                  disabled={!settings.weatherVariabilityEnabled}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-primary text-xs font-semibold">Mu</label>
+                <Input
+                  type="number"
+                  value={entry.mu}
+                  onChange={(event) =>
+                    handleWeatherVariableChange(index, 'mu', event.target.value)
+                  }
+                  placeholder="Mu"
+                  disabled={!settings.weatherVariabilityEnabled}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-primary text-xs font-semibold">
+                  Tau
+                </label>
+                <Input
+                  type="number"
+                  value={entry.tau}
+                  onChange={(event) =>
+                    handleWeatherVariableChange(
+                      index,
+                      'tau',
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Tau"
+                  disabled={!settings.weatherVariabilityEnabled}
+                />
+              </div>
+
+              <div className="flex items-end">
+                <Button
+                  size="icon"
+                  type="button"
+                  onClick={() => handleRemoveWeatherVariable(index)}
+                  disabled={!settings.weatherVariabilityEnabled}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
           <Button
