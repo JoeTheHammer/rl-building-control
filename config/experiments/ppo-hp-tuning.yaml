@@ -1,0 +1,10 @@
+experiments:
+  - name: "ppo-hp-tuning"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation.yaml
+    controller: "ppo"
+    controller_config: /config/controllers/continuous-hp-tuner-controller.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

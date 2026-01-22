@@ -1,0 +1,10 @@
+experiments:
+  - name: "dqn-hp-tuning"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation-discrete.yaml
+    controller: "dqn"
+    controller_config: /config/controllers/discrete-hp-tuner-controller.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true
