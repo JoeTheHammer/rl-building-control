@@ -53,7 +53,7 @@ class ActionSpaceConfig(BaseModel):
 
 
 class BaseRewardConfig(BaseModel):
-    variables: Optional[List[str]] = None  # ← shared field
+    variables: Optional[List[str]] = None  # shared field
 
 
 class ExpressionRewardConfig(BaseRewardConfig):
@@ -79,10 +79,40 @@ class EpisodeConfig(BaseModel):
     period: Optional[List[int]] = None
 
 
+WeatherVariabilityTuple = tuple[float, float, float]
+
+
 class SinergymEnvironmentConfig(BaseModel):
     building_model: str
     weather_data: str
+
+    weather_variability: Optional[Dict[str, WeatherVariabilityTuple]] = None
+
     state_space: StateSpaceConfig
     action_space: ActionSpaceConfig
     reward_function: RewardConfig
     episode: Optional[EpisodeConfig] = None
+
+    @field_validator("weather_variability", mode="before")
+    @classmethod
+    def _normalize_weather_variability(cls, v):
+        """
+        Accepts mapping: variable_name -> [sigma, mu, tau]
+        and stores it as: variable_name -> (sigma, mu, tau)
+        """
+        if v is None:
+            return None
+        if not isinstance(v, dict):
+            raise TypeError(
+                "weather_variability must be a mapping: variable_name -> [sigma, mu, tau]"
+            )
+
+        out: Dict[str, WeatherVariabilityTuple] = {}
+        for key, item in v.items():
+            if not isinstance(item, (list, tuple)) or len(item) != 3:
+                raise ValueError(
+                    f"weather_variability['{key}'] must be a list/tuple of exactly 3 numbers: [sigma, mu, tau]"
+                )
+            sigma, mu, tau = item
+            out[key] = (float(sigma), float(mu), float(tau))
+        return out

@@ -189,6 +189,21 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
 
     doc["episode"] = episode
 
+    # --- Weather variability ---
+    if cfg.generalSettings.weatherVariabilityEnabled:
+        variability_entries = [
+            entry
+            for entry in cfg.generalSettings.weatherVariabilityVariables
+            if entry.key.strip()
+        ]
+        if variability_entries:
+            weather_variability: dict[str, Any] = {}
+            for entry in variability_entries:
+                seq = CommentedSeq([entry.sigma, entry.mu, entry.tau])
+                seq.fa.set_flow_style()
+                weather_variability[entry.key] = seq
+            doc["weather_variability"] = weather_variability
+
     # Dump YAML
     stream = StringIO()
     yaml.dump(doc, stream)

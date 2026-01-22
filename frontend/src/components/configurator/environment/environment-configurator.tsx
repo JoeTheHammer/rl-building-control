@@ -40,6 +40,8 @@ const EnvironmentConfigurator = () => {
       startDate: '',
       endDate: '',
       timestepsPerHour: 4,
+      weatherVariabilityEnabled: false,
+      weatherVariabilityVariables: [],
     })
 
   const [stateSpaceSettings, setStateSpaceSettings] =

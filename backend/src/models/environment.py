@@ -6,6 +6,15 @@ class EnvironmentGeneralSettings(BaseModel):
     startDate: str = ""
     endDate: str = ""
     timestepsPerHour: int | None = None
+    weatherVariabilityEnabled: bool = False
+    weatherVariabilityVariables: list["WeatherVariabilityVariable"] = Field(default_factory=list)
+
+
+class WeatherVariabilityVariable(BaseModel):
+    key: str
+    sigma: float
+    mu: float
+    tau: float
 
 class TimeFlag(BaseModel):
     included: bool = False

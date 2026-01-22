@@ -2835,7 +2835,7 @@
         },
         "Output:Variable 111": {
             "key_value": "West Zone PEOPLE",
-            "reporting_frequency": "Hourly",
+            "reporting_frequency": "Timestep",
             "variable_name": "Zone Thermal Comfort Fanger Model Clothing Value"
         },
         "Output:Variable 555": {
@@ -2845,7 +2845,7 @@
         },
         "Output:Variable 92": {
             "key_value": "East Zone PEOPLE",
-            "reporting_frequency": "Hourly",
+            "reporting_frequency": "Timestep",
             "variable_name": "Zone Thermal Comfort Fanger Model Clothing Value"
         },
         "Output:Variable XX": {

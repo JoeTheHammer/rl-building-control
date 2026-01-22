@@ -4,8 +4,9 @@ import { DatePicker } from '../../ui/date-picker.tsx'
 import { Input } from '../../ui/input.tsx'
 import { Button } from '@/components/ui/button.tsx'
 import BuildingModelDialog from '@/components/configurator/environment/building-model-dialog.tsx'
-import { File } from 'lucide-react'
+import { File, Plus, Trash2 } from 'lucide-react'
 import WeatherFileDialog from '@/components/configurator/environment/weather-data-dialog.tsx'
+import { Checkbox } from '../../ui/checkbox.tsx'
 
 const getFileName = (value: string) => {
   return value.split(/[/\\]/).pop() || value
@@ -17,6 +18,15 @@ export interface EnvironmentGeneralSettings {
   startDate: string
   endDate: string
   timestepsPerHour: number | undefined
+  weatherVariabilityEnabled: boolean
+  weatherVariabilityVariables: WeatherVariabilityVariable[]
+}
+
+export interface WeatherVariabilityVariable {
+  key: string
+  sigma: number
+  mu: number
+  tau: number
 }
 
 interface EnvGeneralTabProps {
@@ -74,6 +84,48 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
     if (!Number.isNaN(numericValue)) {
       onSettingsChange({ timestepsPerHour: numericValue })
     }
+  }
+
+  const handleWeatherVariabilityToggle = (checked: boolean) => {
+    onSettingsChange({ weatherVariabilityEnabled: checked })
+  }
+
+  const handleAddWeatherVariable = () => {
+    onSettingsChange({
+      weatherVariabilityVariables: [
+        ...settings.weatherVariabilityVariables,
+        { key: '', sigma: 0, mu: 0, tau: 0 },
+      ],
+    })
+  }
+
+  const handleWeatherVariableChange = (
+    index: number,
+    field: keyof WeatherVariabilityVariable,
+    value: string,
+  ) => {
+    const updated = settings.weatherVariabilityVariables.map((entry, idx) =>
+      idx === index
+        ? {
+            ...entry,
+            [field]:
+              field === 'key'
+                ? value
+                : Number.isNaN(Number(value))
+                  ? entry[field]
+                  : Number(value),
+          }
+        : entry,
+    )
+    onSettingsChange({ weatherVariabilityVariables: updated })
+  }
+
+  const handleRemoveWeatherVariable = (index: number) => {
+    onSettingsChange({
+      weatherVariabilityVariables: settings.weatherVariabilityVariables.filter(
+        (_, idx) => idx !== index,
+      ),
+    })
   }
 
   const startDate = parseStoredDate(settings.startDate)
@@ -167,6 +219,76 @@ const EnvGeneralTab = ({ settings, onSettingsChange }: EnvGeneralTabProps) => {
             value={settings.timestepsPerHour ?? 4}
             onChange={handleTimestepsChange}
           />
+        </div>
+      </div>
+
+        <div className="border-input flex flex-col gap-4 rounded-lg border p-4">
+          <label className="flex items-center gap-3">
+            <Checkbox
+              checked={settings.weatherVariabilityEnabled}
+            onCheckedChange={(checked: boolean) =>
+              handleWeatherVariabilityToggle(checked)
+            }
+          />
+          <span className={fieldLabelStyles}>Weather Variability</span>
+        </label>
+        <div className="flex flex-col gap-3">
+          {settings.weatherVariabilityVariables.map((entry, index) => (
+            <div key={`weather-var-${index}`} className="grid gap-2 md:grid-cols-5">
+              <Input
+                value={entry.key}
+                onChange={(event) =>
+                  handleWeatherVariableChange(index, 'key', event.target.value)
+                }
+                placeholder="Variable key"
+                disabled={!settings.weatherVariabilityEnabled}
+              />
+              <Input
+                type="number"
+                value={entry.sigma}
+                onChange={(event) =>
+                  handleWeatherVariableChange(index, 'sigma', event.target.value)
+                }
+                placeholder="Sigma"
+                disabled={!settings.weatherVariabilityEnabled}
+              />
+              <Input
+                type="number"
+                value={entry.mu}
+                onChange={(event) =>
+                  handleWeatherVariableChange(index, 'mu', event.target.value)
+                }
+                placeholder="Mu"
+                disabled={!settings.weatherVariabilityEnabled}
+              />
+              <Input
+                type="number"
+                value={entry.tau}
+                onChange={(event) =>
+                  handleWeatherVariableChange(index, 'tau', event.target.value)
+                }
+                placeholder="Tau"
+                disabled={!settings.weatherVariabilityEnabled}
+              />
+              <Button
+                size="icon"
+                type="button"
+                onClick={() => handleRemoveWeatherVariable(index)}
+                disabled={!settings.weatherVariabilityEnabled}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            onClick={handleAddWeatherVariable}
+            type="button"
+            className="w-fit"
+            disabled={!settings.weatherVariabilityEnabled}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Variable
+          </Button>
         </div>
       </div>
     </div>

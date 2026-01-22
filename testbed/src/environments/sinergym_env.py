@@ -6,10 +6,9 @@ import numpy as np
 from sinergym import BaseReward
 from sinergym.envs import EplusEnv
 
+from experiment.status import increment_training_episode
 from spaces.custom_action_space import ActuatorActionSpace
 from utils.observation import build_info_dict
-
-from experiment.status import increment_training_episode
 
 
 class SinergymEnvironment(EplusEnv):
@@ -17,6 +16,7 @@ class SinergymEnvironment(EplusEnv):
         self,
         building_model_path: str,
         weather_data_path: str,
+        weather_variability: dict[str, tuple[float, float, float]] | None,
         variables: dict[str, tuple[str, str]],
         meters: dict[str, str],
         state_variable_keys: List[str],
@@ -31,7 +31,6 @@ class SinergymEnvironment(EplusEnv):
         time_info: dict[str, dict[str, bool]] | None = None,
         config_params: dict[str, Any] | None = None,
     ):
-
         self.variables = variables
         self.meters = meters
         self.state_variable_keys = list(state_variable_keys)
@@ -49,9 +48,7 @@ class SinergymEnvironment(EplusEnv):
 
         self._all_metric_keys = list(self.variables.keys()) + list(self.meters.keys())
         self._state_order = self.state_variable_keys + self.state_meter_keys
-        self._metric_index_map = {
-            key: idx for idx, key in enumerate(self._all_metric_keys)
-        }
+        self._metric_index_map = {key: idx for idx, key in enumerate(self._all_metric_keys)}
         self._state_indices = [self._metric_index_map[key] for key in self._state_order]
 
         super().__init__(
@@ -64,6 +61,7 @@ class SinergymEnvironment(EplusEnv):
             reward=reward_function_cls,
             reward_kwargs=reward_kwargs,
             config_params=config_params,
+            weather_variability=weather_variability,
         )
 
     @property
@@ -92,7 +90,6 @@ class SinergymEnvironment(EplusEnv):
         return self.custom_action_space.tuple_space
 
     def step(self, action):
-
         action = self.custom_action_space.to_eplus_action(action)
 
         # We ignore reward as we calculate it later in this method.
@@ -140,7 +137,6 @@ class SinergymEnvironment(EplusEnv):
 
         return state, merged_info
 
-
     def _add_time_information_to_state(
         self, obs: np.ndarray
     ) -> tuple[np.ndarray, Dict[str, float]]:
@@ -149,7 +145,7 @@ class SinergymEnvironment(EplusEnv):
         Returns both the augmented observation and a dict of time values including sin/cos.
         """
         state = list(obs)
-        time_info_dict = {}
+        time_info_dict: Dict[str, float] = {}
 
         if self.time_info is not None:
             sim = self.energyplus_simulator
@@ -186,7 +182,7 @@ class SinergymEnvironment(EplusEnv):
                     time_info_dict[f"{time_key}_cos"] = cos_val
                 else:
                     state.append(value)
-                    time_info_dict[time_key] = value
+                    time_info_dict[time_key] = float(value)
 
         return np.array(state, dtype=np.float32), time_info_dict
 

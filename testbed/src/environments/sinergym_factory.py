@@ -3,13 +3,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from parser.config_parser import parse_sinergym_environment_config
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-)
+from typing import Any, Dict, List, Optional, Tuple
 
 import gymnasium as gym
 import numpy as np
@@ -28,6 +22,7 @@ from utils.yaml_utils import resolve_project_path
 class EnvironmentElements:
     building_model_path: str
     weather_data_path: str
+    weather_variability: Optional[dict[str, tuple[float, float, float]]]
     variables: Dict[str, Tuple[str, str]]
     meters: Dict[str, str]
     state_variable_keys: List[str]
@@ -163,7 +158,7 @@ def _build_episode(config: SinergymEnvironmentConfig) -> dict:
     if not config.episode:
         return {}
 
-    episode_params = {}
+    episode_params: Dict[str, Any] = {}
     if config.episode.timesteps_per_hour is not None:
         if config.episode.timesteps_per_hour <= 0:
             raise ValueError("timesteps_per_hour must be a positive integer.")
@@ -172,13 +167,22 @@ def _build_episode(config: SinergymEnvironmentConfig) -> dict:
     if config.episode.period is not None:
         if len(config.episode.period) != 6:
             raise ValueError(
-                "period must contain exactly 6 integers for [start_day, start_month, start_year, end_day, end_month, end_year]."
+                "period must contain exactly 6 integers for "
+                "[start_day, start_month, start_year, end_day, end_month, end_year]."
             )
-        # Sinergym expects a tuple for the period
-
         episode_params["runperiod"] = tuple(config.episode.period)
 
     return episode_params
+
+
+def _parse_weather_variability(
+    config: SinergymEnvironmentConfig,
+) -> Optional[dict[str, tuple[float, float, float]]]:
+    if not config.weather_variability:
+        return None
+
+    # Already normalized by pydantic validator in SinergymEnvironmentConfig
+    return dict(config.weather_variability)
 
 
 def _build_reward_function(
@@ -199,7 +203,7 @@ def _build_reward_function(
             reward_variables,
         )
 
-    elif reward_cfg.type == PYTHON_REWARD_TYPE or reward_cfg.type == CODE_BASED_REWARD_TYPE:
+    if reward_cfg.type == PYTHON_REWARD_TYPE or reward_cfg.type == CODE_BASED_REWARD_TYPE:
         try:
             module = importlib.import_module(reward_cfg.module)
             cls = getattr(module, reward_cfg.class_name)
@@ -221,11 +225,13 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
     time_info = _parse_time_info(config)
     action_space = _build_action_space(config)
     build_episode = _build_episode(config)
+    weather_variability = _parse_weather_variability(config)
     reward_function_cls, reward_kwargs, reward_variables = _build_reward_function(config)
 
     return EnvironmentElements(
         building_model_path=building_model_path,
         weather_data_path=weather_data_path,
+        weather_variability=weather_variability,
         variables=variables,
         meters=meters,
         state_variable_keys=state_variable_keys,
@@ -243,7 +249,6 @@ def _build_environment_elements(config: SinergymEnvironmentConfig) -> Environmen
 
 
 class SinergymFactory(EnvironmentFactory):
-
     def create_environment(self) -> SinergymEnvironment | NormalizeObservation:
         config = parse_sinergym_environment_config(self.config_path)
         env_elements = _build_environment_elements(config)
@@ -251,6 +256,7 @@ class SinergymFactory(EnvironmentFactory):
         env = SinergymEnvironment(
             env_elements.building_model_path,
             env_elements.weather_data_path,
+            env_elements.weather_variability,
             env_elements.variables,
             env_elements.meters,
             env_elements.state_variable_keys,

@@ -177,12 +177,27 @@ export const buildEnvironmentYaml = (
     },
   }
 
+  const weatherVariabilityEntries = general.weatherVariabilityVariables.filter(
+    (entry) => entry.key.trim() !== '',
+  )
+  if (general.weatherVariabilityEnabled && weatherVariabilityEntries.length > 0) {
+    Object.assign(doc, {
+      weather_variability: Object.fromEntries(
+        weatherVariabilityEntries.map((entry) => [
+          entry.key,
+          [entry.sigma, entry.mu, entry.tau],
+        ]),
+      ),
+    })
+  }
+
   return yaml.dump(doc, { noRefs: true })
 }
 
 interface ParsedDoc {
   building_model?: string
   weather_data?: string
+  weather_variability?: Record<string, [number, number, number]>
   state_space?: {
     variables?: Record<
       string,
@@ -244,6 +259,15 @@ interface ParsedDoc {
 export const parseEnvironmentYaml = (yamlStr: string): EnvironmentConfig => {
   const doc = yaml.load(yamlStr) as ParsedDoc
 
+  const weatherVariabilityEntries = Object.entries(
+    doc.weather_variability ?? {},
+  ).map(([key, values]) => ({
+    key,
+    sigma: values?.[0] ?? 0,
+    mu: values?.[1] ?? 0,
+    tau: values?.[2] ?? 0,
+  }))
+
   const generalSettings: EnvironmentGeneralSettings = {
     buildingModelFile: doc.building_model ?? null,
     weatherDataFile: doc.weather_data ?? null,
@@ -254,6 +278,8 @@ export const parseEnvironmentYaml = (yamlStr: string): EnvironmentConfig => {
       ? `${doc.episode.period[5]}-${doc.episode.period[4]}-${doc.episode.period[3]}`
       : '',
     timestepsPerHour: doc.episode?.timesteps_per_hour ?? undefined,
+    weatherVariabilityEnabled: weatherVariabilityEntries.length > 0,
+    weatherVariabilityVariables: weatherVariabilityEntries,
   }
 
   const variables =
