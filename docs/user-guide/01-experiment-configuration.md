@@ -37,6 +37,8 @@ In the **General** tab, general environment properties can be configured:
 - **End Date Episode**: Selects the end date for each experiment episode.
 - **Timesteps per hour**: Defines the number of simulated timesteps per hour.
 
+At the bottom of the configuration, weather variability can be defined using an [Ornstein Uhlenbeck noise](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process) process. The parameters sigma, mu, and tau specify the noise characteristics, where sigma controls the magnitude of the stochastic fluctuations, mu defines the long term mean, and tau determines how aggressively the noise evolves over time. The variable key must reference a valid weather variable provided by the selected weather data.
+
 ### State Space
 
 The **State Space** tab allows for the configuration of the state space. At the top, users can specify whether to include time information and, if so, which components to include. Additionally, cyclic time representation can be enabled. More information on cyclic data handling can be found [here](https://towardsdatascience.com/how-to-handle-cyclical-data-in-machine-learning-3e0336f7f97c/).
