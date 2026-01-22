@@ -79,8 +79,6 @@ state_space:
       cyclic: false
     month:
       cyclic: false
-    day_of_week:
-      cyclic: false
     hour:
       cyclic: false
 action_space:
