@@ -56,7 +56,7 @@ const EnvironmentConfigurator = () => {
         {
           name: '',
           variableType: 'variable',
-          energyPlusType: '',
+          energyPlusName: '',
           zone: '',
           excludeFromState: false,
         },

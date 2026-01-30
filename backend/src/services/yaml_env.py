@@ -82,7 +82,7 @@ def build_environment_yaml(cfg: EnvironmentConfig) -> str:
                 meters[v.name] = meter_name
         else:
             entry = {
-                "type": DoubleQuotedScalarString(v.energyPlusType.strip('"')),
+                "name": DoubleQuotedScalarString(v.energyPlusName.strip('"')),
                 "zone": DoubleQuotedScalarString(v.zone.strip('"')),
             }
             if v.excludeFromState:

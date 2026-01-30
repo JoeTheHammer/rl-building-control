@@ -61,7 +61,7 @@ export const buildEnvironmentYaml = (
 ): string => {
   const variables: Record<
     string,
-    { type: string; zone: string; exclude_from_state?: boolean }
+    { name: string; zone: string; exclude_from_state?: boolean }
   > = {}
   const meters: Record<
     string,
@@ -80,7 +80,7 @@ export const buildEnvironmentYaml = (
       }
     } else {
       variables[v.name] = {
-        type: v.energyPlusType,
+        name: v.energyPlusName,
         zone: v.zone,
         ...(v.excludeFromState ? { exclude_from_state: true } : {}),
       }
@@ -201,7 +201,7 @@ interface ParsedDoc {
   state_space?: {
     variables?: Record<
       string,
-      { type: string; zone: string; exclude_from_state?: boolean }
+      { name?: string; type?: string; zone: string; exclude_from_state?: boolean }
     >
     meters?: Record<
       string,
@@ -286,7 +286,7 @@ export const parseEnvironmentYaml = (yamlStr: string): EnvironmentConfig => {
     Object.entries(doc.state_space?.variables ?? {}).map(([name, v]) => ({
       name,
       variableType: 'variable' as const,
-      energyPlusType: v.type,
+      energyPlusName: v.name ?? v.type ?? '',
       zone: v.zone,
       excludeFromState: !!v.exclude_from_state,
     })) ?? []

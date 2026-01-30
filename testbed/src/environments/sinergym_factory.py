@@ -72,7 +72,7 @@ def _parse_variables(
     excluded: List[str] = []
 
     for key, var_cfg in config.state_space.variables.items():
-        variables[key] = (var_cfg.type, var_cfg.zone)
+        variables[key] = (var_cfg.name, var_cfg.zone)
         if var_cfg.exclude_from_state:
             excluded.append(key)
         else:

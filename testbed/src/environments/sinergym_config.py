@@ -1,10 +1,12 @@
 from typing import Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class VariableConfig(BaseModel):
-    type: str
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str = Field(validation_alias="type")
     zone: str
     exclude_from_state: bool = False
 

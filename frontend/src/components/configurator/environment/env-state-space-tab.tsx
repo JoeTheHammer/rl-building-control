@@ -27,7 +27,7 @@ export type TimeFeatureKey =
 export interface VariableSetting {
   name: string
   variableType: 'variable'
-  energyPlusType: string
+  energyPlusName: string
   zone: string
   excludeFromState: boolean
 }
@@ -116,7 +116,7 @@ const EnvStateSpaceTab = ({
       {
         name: '',
         variableType: 'variable' as const,
-        energyPlusType: '',
+        energyPlusName: '',
         zone: '',
         excludeFromState: false,
       },
@@ -242,16 +242,16 @@ const EnvStateSpaceTab = ({
                         >
                           EnergyPlus Name
                         </label>
-                        <Input
-                          id={`variable-energy-${index}`}
-                          value={variable.energyPlusType}
-                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                            handleVariableFieldChange(
-                              index,
-                              'energyPlusType',
-                              event.target.value,
-                            )
-                          }
+                      <Input
+                        id={`variable-energy-${index}`}
+                        value={variable.energyPlusName}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                          handleVariableFieldChange(
+                            index,
+                            'energyPlusName',
+                            event.target.value,
+                          )
+                        }
                           placeholder="Enter EnergyPlus name"
                         />
                       </div>

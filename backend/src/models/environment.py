@@ -23,7 +23,7 @@ class TimeFlag(BaseModel):
 class EnvVariable(BaseModel):
     name: str
     variableType: str  # "variable" or "meter"
-    energyPlusType: str | None = None
+    energyPlusName: str | None = None
     zone: str | None = None
     meterName: str | None = None
     excludeFromState: bool = False
