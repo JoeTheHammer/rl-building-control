@@ -48,7 +48,7 @@ class Experiment:
         episode_rewards = []
         total_rewards = []
 
-        self._setup_reporting()
+        self._setup_recording()
 
         for ep in range(1, self.episodes + 1):
 
@@ -91,7 +91,7 @@ class Experiment:
 
         return episode_rewards
 
-    def _setup_reporting(self):
+    def _setup_recording(self):
         self.env = ReportingWrapper(self.env, denorm_state=self.denorm_state)
         if self.experiment_storage:
             evaluation_handler = self.experiment_storage.create_evaluation_handler()
