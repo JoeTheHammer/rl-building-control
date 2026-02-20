@@ -490,7 +490,9 @@ const Analytics: React.FC = () => {
       (item) => item.key === experiment.key,
     )
     const canShowContext =
-      Boolean(contextEntry) && selectedSuite?.status === 'Finished'
+      Boolean(contextEntry) &&
+      selectedSuite?.status !== 'Running' &&
+      selectedSuite?.status !== 'New'
 
     return (
       <section

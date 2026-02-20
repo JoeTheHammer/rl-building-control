@@ -29,8 +29,9 @@ export const useSuiteStatus = ({
   detailsOpen,
   status,
 }: UseSuiteStatusOptions): UseSuiteStatusResult => {
-  const shouldLoadStatus = status === 'Running' && typeof suiteId === 'number'
-  const shouldStreamLogs = shouldLoadStatus && detailsOpen
+  const isRunning = status === 'Running'
+  const shouldLoadStatus = status !== 'New' && typeof suiteId === 'number'
+  const shouldStreamLogs = isRunning && detailsOpen
 
   const [statusInfo, setStatusInfo] =
     useState<ExperimentRunStatusResponse | null>(null)
@@ -76,13 +77,15 @@ export const useSuiteStatus = ({
     }
 
     fetchStatus()
-    const interval = window.setInterval(fetchStatus, 2000)
+    const interval = isRunning ? window.setInterval(fetchStatus, 2000) : null
 
     return () => {
       ignore = true
-      window.clearInterval(interval)
+      if (interval !== null) {
+        window.clearInterval(interval)
+      }
     }
-  }, [shouldLoadStatus, suiteId])
+  }, [isRunning, shouldLoadStatus, suiteId])
 
   const progressById = useMemo(
     () => buildProgressById(statusInfo),

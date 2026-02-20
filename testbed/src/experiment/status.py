@@ -158,6 +158,22 @@ def increment_evaluation_episode() -> None:
     _update_current_experiment(_updater)
 
 
+def mark_experiment_finished() -> None:
+    def _updater(entry: Dict[str, Any]) -> bool:
+        entry["status"] = "finished"
+        return True
+
+    _update_current_experiment(_updater)
+
+
+def mark_experiment_failed() -> None:
+    def _updater(entry: Dict[str, Any]) -> bool:
+        entry["status"] = "failed"
+        return True
+
+    _update_current_experiment(_updater)
+
+
 def calculate_total_training_episodes(
     training_timesteps: int, env_config_path: Optional[str]
 ) -> Optional[int]:

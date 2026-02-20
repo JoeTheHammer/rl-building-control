@@ -35,6 +35,11 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({
   error,
 }) => {
   const normalizedStatus = progress?.status?.toLowerCase()
+  const isSuccessful =
+    normalizedStatus === 'finished' ||
+    normalizedStatus === 'successful' ||
+    normalizedStatus === 'success'
+  const isFailed = normalizedStatus === 'failed' || normalizedStatus === 'error'
 
   const trainingPercent = useMemo(
     () =>
@@ -73,6 +78,8 @@ const ProgressSection: React.FC<ProgressSectionProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
+        {isSuccessful && <Badge variant="default">Successful</Badge>}
+        {isFailed && <Badge variant="default">Failed</Badge>}
         <Badge
           variant={normalizedStatus === 'training' ? 'default' : 'secondary'}
         >

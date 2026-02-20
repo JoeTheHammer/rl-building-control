@@ -22,7 +22,13 @@ export interface SaveExperimentPayload {
   directory?: string
 }
 
-export type ExperimentSuiteStatus = 'New' | 'Running' | 'Finished' | 'Aborted'
+export type ExperimentSuiteStatus =
+  | 'New'
+  | 'Running'
+  | 'Finished'
+  | 'Partially Successful'
+  | 'Error'
+  | 'Aborted'
 
 export interface TensorBoardStatus {
   enabled: boolean

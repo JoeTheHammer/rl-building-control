@@ -6,7 +6,12 @@ from custom_loggers.setup_logger import logger as setup_logger
 from environments.base_factory import EnvironmentFactory
 from experiment.experiment import Experiment
 from experiment.experiment_config import ExperimentConfig, ReportingConfig
-from experiment.status import initialize_status, set_current_experiment
+from experiment.status import (
+    initialize_status,
+    mark_experiment_failed,
+    mark_experiment_finished,
+    set_current_experiment,
+)
 from reporting.context import collect_experiment_context
 from reporting.hdf5_storage import ExperimentStorage, HDF5StorageManager
 from parser.config_parser import parse_experiment_list
@@ -76,6 +81,7 @@ class ExperimentManager:
             experiment = self._create_experiment(experiment_config, index, experiment_storage)
 
             if experiment is None:
+                mark_experiment_failed()
                 set_current_experiment(None)
                 setup_logger.warning(
                     f"Skipping run for experiment {experiment_config.name} due to creation failure."
@@ -84,10 +90,12 @@ class ExperimentManager:
 
             setup_logger.info(f"Running evaluation for experiment {experiment.name}")
             experiment.run()
+            mark_experiment_finished()
             set_current_experiment(None)
             setup_logger.info(f"--- Finished experiment: {experiment.name} ---")
 
         except Exception as e:
+            mark_experiment_failed()
             setup_logger.error(f"CRITICAL FAILURE in experiment {experiment_config.name}: {e}")
             setup_logger.error(traceback.format_exc())
             set_current_experiment(None)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -332,6 +333,96 @@ def _detect_tensorboard_enabled(config_path: Path) -> bool:
     return False
 
 
+def _read_exit_result(suite_path: Optional[str]) -> tuple[Optional[str], Optional[int]]:
+    if not suite_path:
+        return None, None
+
+    exit_file = Path(suite_path) / "experiment_log.exit.json"
+    if not exit_file.exists() or not exit_file.is_file():
+        return None, None
+
+    try:
+        with exit_file.open("r", encoding="utf-8") as file:
+            payload = json.load(file)
+    except Exception:
+        return None, None
+
+    status_value = payload.get("status")
+    status = str(status_value).lower() if isinstance(status_value, str) else None
+
+    return_code_raw = payload.get("return_code")
+    try:
+        return_code = int(return_code_raw) if return_code_raw is not None else None
+    except (TypeError, ValueError):
+        return_code = None
+
+    return status, return_code
+
+
+def _read_experiment_states(suite_path: Optional[str]) -> list[str]:
+    if not suite_path:
+        return []
+
+    status_path = Path(suite_path) / "status.yaml"
+    if not status_path.exists() or not status_path.is_file():
+        return []
+
+    try:
+        with status_path.open("r", encoding="utf-8") as file:
+            payload = yaml.safe_load(file) or {}
+    except Exception:
+        return []
+
+    experiments = payload.get("experiments")
+    if not isinstance(experiments, list):
+        return []
+
+    states: list[str] = []
+    for entry in experiments:
+        if not isinstance(entry, dict):
+            continue
+        state = entry.get("status")
+        if isinstance(state, str) and state.strip():
+            states.append(state.strip().lower())
+    return states
+
+
+def _derive_final_status(
+    suite_path: Optional[str],
+    process_status: str,
+    return_code: Optional[int],
+) -> ExperimentSuiteStatus:
+    states = _read_experiment_states(suite_path)
+    has_states = len(states) > 0
+    failed_count = sum(state in {"failed", "error"} for state in states)
+    finished_count = sum(state in {"finished", "successful", "success"} for state in states)
+    process_success = return_code == 0 if return_code is not None else process_status in {"finished"}
+
+    if has_states:
+        if failed_count == len(states):
+            return ExperimentSuiteStatus.ERROR
+        if failed_count > 0:
+            return ExperimentSuiteStatus.PARTIALLY_SUCCESSFUL
+        if finished_count == len(states):
+            return ExperimentSuiteStatus.FINISHED if process_success else ExperimentSuiteStatus.ERROR
+        return ExperimentSuiteStatus.ERROR
+
+    if return_code is not None:
+        return ExperimentSuiteStatus.FINISHED if return_code == 0 else ExperimentSuiteStatus.ERROR
+
+    if "terminated gracefully" in process_status or "force killed" in process_status:
+        return ExperimentSuiteStatus.ABORTED
+
+    if (
+        "not running" in process_status
+        or "finished" in process_status
+        or process_status == "exited"
+    ):
+        return ExperimentSuiteStatus.FINISHED
+
+    return ExperimentSuiteStatus.ERROR
+
+
 class ExperimentSuiteManager:
     def __init__(self, repository: Optional[ExperimentSuiteRepository] = None) -> None:
         self._repository = repository or ExperimentSuiteRepository()
@@ -655,21 +746,22 @@ class ExperimentSuiteManager:
                         continue
 
                     print(f"[INFO] Global monitor: suite {suite.id} no longer running (status={status})")
+                    try:
+                        parsed_return_code = int(return_code) if return_code is not None else None
+                    except (TypeError, ValueError):
+                        parsed_return_code = None
 
-                    success = True
-                    if return_code is not None and return_code != 0:
-                        success = False
+                    exit_status, exit_return_code = _read_exit_result(suite.path)
+                    normalized_status = exit_status or status
+                    normalized_return_code = (
+                        parsed_return_code if parsed_return_code is not None else exit_return_code
+                    )
 
-                    if (
-                            success and (
-                            "not running" in status or
-                            "finished" in status
-                            or "terminated gracefully" in status
-                            or status == "exited" and data.get("return_code") == 0)
-                    ):
-                        final_status = ExperimentSuiteStatus.FINISHED
-                    else:
-                        final_status = ExperimentSuiteStatus.ABORTED
+                    final_status = _derive_final_status(
+                        suite.path,
+                        normalized_status,
+                        normalized_return_code,
+                    )
 
                     self._repository.update_status(suite.id, final_status, None)
             except Exception as e:

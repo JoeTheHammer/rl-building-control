@@ -9,6 +9,10 @@ export const getStatusBadgeClass = (status: ExperimentSuiteStatus): string => {
       return 'bg-emerald-500 text-white'
     case 'Finished':
       return 'bg-green-800 text-primary-foreground'
+    case 'Partially Successful':
+      return 'bg-amber-600 text-white'
+    case 'Error':
+      return 'bg-red-700 text-white'
     case 'Aborted':
       return 'bg-red-800 text-primary-foreground'
     default:

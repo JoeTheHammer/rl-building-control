@@ -31,6 +31,8 @@ class ExperimentSuiteStatus(str, Enum):
     NEW = "New"
     RUNNING = "Running"
     FINISHED = "Finished"
+    PARTIALLY_SUCCESSFUL = "Partially Successful"
+    ERROR = "Error"
     ABORTED = "Aborted"
 
 

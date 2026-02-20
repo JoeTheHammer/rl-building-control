@@ -65,7 +65,10 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
         >
           Show Experiment Config
         </Button>
-        {(status === 'Finished' || status === 'Aborted') && (
+        {(status === 'Finished' ||
+          status === 'Partially Successful' ||
+          status === 'Error' ||
+          status === 'Aborted') && (
           <Button
             onClick={() => onShowCompletedLogs(true)}
             disabled={typeof suiteId !== 'number'}
@@ -153,7 +156,7 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
                     )}
                   </div>
                 )}
-                {status === 'Running' && (
+                {(status === 'Running' || progress) && (
                   <ProgressSection
                     progress={progress ?? null}
                     loading={showLoading}
