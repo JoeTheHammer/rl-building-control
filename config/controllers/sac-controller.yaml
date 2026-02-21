@@ -1,0 +1,21 @@
+training:
+  timesteps: 1401600
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
+hyperparameters:
+  ent_coef: "auto_1.333790296034039"
+  learning_rate: 0.00010602004858471923
+  gamma: 0.9176399949064639
+  batch_size: 128
+  tau: 0.013996745302456417
+  train_freq: 8
+  gradient_steps: 8
+  target_update_interval: 10
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false
+
