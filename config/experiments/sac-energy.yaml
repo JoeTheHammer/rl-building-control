@@ -1,0 +1,9 @@
+experiments:
+  - name: "sac-energy"
+    engine: "sinergym"
+    environment_config: /config/environments/sinergym-data-center-energy.yaml
+    controller: "sac"
+    controller_config: /config/controllers/sac-controller.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

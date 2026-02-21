@@ -1,0 +1,9 @@
+experiments:
+  - name: "ddpg-energy"
+    engine: "sinergym"
+    environment_config: /config/environments/sinergym-data-center-energy.yaml
+    controller: "ddpg"
+    controller_config: /config/controllers/ddpg-controller.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true
