@@ -21,6 +21,26 @@ def _flatten(values):
     return arr.squeeze()
 
 
+def _extract_applied_action_from_info(info: Dict[str, object]) -> np.ndarray | None:
+    """
+    Build action vector from env info dict when it provides applied actuator values.
+    """
+    action_keys = info.get("action_keys")
+    if not isinstance(action_keys, (list, tuple)) or not action_keys:
+        return None
+
+    extracted = []
+    for key in action_keys:
+        if key not in info:
+            return None
+        extracted.append(info[key])
+
+    try:
+        return np.asarray(extracted, dtype=np.float32)
+    except (TypeError, ValueError):
+        return None
+
+
 class ReportingWrapper(gym.Wrapper):
     """
     A Gymnasium wrapper that adds logging and visualization capabilities.
@@ -140,7 +160,10 @@ class ReportingWrapper(gym.Wrapper):
         self._maybe_extract_names(info, obs=obs, action=action)
         if self.is_recording:
             self.states.append(obs if not self.denorm_state else denormalize_state(obs, self.env))
-            self.actions.append(get_original_action(action_copy, self.env))
+            applied_action = _extract_applied_action_from_info(info)
+            self.actions.append(
+                applied_action if applied_action is not None else get_original_action(action_copy, self.env)
+            )
             self.rewards.append(denormalize_reward(reward, self.env))
             metrics = info.get("non_state_metrics")
             if metrics is not None:
