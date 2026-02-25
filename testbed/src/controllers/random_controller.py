@@ -4,6 +4,7 @@ import gymnasium as gym
 
 from controllers.base_controller import ControllerSetup, Controller, ControllerFactory
 from environments.base_factory import EnvironmentFactory
+from utils.seeding import seed_env_spaces
 
 
 class RandomController(Controller):
@@ -35,6 +36,7 @@ class RandomControllerFactory(ControllerFactory):
     def create_controller_setup(self) -> ControllerSetup:
 
         env = self.env_factory.create_environment()
+        seed_env_spaces(env, self.seed)
         controller = RandomController(env)
 
         return ControllerSetup(controller, env)

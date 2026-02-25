@@ -31,6 +31,7 @@ config/
        controller: sac
        engine: sinergym
        episodes: 10
+       seed: 42  # optional
    ```
 4. Commit both environment and controller files alongside the experiment suite
    so runs are reproducible.

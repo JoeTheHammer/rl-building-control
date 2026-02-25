@@ -15,6 +15,7 @@ from environments.sinergym_config import SinergymEnvironmentConfig
 from environments.sinergym_env import SinergymEnvironment
 from reward.expression_reward import ExpressionReward
 from spaces.custom_action_space import ActuatorActionSpace
+from utils.seeding import seed_env_spaces
 from utils.yaml_utils import resolve_project_path
 
 
@@ -272,4 +273,5 @@ class SinergymFactory(EnvironmentFactory):
             env_elements.config_params,
         )
 
+        seed_env_spaces(env, self.seed)
         return env

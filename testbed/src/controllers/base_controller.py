@@ -54,12 +54,16 @@ class ControllerFactory(ABC):
         self.env_factory: EnvironmentFactory | None = None
         self.experiment_storage: ExperimentStorage | None = None
         self.storage_flush_interval: int = 1024
+        self.seed: int | None = None
 
     def set_config_path(self, config_path: str):
         self.config_path = config_path
 
     def set_env_factory(self, env_factory: EnvironmentFactory):
         self.env_factory = env_factory
+
+    def set_seed(self, seed: int | None):
+        self.seed = seed
 
     def set_experiment_storage(
         self,

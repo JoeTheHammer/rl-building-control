@@ -14,9 +14,13 @@ class EnvironmentFactory(ABC):
 
     def __init__(self):
         self.config_path = ""
+        self.seed: int | None = None
 
     def set_config_path(self, config_path: str):
         self.config_path = config_path
+
+    def set_seed(self, seed: int | None):
+        self.seed = seed
 
     @abstractmethod
     def create_environment(self) -> gym.Env:

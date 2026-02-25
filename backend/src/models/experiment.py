@@ -18,6 +18,7 @@ class ExperimentConfig(BaseModel):
     controller: str = ""
     controllerConfig: str = ""
     episodes: int | None = None
+    seed: int | None = None
     reporting: ExperimentReporting = Field(default_factory=ExperimentReporting)
 
 

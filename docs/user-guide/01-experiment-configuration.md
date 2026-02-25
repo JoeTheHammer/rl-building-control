@@ -399,6 +399,7 @@ For each experiment, the following settings can be configured:
     - TD3
 - **Controller Config**: The `.yaml` configuration file for the controller. Ensure that the hyperparameters in the file match those supported by the chosen RL model.
 - **Episodes**: The number of episodes used for evaluation.
+- **Seed (optional)**: Integer seed applied per experiment. If set, it is used for global RNGs (for example `random`, `numpy`, PyTorch when available) and controller/environment seedable components.
 - **Denormalize State in collected data**: If selected, denormalized state and action space values will be recorded during evaluation. Enabling this option is recommended.
 
 ### Example Config
@@ -425,6 +426,7 @@ experiments:
     controller: ppo
     controller_config: ppo_controller.yaml
     episodes: 2
+    seed: 42
     reporting:
       denormalize_state: true
 ```

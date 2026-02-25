@@ -15,6 +15,7 @@ from experiment.status import (
 from reporting.context import collect_experiment_context
 from reporting.hdf5_storage import ExperimentStorage, HDF5StorageManager
 from parser.config_parser import parse_experiment_list
+from utils.seeding import apply_global_seed
 from utils.yaml_utils import resolve_project_path
 
 import traceback
@@ -69,6 +70,7 @@ class ExperimentManager:
                     "controller": experiment_config.controller,
                     "controller_config": experiment_config.controller_config,
                     "episodes": experiment_config.episodes,
+                    "seed": experiment_config.seed,
                 },
             )
 
@@ -77,6 +79,7 @@ class ExperimentManager:
             )
             experiment_storage.store_context(context)
             self._storage_manager.flush()
+            apply_global_seed(experiment_config.seed)
 
             experiment = self._create_experiment(experiment_config, index, experiment_storage)
 
@@ -134,6 +137,7 @@ class ExperimentManager:
             experiment_storage=experiment_storage,
             denorm_state=reporting.denormalize_state,
             episodes=experiment_config.episodes,
+            seed=experiment_config.seed,
             flush_interval=self._flush_interval,
         )
 
@@ -141,12 +145,13 @@ class ExperimentManager:
         self, experiment_config: ExperimentConfig
     ) -> EnvironmentFactory | None:
         env_factory = self._env_factories.get(experiment_config.engine)
-        env_factory.set_config_path(resolve_project_path(experiment_config.environment_config))
         if env_factory is None:
             setup_logger.error(
                 f"No environment factory registered for engine '{experiment_config.engine}'."
             )
             return None
+        env_factory.set_config_path(resolve_project_path(experiment_config.environment_config))
+        env_factory.set_seed(experiment_config.seed)
         return env_factory
 
     def _create_controller(
@@ -167,6 +172,7 @@ class ExperimentManager:
         controller_factory.set_config_path(
             resolve_project_path(experiment_config.controller_config)
         )
+        controller_factory.set_seed(experiment_config.seed)
         controller_factory.set_experiment_storage(experiment_storage, self._flush_interval)
 
         set_current_experiment(experiment_id)

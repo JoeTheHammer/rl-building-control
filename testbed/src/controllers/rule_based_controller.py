@@ -10,6 +10,7 @@ from controllers.base_controller import ControllerSetup, Controller, ControllerF
 from environments.sinergym_factory import SinergymFactory
 from parser.config_parser import parse_sinergym_environment_config
 from reward.expression_reward import within
+from utils.seeding import seed_env_spaces
 from wrappers.continuous_action_wrapper import ContinuousActionWrapper
 
 
@@ -212,6 +213,7 @@ class RuleBasedControllerFactory(ControllerFactory):
         controller_config = load_rule_based_controller_config(self.config_path)
 
         env = self.env_factory.create_environment()
+        seed_env_spaces(env, self.seed)
 
         # For sinergym environment, state space can be read out of config.
         if isinstance(self.env_factory, SinergymFactory):
