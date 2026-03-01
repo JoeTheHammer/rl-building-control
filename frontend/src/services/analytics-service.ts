@@ -1,5 +1,9 @@
 import axios from 'axios'
 import { getBaseHost } from '@/services/api-service.ts'
+import type {
+  ExperimentSuiteApiResponse,
+  SuiteContextResponse,
+} from '@/services/experiment-service.ts'
 
 const API_BASE = `${getBaseHost()}:8000/api/analytics`
 
@@ -112,4 +116,57 @@ export const downloadAnalyticsSuiteFile = async (
     blob: response.data,
     fileName,
   }
+}
+
+export const uploadAnalyticsFile = async (
+  file: File,
+): Promise<AnalyticsDataResponse> => {
+  const response = await axios.post<AnalyticsDataResponse>(
+    `${API_BASE}/file`,
+    file,
+    {
+      params: { filename: file.name },
+      headers: {
+        'Content-Type': file.type || 'application/x-hdf5',
+      },
+    },
+  )
+  return response.data
+}
+
+export const fetchUploadedAnalyticsContext = async (
+  file: File,
+): Promise<SuiteContextResponse> => {
+  const response = await axios.post<SuiteContextResponse>(
+    `${API_BASE}/file/context`,
+    file,
+    {
+      params: { filename: file.name },
+      headers: {
+        'Content-Type': file.type || 'application/x-hdf5',
+      },
+    },
+  )
+  return response.data
+}
+
+export const reproduceUploadedAnalyticsExperiment = async (
+  file: File,
+  experimentKey: string,
+  reproductionName?: string,
+): Promise<ExperimentSuiteApiResponse> => {
+  const response = await axios.post<ExperimentSuiteApiResponse>(
+    `${API_BASE}/file/experiments/${encodeURIComponent(experimentKey)}/reproduce`,
+    file,
+    {
+      params: {
+        filename: file.name,
+        ...(reproductionName !== undefined ? { name: reproductionName } : {}),
+      },
+      headers: {
+        'Content-Type': file.type || 'application/x-hdf5',
+      },
+    },
+  )
+  return response.data
 }

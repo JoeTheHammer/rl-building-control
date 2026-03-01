@@ -531,6 +531,16 @@ class ExperimentSuiteManager:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
         record = get_experiment_record(suite_id, experiment_key)
+        return self.reproduce_experiment_from_record(record, name)
+
+    def reproduce_experiment_from_record(
+        self,
+        record: Any,
+        name: Optional[str] = None,
+    ) -> ExperimentSuiteResponse:
+        """
+        Reproduce an experiment from a context record (suite-backed or uploaded file).
+        """
 
         provided_name = (name or "").strip() if name is not None else ""
         base_name = (record.name or "").strip()

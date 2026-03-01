@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
@@ -208,17 +209,18 @@ def _parse_experiment_group(key: str, group: h5py.Group) -> AnalyticsExperiment:
     )
 
 
-def _load_hdf5_content(file_path: Path) -> tuple[Dict[str, Any], List[AnalyticsExperiment]]:
-    metadata: Dict[str, Any] = {}
+def _load_hdf5_from_handle(handle: h5py.File) -> tuple[Dict[str, Any], List[AnalyticsExperiment]]:
+    metadata = _read_metadata(handle)
     experiments: List[AnalyticsExperiment] = []
-
-    with h5py.File(file_path, "r") as handle:
-        metadata = _read_metadata(handle)
-        for key, item in handle.items():
-            if isinstance(item, h5py.Group) and key.startswith("experiment"):
-                experiments.append(_parse_experiment_group(key, item))
-
+    for key, item in handle.items():
+        if isinstance(item, h5py.Group) and key.startswith("experiment"):
+            experiments.append(_parse_experiment_group(key, item))
     return metadata, experiments
+
+
+def _load_hdf5_content(file_path: Path) -> tuple[Dict[str, Any], List[AnalyticsExperiment]]:
+    with h5py.File(file_path, "r") as handle:
+        return _load_hdf5_from_handle(handle)
 
 
 def list_available_suites() -> List[AnalyticsSuiteSummary]:
@@ -269,6 +271,25 @@ def load_suite_data(suite_id: int) -> AnalyticsDataResponse:
         suite_id=suite.id,
         suite_name=suite.name,
         file_name=file_path.name,
+        metadata=metadata,
+        experiments=experiments,
+    )
+
+
+def load_uploaded_hdf5_data(file_name: str, content: bytes) -> AnalyticsDataResponse:
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    try:
+        with h5py.File(BytesIO(content), "r") as handle:
+            metadata, experiments = _load_hdf5_from_handle(handle)
+    except OSError as exc:
+        raise HTTPException(status_code=400, detail="Invalid HDF5 file") from exc
+
+    return AnalyticsDataResponse(
+        suite_id=0,
+        suite_name=Path(file_name).stem or "Uploaded file",
+        file_name=file_name,
         metadata=metadata,
         experiments=experiments,
     )

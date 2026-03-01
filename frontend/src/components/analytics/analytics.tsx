@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { FileDown, Loader2, RefreshCw } from 'lucide-react'
+import { FileDown, FolderOpen, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useLocation, useSearchParams } from 'react-router-dom'
 
@@ -26,9 +26,12 @@ import type {
   AnalyticsSuiteSummary,
 } from '@/services/analytics-service.ts'
 import {
+  fetchUploadedAnalyticsContext,
   downloadAnalyticsSuiteFile,
   fetchAnalyticsSuiteData,
   fetchAnalyticsSuites,
+  reproduceUploadedAnalyticsExperiment,
+  uploadAnalyticsFile,
 } from '@/services/analytics-service.ts'
 import {
   fetchSuiteContext,
@@ -83,6 +86,8 @@ const Analytics: React.FC = () => {
   const [selectedCsvOptions, setSelectedCsvOptions] = useState<string[]>([])
   const [autoLoadSuiteId, setAutoLoadSuiteId] = useState<number | null>(null)
   const requestedSuiteIdRef = useRef<number | null>(null)
+  const openFileInputRef = useRef<HTMLInputElement | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [suiteContext, setSuiteContext] = useState<SuiteContextResponse | null>(
     null,
   )
@@ -158,6 +163,7 @@ const Analytics: React.FC = () => {
       try {
         const response = await fetchAnalyticsSuiteData(suiteId)
         setSelectedSuite(suite)
+        setUploadedFile(null)
         setSuiteData(response)
         setSelectedCsvOptions([])
         setSearchParams({ suiteId: String(suiteId) }, { replace: true })
@@ -223,11 +229,6 @@ const Analytics: React.FC = () => {
 
   const handleReproduceExperiment = useCallback(
     (entry: SuiteContextExperiment, experimentName: string) => {
-      if (!selectedSuite) {
-        toast.error('Load an experiment suite before reproducing')
-        return
-      }
-
       const defaultName = experimentName
         ? `Reproduction ${experimentName}`
         : 'Reproduction'
@@ -239,7 +240,7 @@ const Analytics: React.FC = () => {
         name: defaultName.trim(),
       })
     },
-    [selectedSuite],
+    [],
   )
 
   const handleReproductionNameChange = useCallback(
@@ -264,8 +265,8 @@ const Analytics: React.FC = () => {
   }, [reproductionSubmitting])
 
   const handleConfirmReproduction = useCallback(async () => {
-    if (!selectedSuite || !reproductionDialog.entry) {
-      toast.error('Load an experiment suite before reproducing')
+    if (!reproductionDialog.entry) {
+      toast.error('Select an experiment before reproducing')
       return
     }
 
@@ -279,11 +280,22 @@ const Analytics: React.FC = () => {
     setReproducingKey(reproductionDialog.entry.key)
 
     try {
-      await reproduceSuiteExperiment(
-        selectedSuite.id,
-        reproductionDialog.entry.key,
-        trimmedName,
-      )
+      if (selectedSuite) {
+        await reproduceSuiteExperiment(
+          selectedSuite.id,
+          reproductionDialog.entry.key,
+          trimmedName,
+        )
+      } else if (uploadedFile) {
+        await reproduceUploadedAnalyticsExperiment(
+          uploadedFile,
+          reproductionDialog.entry.key,
+          trimmedName,
+        )
+      } else {
+        toast.error('Load an experiment suite or open an HDF5 file before reproducing')
+        return
+      }
       toast.success(`Started reproduction for "${trimmedName}"`)
       await loadSuites()
       setReproductionDialog({
@@ -304,6 +316,7 @@ const Analytics: React.FC = () => {
     reproductionDialog.entry,
     reproductionDialog.name,
     selectedSuite,
+    uploadedFile,
   ])
 
   useEffect(() => {
@@ -482,6 +495,54 @@ const Analytics: React.FC = () => {
     }
   }, [selectedSuite])
 
+  const handleOpenFileClick = useCallback(() => {
+    openFileInputRef.current?.click()
+  }, [])
+
+  const handleOpenFileChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (!file) return
+
+      setLoadingData(true)
+      setLoadDialogOpen(false)
+      setSelectedSuite(null)
+      setUploadedFile(file)
+      setSuiteContext(null)
+      setContextDialog(null)
+      setContextError(null)
+
+      try {
+        const response = await uploadAnalyticsFile(file)
+        setSuiteData(response)
+        setSelectedCsvOptions([])
+        setSearchParams({}, { replace: true })
+        toast.success(`Loaded analytics from "${file.name}"`)
+        setContextLoading(true)
+        try {
+          const contextResponse = await fetchUploadedAnalyticsContext(file)
+          setSuiteContext(contextResponse)
+          setContextError(null)
+        } catch (contextError) {
+          console.error('Failed to load uploaded suite context', contextError)
+          setSuiteContext(null)
+          setContextError('Unable to load configuration context for the uploaded file')
+        } finally {
+          setContextLoading(false)
+        }
+      } catch (error) {
+        console.error('Failed to open analytics file', error)
+        toast.error('Unable to open the selected HDF5 file')
+        setUploadedFile(null)
+        setContextLoading(false)
+      } finally {
+        event.target.value = ''
+        setLoadingData(false)
+      }
+    },
+    [setSearchParams],
+  )
+
   const renderExperiment = (experiment: AnalyticsExperiment, index: number) => {
     const evaluation = experiment.evaluation
     const training = experiment.training
@@ -608,11 +669,19 @@ const Analytics: React.FC = () => {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Experiment Analytics</h1>
-            {selectedSuite && (
+            {suiteData && (
               <p className="mt-2 text-sm">
-                Loaded suite:{' '}
-                <span className="font-semibold">{selectedSuite.name}</span> (ID{' '}
-                {selectedSuite.id})
+                Loaded source:{' '}
+                {selectedSuite ? (
+                  <>
+                    <span className="font-semibold">{selectedSuite.name}</span>{' '}
+                    (ID {selectedSuite.id})
+                  </>
+                ) : (
+                  <span className="font-semibold">
+                    {suiteData.file_name || 'Uploaded file'}
+                  </span>
+                )}
               </p>
             )}
           </div>
@@ -620,6 +689,14 @@ const Analytics: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <Button onClick={() => setLoadDialogOpen(true)} className="gap-2">
               <RefreshCw className="size-4" /> Load Data
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleOpenFileClick}
+              disabled={loadingData}
+            >
+              <FolderOpen className="size-4" /> Open File
             </Button>
             <Button
               variant="outline"
@@ -666,6 +743,14 @@ const Analytics: React.FC = () => {
             evaluation metrics. Use the “Load Data” button above to get started.
           </div>
         )}
+
+        <input
+          ref={openFileInputRef}
+          type="file"
+          accept=".h5,.hdf5,application/x-hdf5"
+          className="hidden"
+          onChange={handleOpenFileChange}
+        />
 
         {!loadingData && suiteData && suiteData.experiments.length === 0 && (
           <div className="text-muted-foreground rounded-lg border border-dashed p-6 text-sm">
