@@ -1,11 +1,11 @@
 import axios from 'axios'
-import { getBaseHost } from '@/services/api-service.ts'
+import { getApiBase } from '@/services/api-service.ts'
 import type {
   ExperimentSuiteApiResponse,
   SuiteContextResponse,
 } from '@/services/experiment-service.ts'
 
-const API_BASE = `${getBaseHost()}:8000/api/analytics`
+const API_BASE = getApiBase('/api/analytics')
 
 export type NumericSeries = number[]
 

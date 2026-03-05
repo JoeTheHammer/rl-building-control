@@ -1,9 +1,9 @@
 import axios from 'axios'
 
 import type { ControllerSettings } from '@/components/configurator/controller/controller-types.ts'
-import { getBaseHost } from '@/services/api-service.ts'
+import { getApiBase } from '@/services/api-service.ts'
 
-const API_BASE = `${getBaseHost()}:8000/api/controller`
+const API_BASE = getApiBase('/api/controller')
 const DEFAULT_DIRECTORY = './config/controllers'
 
 export interface ControllerConfigFileList {
