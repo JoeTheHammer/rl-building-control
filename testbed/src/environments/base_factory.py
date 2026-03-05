@@ -28,6 +28,6 @@ class EnvironmentFactory(ABC):
         Create and return an environment instance based on the provided configuration file.
 
         Returns:
-            IEnvironment: A fully constructed experiment environment instance.
+            gym.Env: A fully constructed experiment environment instance.
         """
         pass
