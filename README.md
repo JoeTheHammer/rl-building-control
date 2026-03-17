@@ -12,7 +12,7 @@ installed:
 ## 2. Clone the repository
 
 ``` bash
-git clone https://github.com/JoeTheHammer/rl-building-control.git
+git clone https://git.uibk.ac.at/csaw4939/rl-building-control.git
 cd rl-building-control
 
 ```
