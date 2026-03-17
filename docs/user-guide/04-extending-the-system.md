@@ -8,6 +8,8 @@ Note that this diagram is not an exhaustive representation of all available inte
 
 A more detailed view can be found at the end of this document.
 
+The root `.env` file is only relevant for service URLs and browser access. New environments, controllers, and rewards still need valid YAML path references in `config/experiments/*.yaml` and `config/environments/*.yaml`; `.env` does not rewrite those files.
+
 # Environment
 
 To add a new environment, inherit from the abstract class `IEnvironmentFactory` and implement the following method:

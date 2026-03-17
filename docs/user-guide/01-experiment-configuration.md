@@ -10,6 +10,13 @@ Experiment configuration relies on `.yaml` files. To define an experiment, the f
 
 The building model and weather data must be provided by the user as external assets. The configuration files, however, can be either authored manually or generated automatically using the Frontend interface.
 
+The root `.env` file is only used for service connectivity in Docker Compose. It does not rewrite the YAML files described in this document. When reusing a configuration on another machine, verify these fields manually:
+
+- `config/environments/*.yaml`: `building_model`, `weather_data`
+- `config/experiments/*.yaml`: `environment_config`, `controller_config`
+
+For Docker Compose, prefer mounted paths such as `/data/...` and `/config/...`. For local execution, absolute host paths also work.
+
 # Configuration with Frontend
 
 To access the frontend, start the application via Docker (see README in project root) and access `http://localhost:5173/`.
@@ -120,9 +127,9 @@ To overcome the limitations of expression rewards, custom Python rewards can be 
 
 ```yaml
 building_model: >-
-  /home/johannes/workspace/rl-building-control/data/environment/buildings/2ZoneDataCenterHVAC_wEconomizer.epJSON
+  /data/environment/buildings/2ZoneDataCenterHVAC_wEconomizer.epJSON
 weather_data: >-
-  /home/johannes/workspace/rl-building-control/data/environment/weather/ny_jfkl/USA_NY_New.York-J.F.Kennedy.Intl.AP.744860_TMY3.epw
+  /data/environment/weather/ny_jfkl/USA_NY_New.York-J.F.Kennedy.Intl.AP.744860_TMY3.epw
 state_space:
   variables:
     Outdoor Temperature:

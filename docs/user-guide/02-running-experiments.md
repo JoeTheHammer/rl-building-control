@@ -2,6 +2,12 @@
 
 To access the frontend, start the application via Docker (refer to the README in the project root) and navigate to `http://localhost:5173/`. Select `Experiments` from the top navigation bar:
 
+Before starting the stack, verify the root `.env` file if you are not using the default local setup. In practice:
+
+- update `BACKEND_HOST` so the frontend reaches the backend,
+- update `TENSORBOARD_HOST` so `Open Tensorboard` links point to the correct machine,
+- update `CORS_ALLOW_ORIGINS` if the frontend is opened from a non-default origin.
+
 ![alt text](images/execution_1.png)
 
 The page is divided into three sections:
@@ -51,4 +57,4 @@ Clicking `Show Details` provides options to view individual `.yaml` configuratio
 
 # Execution without GUI
 
-Experiment suites can also be executed using the testbed, as described [here](../../testbed/README.md).
+Experiment suites can also be executed using the testbed, as described [here](../../testbed/README.md). If you execute them outside Docker, also verify that the referenced YAML files contain valid local paths for `environment_config`, `controller_config`, `building_model`, and `weather_data`.

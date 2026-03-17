@@ -19,6 +19,31 @@ cd rl-building-control
 
 ## 3. Start the entire system
 
+Create a `.env` file in the project root before starting Docker Compose. This file is used by `docker-compose.yml` to wire the frontend to the backend, generate TensorBoard links, and extend backend CORS settings.
+
+Example:
+
+```dotenv
+BACKEND_HOST=http://localhost:8000
+TESTBED_HOST=testbed
+TENSORBOARD_HOST=localhost
+CORS_ALLOW_ORIGINS=http://localhost:5173
+# Optional:
+# CORS_ALLOW_ORIGIN_REGEX=
+```
+
+What to update when you use the `.env` file:
+
+- `BACKEND_HOST`: Address the frontend should call. For remote access use `http://<your-host>:8000`.
+- `TENSORBOARD_HOST`: Hostname or IP that should appear in TensorBoard links opened from the UI.
+- `CORS_ALLOW_ORIGINS`: Comma-separated list of frontend origins allowed to call the backend. Add the remote UI origin here.
+- `TESTBED_HOST`: Keep `testbed` for Docker Compose. Change it only when you run the backend outside Docker and need it to call a separately started testbed instance.
+
+The `.env` file does not update YAML configuration paths. When you move configs between machines or between Docker and local execution, update the path fields inside the YAML files as needed:
+
+- `config/experiments/*.yaml`: `environment_config`, `controller_config`
+- `config/environments/*.yaml`: `building_model`, `weather_data`
+
 ``` bash
 docker-compose up --build
 ```
@@ -39,9 +64,15 @@ docker-compose down -v   # wipe volumes
 
 ## 4. Remote access
 
-If you want to access the system from remote, make sure to set the host environment variables in the `.env` file in the project root. The hostnames should correstpond to the host system.
+If you want to access the system remotely, update the `.env` file in the project root before starting the stack. The hostnames and origins must match the machine from which users will open the UI.
 
-This is only needed for remote access, as the default hostname is `localhost`. 
+Typical remote changes:
+
+- `BACKEND_HOST=http://<server-or-dns-name>:8000`
+- `TENSORBOARD_HOST=<server-or-dns-name>`
+- `CORS_ALLOW_ORIGINS=http://<server-or-dns-name>:5173`
+
+If you keep everything on the same machine and open it locally, the example `.env` values above are sufficient.
 
 ------------------------------------------------------------------------
 
@@ -126,6 +157,8 @@ cd frontend
 npm install
 npm run dev
 ```
+
+When running the frontend locally without Docker, use `frontend/.env.local` to set `VITE_BACKEND_URL`. This is separate from the root `.env` file used by Docker Compose.
 
 ## Extending the system
 

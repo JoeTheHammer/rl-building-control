@@ -19,6 +19,20 @@ and EnergyPlus simulations.
 
 The backend container interacts solely with these HTTP endpoints.
 
+## Compose and `.env`
+The testbed itself does not read the root `.env` file directly, but it is part of a stack that does:
+
+- `docker-compose.yml` uses the root `.env` file for frontend/backend connectivity.
+- The backend uses those values to reach the testbed and to build TensorBoard links shown in the UI.
+- YAML config paths still need to be correct independently of `.env`.
+
+If you move between Docker and local execution, verify:
+
+- `config/experiments/*.yaml`: `environment_config`, `controller_config`
+- `config/environments/*.yaml`: `building_model`, `weather_data`
+
+Inside Docker, mounted paths such as `/config/...` and `/data/...` are the safest option.
+
 ## Environment prerequisites
 - Python 3.12 with C extensions (provided by the Docker image).
 - EnergyPlus installation path registered in `site-packages/energyplus_path.pth`.
