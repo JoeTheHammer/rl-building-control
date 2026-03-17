@@ -74,6 +74,9 @@ class OnPolicyAdapter(gym.Wrapper, RLController):
         return single_obs, single_reward, terminated, truncated, single_info
 
     def reset(self, **kwargs):
+        seed = kwargs.pop("seed", None)
+        if seed is not None:
+            self.vec_env.seed(seed)
         obs = self.vec_env.reset()
         self.lstm_states = None
         return obs[0], {}

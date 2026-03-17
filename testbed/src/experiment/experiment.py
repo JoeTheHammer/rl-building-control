@@ -24,6 +24,7 @@ class Experiment:
         experiment_id: int,
         experiment_storage: ExperimentStorage | None = None,
         episodes: int = 1,
+        seed: int | None = None,
         denorm_state: bool = False,
         status_tracking: bool = True,
         flush_interval: int = 1024,
@@ -33,6 +34,7 @@ class Experiment:
         self.controller = controller
         self.experiment_id = experiment_id
         self.episodes = episodes
+        self.seed = seed
         self.denorm_state = denorm_state
         self.status_tracking = status_tracking
         self.experiment_storage = experiment_storage
@@ -49,6 +51,7 @@ class Experiment:
         total_rewards = []
 
         self._setup_recording()
+        self._seed_spaces()
 
         for ep in range(1, self.episodes + 1):
 
@@ -59,7 +62,10 @@ class Experiment:
                 self.env.begin_episode(ep)
 
             episode_reward = 0
-            state, _ = self.env.reset()
+            reset_kwargs = {}
+            if self.seed is not None:
+                reset_kwargs["seed"] = self.seed + (ep - 1)
+            state, _ = self.env.reset(**reset_kwargs)
             done = False
 
             while not done:
@@ -103,6 +109,16 @@ class Experiment:
             )
             self.env.configure_storage(evaluation_handler, flush_interval=self.flush_interval)
         self.env.start_recording()
+
+    def _seed_spaces(self):
+        if self.seed is None:
+            return
+        action_space = getattr(self.env, "action_space", None)
+        if hasattr(action_space, "seed"):
+            action_space.seed(self.seed)
+        observation_space = getattr(self.env, "observation_space", None)
+        if hasattr(observation_space, "seed"):
+            observation_space.seed(self.seed)
 
     def _report(self):
 

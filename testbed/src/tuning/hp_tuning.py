@@ -8,6 +8,7 @@ from controllers.config import HyperparameterTuning
 from custom_loggers.setup_logger import logger
 from experiment.experiment import Experiment
 from experiment.status import set_hyperparameter_tuning_status
+from utils.seeding import seed_env_spaces
 from wrappers.manager import EnvWrapperManager
 
 
@@ -51,14 +52,22 @@ def tune_hp(
                 "Controller factory must implement get_grid_search_space() " "to use GridSampler."
             )
         search_space = controller_factory.get_grid_search_space()
-        sampler = optuna.samplers.GridSampler(search_space)
+        if controller_factory.seed is None:
+            sampler = optuna.samplers.GridSampler(search_space)
+        else:
+            sampler = optuna.samplers.GridSampler(search_space, seed=controller_factory.seed)
     else:
-        sampler = sampler_cls()
+        if controller_factory.seed is None:
+            sampler = sampler_cls()
+        else:
+            sampler = sampler_cls(seed=controller_factory.seed)
 
     logger.info(f"Using Optuna sampler: {sampler_cls.__name__}")
 
     def objective(trial: optuna.Trial) -> float:
         trial_hp = _suggest_hyperparameters(controller_factory, trial, hp)
+        if controller_factory.seed is not None and "seed" not in trial_hp:
+            trial_hp["seed"] = controller_factory.seed + trial.number
 
         # Needed to keep n_steps and batch_size compatible in PPO controller
         if "nstep_batch" in trial_hp:
@@ -68,6 +77,7 @@ def tune_hp(
 
         env_t = controller_factory.env_factory.create_environment()
         env_t = env_wrapper_manager.apply_wrappers(env_t)
+        seed_env_spaces(env_t, trial_hp.get("seed", controller_factory.seed))
         ctrl = controller_factory.build_controller(env_t, trial_hp)
 
         logger.info(f"Training for {hp_tuning_config.training_timesteps} timesteps")
@@ -83,6 +93,7 @@ def tune_hp(
             controller=ctrl,
             experiment_id=0,
             episodes=hp_tuning_config.num_episodes,
+            seed=trial_hp.get("seed", controller_factory.seed),
             status_tracking=False,
         ).run()
 

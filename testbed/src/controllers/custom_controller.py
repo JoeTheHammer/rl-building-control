@@ -6,6 +6,7 @@ import yaml
 from pydantic import BaseModel
 
 from controllers.base_controller import ControllerSetup, Controller, ControllerFactory
+from utils.seeding import seed_env_spaces
 
 
 class CustomControllerConfig(BaseModel):
@@ -51,6 +52,7 @@ class CustomControllerFactory(ControllerFactory):
         controller_args = controller_config.args or {}
 
         env = self.env_factory.create_environment()
+        seed_env_spaces(env, self.seed)
 
         controller_instance = controller_class(env=env, **controller_args)
 

@@ -33,8 +33,23 @@ spec.
 | `TENSORBOARD_HOST` | Hostname embedded in TensorBoard links. | `localhost` |
 | `TESTBED_HOST` | Hostname to reach the testbed when spawned via Docker. | `testbed` inside containers |
 | `RUNNING_IN_DOCKER` | Set automatically by the Docker image to adjust path logic. | `false` |
+| `CORS_ALLOW_ORIGINS` | Comma-separated extra allowed frontend origins. | empty |
+| `CORS_ALLOW_ORIGIN_REGEX` | Regex used to allow dynamic origins (preflight + requests). | `^https?://(localhost\|127\.0\.0\.1\|0\.0\.0\.0\|172\.\d+\.\d+\.\d+)(:\d+)?$` |
 
-When running outside Docker you typically only need to set any environment variables. When running in docker, make sure to provide a `.env` file with the the correct variables set in the project root.
+When running through Docker Compose, set these values in the root `.env` file. Typical values are:
+
+```dotenv
+BACKEND_HOST=http://localhost:8000
+TESTBED_HOST=testbed
+TENSORBOARD_HOST=localhost
+CORS_ALLOW_ORIGINS=http://localhost:5173
+```
+
+Notes:
+
+- `TESTBED_HOST` matters mainly for non-Docker backend runs. Inside the Compose network the backend resolves the testbed as `testbed`.
+- `TENSORBOARD_HOST` should be the hostname users can open in the browser, not the internal container name.
+- The `.env` file does not change any YAML config paths.
 
 ### Database
 Experiment suite metadata is persisted in

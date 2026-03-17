@@ -24,8 +24,13 @@ backend URL defined by `VITE_BACKEND_URL`.
 ### Environment variables
 Create a `.env.local` file to override the defaults:
 ```
-VITE_BACKEND_URL=http://localhost:8000
+VITE_BACKEND_URL=localhost:8000
 ```
+`VITE_BACKEND_URL` accepts `host`, `host:port`, or a full URL (for example
+`https://api.example.com`). If omitted, the frontend calls
+`${window.location.protocol}//${window.location.hostname}:8000`.
+
+When the frontend is started with Docker Compose, this value is injected from the root `.env` file as `BACKEND_HOST`. Update `BACKEND_HOST` there if the backend is exposed on another machine or hostname.
 
 ## Building for production
 ```bash

@@ -1,9 +1,9 @@
 import axios from 'axios'
 
 import type { ExperimentDefinition } from '@/services/yaml-service.ts'
-import { getBaseHost } from '@/services/api-service.ts'
+import { getApiBase } from '@/services/api-service.ts'
 
-const API_BASE = `${getBaseHost()}:8000/api/experiment`
+const API_BASE = getApiBase('/api/experiment')
 const DEFAULT_DIRECTORY = './config/experiments'
 
 export interface ExperimentConfigFileList {

@@ -10,6 +10,7 @@ from controllers.config import RLControllerConfig
 from custom_loggers.setup_logger import logger
 from wrappers.manager import EnvWrapperManager
 from wrappers.reporting_wrapper import ReportingWrapper
+from utils.seeding import seed_env_spaces
 
 from experiment.status import calculate_total_training_episodes, set_training_status
 
@@ -93,11 +94,14 @@ class RLControllerFactory(ControllerFactory, ABC):
         Builds, trains, and sets up a reinforcement learning controller.
         """
         hp_map = dict(hp) if hp else {}
+        if self.seed is not None and "seed" not in hp_map:
+            hp_map["seed"] = self.seed
 
         logger.info(f"\033[92mCreate controller with hyperparameters: {hp_map}\033[0m")
 
         env = self.env_factory.create_environment()
         env = env_wrap_manager.apply_wrappers(env)
+        seed_env_spaces(env, self.seed)
 
         training_conf = load_rl_controller_config(self.config_path).training
 

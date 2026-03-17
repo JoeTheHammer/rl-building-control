@@ -1,0 +1,9 @@
+experiments:
+  - name: "td3-energy"
+    engine: "sinergym"
+    environment_config: /config/environments/sinergym-data-center-energy.yaml
+    controller: "td3"
+    controller_config: /config/controllers/td3-controller.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

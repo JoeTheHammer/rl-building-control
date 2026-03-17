@@ -35,6 +35,8 @@ def build_experiment_yaml(configs: Iterable[ExperimentConfig]) -> str:
             config.controllerConfig
         ))
         experiment_map["episodes"] = config.episodes or 0
+        if config.seed is not None:
+            experiment_map["seed"] = int(config.seed)
 
         reporting_map = CommentedMap()
         reporting_map["denormalize_state"] = bool(

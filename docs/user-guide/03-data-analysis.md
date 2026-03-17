@@ -2,6 +2,8 @@
 
 To access the frontend, start the application via Docker (refer to the README in the project root) and navigate to `http://localhost:5173/`. Select `Data Analysis` from the top navigation bar or click `Show Results` in the `Experiments` dashboard ([more information](02-running-experiments.md)).
 
+If the stack is accessed remotely, verify the root `.env` file first. The same `BACKEND_HOST`, `TENSORBOARD_HOST`, and `CORS_ALLOW_ORIGINS` settings used for experiment execution also affect navigation into the analysis views.
+
 ## Data Analysis in GUI
 
 Experiment data can be loaded by clicking `Load Data`. An overview of the results for each experiment in the suite will be displayed:

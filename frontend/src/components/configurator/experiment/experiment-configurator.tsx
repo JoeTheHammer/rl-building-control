@@ -55,6 +55,7 @@ const createDefaultExperiment = (): ExperimentFormState => ({
   controller: 'ppo',
   controllerConfig: '',
   episodes: 1,
+  seed: undefined,
   reporting: {
     denormalizeState: true,
   },
@@ -166,6 +167,12 @@ const ExperimentConfigurator = () => {
       'episodes',
       Number.isNaN(parsed) ? undefined : parsed,
     )
+  }
+
+  const handleSeedChange = (index: number, value: string) => {
+    const trimmed = value.trim()
+    const parsed = trimmed === '' ? undefined : Number(trimmed)
+    updateExperiment(index, 'seed', Number.isNaN(parsed) ? undefined : parsed)
   }
 
   const handleDenormalizeStateChange = (index: number, value: boolean) => {
@@ -435,6 +442,26 @@ const ExperimentConfigurator = () => {
                           handleEpisodesChange(index, event.target.value)
                         }
                         placeholder="1"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label
+                        className="text-primary text-sm font-semibold"
+                        htmlFor={`seed-${index}`}
+                      >
+                        Seed (optional)
+                      </label>
+                      <Input
+                        id={`seed-${index}`}
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={experiment.seed ?? ''}
+                        onChange={(event) =>
+                          handleSeedChange(index, event.target.value)
+                        }
+                        placeholder="e.g. 42"
                       />
                     </div>
                   </div>

@@ -831,6 +831,7 @@ export interface ExperimentFormState {
   controller: string
   controllerConfig: string
   episodes: number | undefined
+  seed: number | undefined
   reporting: ExperimentReportingOptions
 }
 
@@ -841,6 +842,7 @@ export interface ExperimentDefinition {
   controller: string
   controllerConfig: string
   episodes: number
+  seed?: number
   reporting: ExperimentReportingOptions
 }
 
@@ -851,6 +853,7 @@ interface ExperimentYamlEntry {
   controller?: unknown
   controller_config?: unknown
   episodes?: unknown
+  seed?: unknown
   reporting?: {
     denormalize_state?: unknown
   }
@@ -896,6 +899,7 @@ export const buildExperimentYaml = (
       controller_config: experiment.controllerConfig,
       episodes:
         typeof experiment.episodes === 'number' ? experiment.episodes : 0,
+      ...(typeof experiment.seed === 'number' ? { seed: experiment.seed } : {}),
       reporting: {
         denormalize_state: experiment.reporting.denormalizeState,
       },
@@ -928,6 +932,7 @@ export const parseExperimentYaml = (yamlStr: string): ExperimentFormState[] => {
       controller: resolveExperimentString(experiment.controller),
       controllerConfig: resolveExperimentString(experiment.controller_config),
       episodes: resolveExperimentNumber(experiment.episodes),
+      seed: resolveExperimentNumber(experiment.seed),
       reporting: reportingOptions,
     }
   })
@@ -943,5 +948,6 @@ export const toExperimentDefinitions = (
     controller: experiment.controller,
     controllerConfig: experiment.controllerConfig,
     episodes: typeof experiment.episodes === 'number' ? experiment.episodes : 0,
+    ...(typeof experiment.seed === 'number' ? { seed: experiment.seed } : {}),
     reporting: resolveReporting(experiment),
   }))

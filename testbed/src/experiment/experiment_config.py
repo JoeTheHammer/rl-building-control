@@ -17,6 +17,7 @@ class ExperimentConfig(BaseModel):
     controller_config: Optional[str] = None
     reporting: ReportingConfig = None
     episodes: int = 1
+    seed: Optional[int] = None
 
 
 class ExperimentList(BaseModel):

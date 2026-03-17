@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -127,12 +128,18 @@ def _open_hdf5_file(file_path: Path) -> h5py.File:
 def _load_context_records(file_path: Path) -> List[ExperimentContextRecord]:
     records: List[ExperimentContextRecord] = []
     with _open_hdf5_file(file_path) as handle:
-        for key, item in handle.items():
-            if not isinstance(item, h5py.Group) or not key.startswith("experiment"):
-                continue
-            record = _read_context_group(key, item)
-            if record:
-                records.append(record)
+        records = _load_context_records_from_handle(handle)
+    return records
+
+
+def _load_context_records_from_handle(handle: h5py.File) -> List[ExperimentContextRecord]:
+    records: List[ExperimentContextRecord] = []
+    for key, item in handle.items():
+        if not isinstance(item, h5py.Group) or not key.startswith("experiment"):
+            continue
+        record = _read_context_group(key, item)
+        if record:
+            records.append(record)
     return records
 
 
@@ -191,6 +198,49 @@ def load_suite_context(suite_id: int) -> SuiteContextResponse:
     )
 
 
+def load_suite_context_from_bytes(file_name: str, content: bytes) -> SuiteContextResponse:
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    try:
+        with h5py.File(BytesIO(content), "r") as handle:
+            records = _load_context_records_from_handle(handle)
+    except OSError as exc:
+        raise HTTPException(status_code=400, detail="Invalid HDF5 file") from exc
+
+    experiments: List[SuiteContextExperiment] = []
+    for record in records:
+        experiment_file = record.get_text_file("configs/experiment.yaml")
+        environment_file = record.get_text_file("configs/environment.yaml")
+        controller_file = record.get_text_file("configs/controller.yaml")
+
+        if not experiment_file:
+            continue
+
+        experiments.append(
+            SuiteContextExperiment(
+                key=record.key,
+                id=record.experiment_id,
+                name=record.name,
+                experiment=_to_suite_context_file(experiment_file),
+                environment=_to_suite_context_file(environment_file)
+                if environment_file
+                else None,
+                controller=_to_suite_context_file(controller_file)
+                if controller_file
+                else None,
+            )
+        )
+
+    experiments.sort(key=lambda item: item.id)
+
+    return SuiteContextResponse(
+        suite_id=0,
+        hdf5_file=Path(file_name).name,
+        experiments=experiments,
+    )
+
+
 def get_experiment_record(suite_id: int, experiment_key: str) -> ExperimentContextRecord:
     suite = suite_manager.get_suite(suite_id)
     if not suite.path:
@@ -200,6 +250,23 @@ def get_experiment_record(suite_id: int, experiment_key: str) -> ExperimentConte
     file_path = find_latest_h5_file(directory)
 
     records = _load_context_records(file_path)
+    for record in records:
+        if record.key == experiment_key:
+            return record
+
+    raise HTTPException(status_code=404, detail="Experiment context not found")
+
+
+def get_experiment_record_from_bytes(content: bytes, experiment_key: str) -> ExperimentContextRecord:
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    try:
+        with h5py.File(BytesIO(content), "r") as handle:
+            records = _load_context_records_from_handle(handle)
+    except OSError as exc:
+        raise HTTPException(status_code=400, detail="Invalid HDF5 file") from exc
+
     for record in records:
         if record.key == experiment_key:
             return record
