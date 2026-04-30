@@ -1,0 +1,24 @@
+training:
+  timesteps: 1401600
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
+hyperparameters:
+  tensorboard_log: "logs/"
+  learning_rate: 0.000018775168371042026
+  n_steps: 100
+  gamma: 0.9925568808391365
+  gae_lambda: 0.96517277624458
+  vf_coef: 1.1096554856786636
+  ent_coef: 0.03795359660465984
+  normalize_advantage: "false"
+  max_grad_norm: 0.12324461210106233
+  use_rms_prop: "true"
+  rms_prop_eps: 0.00001642407242212091
+  use_sde: "false"
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false

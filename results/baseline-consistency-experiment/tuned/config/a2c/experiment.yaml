@@ -1,0 +1,10 @@
+experiments:
+  - name: "a2c-default"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation.yaml
+    controller: "a2c"
+    controller_config: /config/controllers/a2c-default.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

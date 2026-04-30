@@ -1,0 +1,22 @@
+training:
+  timesteps: 1401600
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: false
+hyperparameters:
+  learning_rate: 0.000022911417659573757
+  gamma: 0.9024025545360941
+  buffer_size: 100000
+  learning_starts: 1229
+  batch_size: 64
+  target_update_interval: 1000
+  train_freq: 8
+  gradient_steps: 1
+  exploration_fraction: 0.17916853951775746
+  exploration_final_eps: 0.010286263356195346
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: true
+  normalize_action: false
+  continuous_action: true
+  discrete_action: false

@@ -1,0 +1,18 @@
+state_space: []
+custom_variables:
+  high: 27
+  low: 18
+  cooling_min: 22
+  cooling_max: 27
+  heating_min: 18
+  heating_max: 22
+rules:
+  - condition: "((East_Zone_Temperature + West_Zone_Temperature) / 2) > high"
+    action: "[clip(Cooling_Setpoint_WEST - 1, cooling_min, cooling_max), clip(Heating_Setpoint_WEST
+      - 1, heating_min, heating_max)]"
+  - condition: "((East_Zone_Temperature + West_Zone_Temperature) / 2) < low"
+    action: "[clip(Cooling_Setpoint_WEST + 1, cooling_min, cooling_max), clip(Heating_Setpoint_WEST
+      + 1, heating_min, heating_max)]"
+  - condition: "True"
+    action: "[clip(Cooling_Setpoint_WEST, cooling_min, cooling_max), clip(Heating_Setpoint_WEST,
+      heating_min, heating_max)]"

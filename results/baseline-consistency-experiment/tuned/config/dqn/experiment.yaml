@@ -1,0 +1,9 @@
+experiments:
+  - name: "dqn-default"
+    engine: "sinergym"
+    environment_config: /config/environments/sinergym-data-center-discrete.yaml
+    controller: "dqn"
+    controller_config: /config/controllers/dqn-default.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

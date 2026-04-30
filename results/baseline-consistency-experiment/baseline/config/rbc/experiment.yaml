@@ -1,0 +1,10 @@
+experiments:
+  - name: "rule-based-experiment"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation.yaml
+    controller: "rule-based"
+    controller_config: /config/controllers/rule-based-controller.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true
