@@ -11,6 +11,8 @@ h5py = "*"
 numpy = "*"
 requests = "*"
 tensorboard = "*"
+python-multipart = "*"
+setuptools = "<81"
 
 [dev-packages]
 

@@ -106,6 +106,7 @@ const Analytics: React.FC = () => {
     name: string
   }>({ open: false, entry: null, experimentName: '', name: '' })
   const [reproductionSubmitting, setReproductionSubmitting] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
 
   const requestedSuiteId = useMemo(() => {
     const state = location.state as { suiteId?: unknown } | null
@@ -513,7 +514,8 @@ const Analytics: React.FC = () => {
       setContextError(null)
 
       try {
-        const response = await uploadAnalyticsFile(file)
+        setUploadProgress(0)
+        const response = await uploadAnalyticsFile(file, setUploadProgress)
         setSuiteData(response)
         setSelectedCsvOptions([])
         setSearchParams({}, { replace: true })
@@ -538,6 +540,7 @@ const Analytics: React.FC = () => {
       } finally {
         event.target.value = ''
         setLoadingData(false)
+        setUploadProgress(null)
       }
     },
     [setSearchParams],
@@ -718,9 +721,22 @@ const Analytics: React.FC = () => {
         </div>
 
         {loadingData && (
-          <div className="text-muted-foreground flex items-center gap-3 rounded-lg border border-dashed p-6">
-            <Loader2 className="size-5 animate-spin" /> Loading analytics
-            data...
+          <div className="flex flex-col gap-3 rounded-lg border border-dashed p-6">
+            <div className="text-muted-foreground flex items-center gap-3">
+              <Loader2 className="size-5 animate-spin" /> Loading analytics
+              data...
+            </div>
+            {uploadProgress !== null && (
+              <div className="flex flex-col gap-2">
+                <div className="bg-secondary/50 h-2 w-full overflow-hidden rounded-full">
+                  <div
+                    className="bg-primary h-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-muted-foreground text-xs">{uploadProgress}% uploaded</p>
+              </div>
+            )}
           </div>
         )}
 

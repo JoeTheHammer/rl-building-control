@@ -120,14 +120,23 @@ export const downloadAnalyticsSuiteFile = async (
 
 export const uploadAnalyticsFile = async (
   file: File,
+  onProgress?: (progress: number) => void,
 ): Promise<AnalyticsDataResponse> => {
+  const formData = new FormData()
+  formData.append('file', file)
+
   const response = await axios.post<AnalyticsDataResponse>(
     `${API_BASE}/file`,
-    file,
+    formData,
     {
       params: { filename: file.name },
-      headers: {
-        'Content-Type': file.type || 'application/x-hdf5',
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percentComplete = Math.round(
+            (progressEvent.loaded / progressEvent.total) * 100,
+          )
+          onProgress(percentComplete)
+        }
       },
     },
   )
@@ -137,14 +146,14 @@ export const uploadAnalyticsFile = async (
 export const fetchUploadedAnalyticsContext = async (
   file: File,
 ): Promise<SuiteContextResponse> => {
+  const formData = new FormData()
+  formData.append('file', file)
+
   const response = await axios.post<SuiteContextResponse>(
     `${API_BASE}/file/context`,
-    file,
+    formData,
     {
       params: { filename: file.name },
-      headers: {
-        'Content-Type': file.type || 'application/x-hdf5',
-      },
     },
   )
   return response.data
@@ -155,16 +164,16 @@ export const reproduceUploadedAnalyticsExperiment = async (
   experimentKey: string,
   reproductionName?: string,
 ): Promise<ExperimentSuiteApiResponse> => {
+  const formData = new FormData()
+  formData.append('file', file)
+
   const response = await axios.post<ExperimentSuiteApiResponse>(
     `${API_BASE}/file/experiments/${encodeURIComponent(experimentKey)}/reproduce`,
-    file,
+    formData,
     {
       params: {
         filename: file.name,
         ...(reproductionName !== undefined ? { name: reproductionName } : {}),
-      },
-      headers: {
-        'Content-Type': file.type || 'application/x-hdf5',
       },
     },
   )

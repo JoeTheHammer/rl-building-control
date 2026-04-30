@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 
 from models.analytics import AnalyticsDataResponse, AnalyticsSuiteSummary
@@ -43,7 +43,7 @@ def download_suite_file(suite_id: int) -> FileResponse:
 
 @router.post("/file", response_model=AnalyticsDataResponse)
 async def open_file(
-    content: bytes = Body(...),
+    file: UploadFile = File(...),
     filename: str = Query(..., min_length=1),
 ) -> AnalyticsDataResponse:
     if not filename:
@@ -52,27 +52,30 @@ async def open_file(
     if not filename.lower().endswith((".h5", ".hdf5")):
         raise HTTPException(status_code=400, detail="Only .h5 and .hdf5 files are supported")
 
+    content = await file.read()
     return load_uploaded_hdf5_data(filename, content)
 
 
 @router.post("/file/context", response_model=SuiteContextResponse)
 async def open_file_context(
-    content: bytes = Body(...),
+    file: UploadFile = File(...),
     filename: str = Query(..., min_length=1),
 ) -> SuiteContextResponse:
     if not filename.lower().endswith((".h5", ".hdf5")):
         raise HTTPException(status_code=400, detail="Only .h5 and .hdf5 files are supported")
+    content = await file.read()
     return load_suite_context_from_bytes(filename, content)
 
 
 @router.post("/file/experiments/{experiment_key}/reproduce", response_model=ExperimentSuiteResponse)
 async def reproduce_uploaded_experiment(
     experiment_key: str,
-    content: bytes = Body(...),
+    file: UploadFile = File(...),
     filename: str = Query(..., min_length=1),
     name: str | None = Query(None),
 ) -> ExperimentSuiteResponse:
     if not filename.lower().endswith((".h5", ".hdf5")):
         raise HTTPException(status_code=400, detail="Only .h5 and .hdf5 files are supported")
+    content = await file.read()
     record = get_experiment_record_from_bytes(content, experiment_key)
     return suite_manager.reproduce_experiment_from_record(record, name)

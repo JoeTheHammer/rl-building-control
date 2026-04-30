@@ -352,13 +352,11 @@ class TensorBoardManager:
         log_dir = Path(suite.path) / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
-        # ✅ Pick a free port in the exposed range
         port = self._allocate_port(start=6006, end=6100)
         host = "0.0.0.0"
         url_host = os.getenv("TENSORBOARD_HOST", "0.0.0.0")
         url = f"http://{url_host}:{port}/"
 
-        # ✅ Run TensorBoard and bind to all interfaces
         command = [
             "python",
             "-m",
