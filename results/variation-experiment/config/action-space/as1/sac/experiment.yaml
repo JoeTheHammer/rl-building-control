@@ -1,0 +1,11 @@
+experiments:
+  - name: "sac-big-action"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation-big-action.yaml
+    controller: "sac"
+    controller_config: /config/controllers/sac-controller.yaml
+    episodes: 10
+    seed: 42
+    reporting:
+      denormalize_state: true

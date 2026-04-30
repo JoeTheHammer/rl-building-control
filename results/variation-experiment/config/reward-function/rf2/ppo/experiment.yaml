@@ -1,0 +1,10 @@
+experiments:
+  - name: "ppo-comfort"
+    engine: "sinergym"
+    environment_config: /config/environments/sinergym-data-center-comfort.yaml
+    controller: "ppo"
+    controller_config: /config/controllers/ppo-controller.yaml
+    episodes: 10
+    seed: 42
+    reporting:
+      denormalize_state: true

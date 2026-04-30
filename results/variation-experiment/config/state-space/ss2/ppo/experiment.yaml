@@ -1,0 +1,11 @@
+experiments:
+  - name: "ppo-weather-anticipation"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/data-center-weather-anticipation.yaml
+    controller: "ppo"
+    controller_config: /config/controllers/ppo-controller.yaml
+    episodes: 10
+    seed: 42
+    reporting:
+      denormalize_state: true

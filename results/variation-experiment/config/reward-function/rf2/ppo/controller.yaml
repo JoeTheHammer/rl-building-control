@@ -1,0 +1,22 @@
+training:
+  timesteps: 700800
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
+hyperparameters:
+  n_steps: 4096
+  batch_size: 1024
+  learning_rate: 0.0009382457690297197
+  gamma: 0.9623261103841985
+  gae_lambda: 0.8085600352126813
+  ent_coef: 0.032936295375520425
+  vf_coef: 0.46288006980621654
+  clip_range: 0.18109694532149087
+  target_kl: 0.01814818754549141
+  max_grad_norm: 0.7802300468436248
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: false
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false

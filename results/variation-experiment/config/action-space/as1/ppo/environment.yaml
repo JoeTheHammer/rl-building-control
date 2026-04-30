@@ -1,0 +1,134 @@
+building_model: context/resources/buildings/2ZoneDataCenterHVAC_wEconomizer.epJSON
+weather_data: context/resources/weather/USA_NY_New.York-J.F.Kennedy.Intl.AP.744860_TMY3.epw
+state_space:
+  variables:
+    Outdoor Temperature:
+      name: Site Outdoor Air Drybulb Temperature
+      zone: Environment
+    East_Zone_Temperature:
+      name: Zone Air Temperature
+      zone: East Zone
+    Outdoor Humidity:
+      name: Site Outdoor Air Relative Humidity
+      zone: Environment
+    Wind Speed:
+      name: Site Wind Speed
+      zone: Environment
+    Wind Direction:
+      name: Site Wind Direction
+      zone: Environment
+    Diffuse Solar Radiation:
+      name: Site Diffuse Solar Radiation Rate per Area
+      zone: Environment
+    Direct Solar Radiation:
+      name: Site Direct Solar Radiation Rate per Area
+      zone: Environment
+    West_Zone_Temperature:
+      name: Zone Air Temperature
+      zone: West Zone
+    East Humidity:
+      name: Zone Air Relative Humidity
+      zone: East Zone
+    West Humidity:
+      name: Zone Air Relative Humidity
+      zone: West Zone
+    West Mean Radiant Temp:
+      name: Zone Thermal Comfort Mean Radiant Temperature
+      zone: West Zone PEOPLE
+    East Mean Radiant Temp:
+      name: Zone Thermal Comfort Mean Radiant Temperature
+      zone: East Zone PEOPLE
+    Fanger West:
+      name: Zone Thermal Comfort Fanger Model PPD
+      zone: West Zone PEOPLE
+    Fanger East:
+      name: Zone Thermal Comfort Fanger Model PPD
+      zone: East Zone PEOPLE
+    People Air Temp West:
+      name: People Air Temperature
+      zone: West Zone PEOPLE
+    People Air Temp East:
+      name: People Air Temperature
+      zone: East Zone PEOPLE
+    East Zone People:
+      name: Zone People Occupant Count
+      zone: East Zone
+    West Zone People:
+      name: Zone People Occupant Count
+      zone: West Zone
+    Facility_Total_HVAC_Electric_Demand_Rate:
+      name: Facility Total HVAC Electricity Demand Rate
+      zone: Whole Building
+    Cooling_Setpoint_WEST:
+      name: Zone Thermostat Cooling Setpoint Temperature
+      zone: West Zone
+    Heating_Setpoint_WEST:
+      name: Zone Thermostat Heating Setpoint Temperature
+      zone: West Zone
+    Cooling_Setpoint_EAST:
+      name: Zone Thermostat Cooling Setpoint Temperature
+      zone: East Zone
+    Heating_Setpoint_EAST:
+      name: Zone Thermostat Heating Setpoint Temperature
+      zone: East Zone
+    Fanger Model Clothing Value:
+      name: Schedule Value
+      zone: Clothing Sch
+  time_info:
+    day_of_month:
+      cyclic: false
+    month:
+      cyclic: false
+    day_of_week:
+      cyclic: false
+    hour:
+      cyclic: false
+action_space:
+  actuators:
+    Cooling Setpoint:
+      type: continuous
+      range:
+      - 22.0
+      - 35.0
+      component: Schedule:Constant
+      control_type: Schedule Value
+      actuator_key: Cooling Setpoint RL
+    Heating Setpoint:
+      type: continuous
+      range:
+      - 5.0
+      - 22.0
+      component: Schedule:Constant
+      control_type: Schedule Value
+      actuator_key: Heating Setpoint RL
+reward_function:
+  type: expression
+  variables:
+  - East_Zone_Temperature
+  - West_Zone_Temperature
+  - Facility_Total_HVAC_Electric_Demand_Rate
+  expression: "- energy_weight * lambda_energy * Facility_Total_HVAC_Electric_Demand_Rate\
+    \ - (1 - energy_weight) * lambda_temperature * (\n    max(0, East_Zone_Temperature\
+    \ - comfort_high)\n  + max(0, comfort_low - East_Zone_Temperature)\n  + max(0,\
+    \ West_Zone_Temperature - comfort_high)\n  + max(0, comfort_low - West_Zone_Temperature)\n\
+    \  )"
+  params:
+    energy_weight: 0.5
+    lambda_energy: 5.0e-05
+    lambda_temperature: 1.0
+    comfort_high: 27.0
+    comfort_low: 18.0
+episode:
+  timesteps_per_hour: 4
+  period:
+  - 1
+  - 1
+  - 2025
+  - 31
+  - 12
+  - 2025
+weather_variability:
+  Dry Bulb Temperature:
+  - 2.0
+  - 0.5
+  - 24.0
