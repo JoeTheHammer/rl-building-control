@@ -1,0 +1,10 @@
+experiments:
+  - name: "sac-old-params-evluation"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation.yaml
+    controller: "sac"
+    controller_config: /config/controllers/sac-default.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

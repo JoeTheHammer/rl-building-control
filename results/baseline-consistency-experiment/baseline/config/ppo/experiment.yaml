@@ -1,0 +1,10 @@
+experiments:
+  - name: "ppo-default"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation.yaml
+    controller: "ppo"
+    controller_config: /config/controllers/ppo-default.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

@@ -1,0 +1,10 @@
+experiments:
+  - name: "recurrent-ppo-default-evaluation"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation.yaml
+    controller: "recurrent-ppo"
+    controller_config: /config/controllers/recurrent-ppo-default-evaluation.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true

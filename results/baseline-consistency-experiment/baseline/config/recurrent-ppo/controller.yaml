@@ -1,0 +1,12 @@
+training:
+  timesteps: 1401600
+  report_training: false
+  report_denormalized_state: false
+  tensorboard_logs: true
+hyperparameters: {}
+environment_wrapper:
+  normalize_state: true
+  normalize_reward: true
+  normalize_action: true
+  continuous_action: true
+  discrete_action: false

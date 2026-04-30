@@ -1,0 +1,10 @@
+experiments:
+  - name: "ddpg-default-experiment"
+    engine: "sinergym"
+    environment_config: 
+      /config/environments/sinergym-data-center-evaluation.yaml
+    controller: "ddpg"
+    controller_config: /config/controllers/ddpg-default-controller.yaml
+    episodes: 10
+    reporting:
+      denormalize_state: true
